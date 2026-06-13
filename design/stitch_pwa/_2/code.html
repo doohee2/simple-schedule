@@ -1,0 +1,341 @@
+<!DOCTYPE html><html class="light" lang="ko"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Effortless Coordination - 점심 약속</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&amp;family=Be+Vietnam+Pro:wght@400;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#fee4b4",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#edeeef",
+                    "on-primary-fixed-variant": "#304a5a",
+                    "secondary-container": "#beeecd",
+                    "secondary-fixed-dim": "#a3d1b2",
+                    "secondary-fixed": "#beeecd",
+                    "on-primary-container": "#516b7c",
+                    "surface-container-low": "#f3f4f5",
+                    "inverse-on-surface": "#f0f1f2",
+                    "inverse-surface": "#2e3132",
+                    "on-tertiary-fixed-variant": "#554421",
+                    "on-secondary-fixed-variant": "#244f37",
+                    "outline": "#73787c",
+                    "outline-variant": "#c2c7cc",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-tint": "#486272",
+                    "surface": "#f8f9fa",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#78653e",
+                    "surface-dim": "#d9dadb",
+                    "primary": "#486272",
+                    "primary-fixed-dim": "#afcadd",
+                    "on-surface": "#191c1d",
+                    "surface-container-high": "#e7e8e9",
+                    "on-tertiary-fixed": "#261a00",
+                    "primary-fixed": "#cbe6fa",
+                    "error-container": "#ffdad6",
+                    "secondary": "#3c674e",
+                    "primary-container": "#d0ebff",
+                    "on-secondary-fixed": "#002111",
+                    "on-background": "#191c1d",
+                    "surface-variant": "#e1e3e4",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#6e5c36",
+                    "inverse-primary": "#afcadd",
+                    "background": "#f8f9fa",
+                    "error": "#ba1a1a",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#42474b",
+                    "on-primary-fixed": "#011e2d",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-fixed": "#f9dfb0",
+                    "on-secondary-container": "#426d53",
+                    "tertiary-fixed-dim": "#dcc496",
+                    "surface-container-highest": "#e1e3e4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "gutter": "1rem",
+                    "md": "1rem",
+                    "lg": "1.5rem",
+                    "xs": "0.5rem",
+                    "margin-mobile": "1.25rem",
+                    "xl": "2rem",
+                    "sm": "0.75rem"
+            },
+            "fontFamily": {
+                    "time-display": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-sm": ["Be Vietnam Pro"],
+                    "label-caps": ["Be Vietnam Pro"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body-md": ["Be Vietnam Pro"]
+            },
+            "fontSize": {
+                    "time-display": ["18px", {"lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "headline-lg": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "display": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #F8F9FA;
+            color: #191c1d;
+        }
+        .dark body {
+            background-color: #1a1c1e;
+            color: #e2e2e6;
+        }
+        
+        /* Spring transition for bottom sheet */
+        .bottom-sheet-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .bottom-sheet-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease-out;
+        }
+        
+        /* Backdrop blur for overlay */
+        .backdrop-overlay {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Pulse animation for available dates */
+        @keyframes softPulse {
+            0% { box-shadow: 0 0 0 0 rgba(208, 235, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(208, 235, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(208, 235, 255, 0); }
+        }
+        
+        .pulse-available {
+            animation: softPulse 2s infinite;
+        }
+        
+        /* Hide scrollbar for category filter */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased min-h-screen relative overflow-hidden">
+<!-- Background Layer Level 0 -->
+<div class="fixed inset-0 bg-surface dark:bg-[#1a1c1e] z-[-1]"></div>
+<!-- Main Container -->
+<main class="w-full h-full max-w-[768px] mx-auto flex flex-col relative pb-32">
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-margin-mobile h-14 w-full max-w-[768px] mx-auto bg-surface dark:bg-surface-dim font-headline-lg-mobile text-headline-lg-mobile text-primary dark:text-primary-fixed-dim flat no shadows docked full-width top-0 z-10 sticky">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant dark:hover:bg-inverse-surface active:scale-95 transition-transform text-on-surface-variant dark:text-outline-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">calendar_today</span>
+</button>
+<h1 class="font-display text-display text-primary dark:text-primary-fixed-dim flex-1 text-center font-bold tracking-tight">약속 잡기</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant dark:hover:bg-inverse-surface active:scale-95 transition-transform text-on-surface-variant dark:text-outline-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 px-margin-mobile pt-lg pb-xl flex flex-col gap-lg overflow-y-auto">
+<!-- Filter Categories -->
+<section class="flex gap-sm overflow-x-auto no-scrollbar py-2">
+<button class="px-6 py-3 rounded-full font-body-sm text-body-sm border border-outline-variant dark:border-outline text-on-surface-variant dark:text-outline-variant bg-surface-container-lowest dark:bg-inverse-surface whitespace-nowrap transition-colors active:scale-95">전체</button>
+<button class="px-6 py-3 rounded-full font-body-sm text-body-sm border border-transparent bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary whitespace-nowrap shadow-[0_4px_12px_rgba(208,235,255,0.4)] transition-colors active:scale-95 font-semibold">점심</button>
+<button class="px-6 py-3 rounded-full font-body-sm text-body-sm border border-outline-variant dark:border-outline text-on-surface-variant dark:text-outline-variant bg-surface-container-lowest dark:bg-inverse-surface whitespace-nowrap transition-colors active:scale-95">저녁</button>
+<button class="px-6 py-3 rounded-full font-body-sm text-body-sm border border-outline-variant dark:border-outline text-on-surface-variant dark:text-outline-variant bg-surface-container-lowest dark:bg-inverse-surface whitespace-nowrap transition-colors active:scale-95">커피</button>
+</section>
+<!-- Calendar Section Level 1 -->
+<section class="bg-surface-container-lowest dark:bg-[#25262B] rounded-[2rem] p-lg shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-md">
+<div class="flex justify-between items-center mb-xs">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface dark:text-on-primary">5월 2024</h2>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<!-- Calendar Grid -->
+<div class="grid grid-cols-7 gap-y-4 gap-x-2 text-center font-body-sm text-body-sm">
+<!-- Days of week -->
+<div class="text-outline font-medium text-xs">일</div>
+<div class="text-on-surface-variant font-medium text-xs">월</div>
+<div class="text-on-surface-variant font-medium text-xs">화</div>
+<div class="text-on-surface-variant font-medium text-xs">수</div>
+<div class="text-on-surface-variant font-medium text-xs">목</div>
+<div class="text-on-surface-variant font-medium text-xs">금</div>
+<div class="text-outline font-medium text-xs">토</div>
+<!-- Week 1 -->
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50"></div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50"></div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50"></div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">1</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">2</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant relative line-through cursor-not-allowed">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-outline">3</span>
+<span class="text-[10px] text-error absolute -bottom-1">불가</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">4</div>
+<!-- Week 2 -->
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">5</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">6</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">7</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant relative line-through cursor-not-allowed">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-outline">8</span>
+<span class="text-[10px] text-error absolute -bottom-1">불가</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container pulse-available font-bold shadow-[0_2px_8px_rgba(208,235,255,0.6)]">9</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">10</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">11</div>
+<!-- Week 3 -->
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">12</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">13</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container pulse-available font-bold shadow-[0_2px_8px_rgba(208,235,255,0.6)]">14</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant relative line-through cursor-not-allowed">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-outline">15</span>
+<span class="text-[10px] text-error absolute -bottom-1">불가</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">16</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container pulse-available font-bold shadow-[0_2px_8px_rgba(208,235,255,0.6)]">17</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">18</div>
+<!-- Week 4 - Selected Week -->
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">19</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group z-10">
+<span class="w-12 h-12 flex items-center justify-center rounded-full bg-secondary text-on-secondary shadow-[0_4px_12px_rgba(60,103,78,0.4)] font-bold border-2 border-surface-container-lowest dark:border-[#25262B] scale-110 transition-transform">20</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container absolute -bottom-2"></span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container text-on-primary-container pulse-available font-bold shadow-[0_2px_8px_rgba(208,235,255,0.6)]">21</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">22</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant relative line-through cursor-not-allowed">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-low text-outline">23</span>
+<span class="text-[10px] text-error absolute -bottom-1">불가</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-on-surface-variant relative cursor-pointer group">
+<span class="w-10 h-10 flex items-center justify-center rounded-full group-hover:bg-surface-container">24</span>
+</div>
+<div class="h-12 flex flex-col items-center justify-center text-outline-variant opacity-50">25</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Overlay Backdrop -->
+<div class="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300"></div>
+<!-- Bottom Sheet Overlays Level 2 -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[768px] bg-surface-container-lowest dark:bg-[#2C2E33] rounded-t-xl z-40 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] bottom-sheet-enter bottom-sheet-enter-active flex flex-col max-h-[751px]">
+<!-- Grabber Handle -->
+<div class="w-full h-8 flex justify-center items-center cursor-pointer shrink-0">
+<div class="w-12 h-1.5 rounded-full bg-surface-variant dark:bg-outline-variant"></div>
+</div>
+<!-- Sheet Content -->
+<div class="px-margin-mobile pb-xl pt-2 flex flex-col gap-lg overflow-y-auto">
+<!-- Header -->
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface dark:text-on-primary">5월 20일 점심 약속</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">일정을 조율하고 추가하세요</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-container/30 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+</div>
+<!-- Inputs Area -->
+<div class="flex flex-col gap-md">
+<!-- Details Input -->
+<div class="relative group">
+<label class="sr-only">약속 대상 및 내용</label>
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline-variant">person_add</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-surface-variant dark:border-outline-variant rounded-xl font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary-fixed focus:ring-1 focus:ring-primary-fixed transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)]" placeholder="약속 대상 및 내용 입력" type="text">
+</div>
+<!-- Minimalist Time Picker Bento -->
+<div class="grid grid-cols-2 gap-sm">
+<div class="bg-surface dark:bg-[#25262B] rounded-xl p-4 flex flex-col items-center justify-center gap-2 border border-surface-variant dark:border-outline-variant relative overflow-hidden group hover:border-primary-fixed transition-colors cursor-pointer">
+<div class="absolute top-2 left-3 text-[10px] font-label-caps text-label-caps text-outline">시작 시간</div>
+<div class="font-time-display text-time-display text-primary dark:text-primary-fixed-dim mt-2 tracking-tight">12:00 PM</div>
+</div>
+<div class="bg-surface dark:bg-[#25262B] rounded-xl p-4 flex flex-col items-center justify-center gap-2 border border-surface-variant dark:border-outline-variant relative overflow-hidden group hover:border-primary-fixed transition-colors cursor-pointer opacity-70">
+<div class="absolute top-2 left-3 text-[10px] font-label-caps text-label-caps text-outline">예상 종료</div>
+<div class="font-time-display text-time-display text-on-surface-variant dark:text-outline-variant mt-2 tracking-tight">1:30 PM</div>
+</div>
+</div>
+<!-- Suggested Places Horizontal Scroll -->
+
+<div class="flex flex-col gap-2 mt-2">
+  <label class="text-xs font-label-caps text-label-caps text-outline px-1">메모</label>
+  <div class="relative group">
+    <textarea class="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-surface-variant dark:border-outline-variant rounded-xl font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary-fixed focus:ring-1 focus:ring-primary-fixed transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] resize-none" placeholder="일정에 대한 메모를 입력하세요"></textarea>
+  </div>
+</div></div>
+<!-- Action Button -->
+<button class="w-full h-14 mt-sm rounded-full bg-primary-container text-on-primary-fixed-variant font-headline-lg-mobile text-headline-lg-mobile text-[16px] flex items-center justify-center shadow-[0_4px_12px_rgba(208,235,255,0.5)] active:scale-[0.98] transition-transform duration-200">
+                일정 추가
+            </button>
+</div>
+</div>
+<!-- BottomNavBar (Hidden by overlay structurally but exists in DOM) -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[768px] z-20 flex justify-around items-center px-4 py-3 bg-surface/80 dark:bg-surface-dim/80 backdrop-blur-xl rounded-t-lg shadow-[0_-4px_20px_rgba(0,0,0,0.04)] font-label-caps text-label-caps opacity-0 pointer-events-none">
+<!-- Labels and icons exist but obscured by bottom sheet -->
+</nav>
+<script>
+        // Simple script to handle bottom sheet animation state if needed
+        document.addEventListener('DOMContentLoaded', () => {
+            const bottomSheet = document.querySelector('.bottom-sheet-enter');
+            // Ensure classes are set correctly for initial load state provided in prompt
+            bottomSheet.classList.add('bottom-sheet-enter-active');
+        });
+    </script>
+
+
+</body></html>

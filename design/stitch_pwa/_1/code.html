@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>약속 잡기 - Appointment Booking</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600&amp;family=Plus+Jakarta+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "outline": "#73787c",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "tertiary-container": "#fee4b4",
+                        "outline-variant": "#c2c7cc",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#cbe6fa",
+                        "surface-container-low": "#f3f4f5",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-primary-fixed-variant": "#304a5a",
+                        "tertiary": "#6e5c36",
+                        "surface-variant": "#e1e3e4",
+                        "tertiary-fixed": "#f9dfb0",
+                        "on-secondary-fixed-variant": "#244f37",
+                        "surface-dim": "#d9dadb",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container": "#edeeef",
+                        "tertiary-fixed-dim": "#dcc496",
+                        "primary-container": "#d0ebff",
+                        "on-background": "#191c1d",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-container": "#beeecd",
+                        "on-primary-fixed": "#011e2d",
+                        "on-tertiary-fixed-variant": "#554421",
+                        "on-secondary-fixed": "#002111",
+                        "background": "#f8f9fa",
+                        "inverse-primary": "#afcadd",
+                        "on-secondary-container": "#426d53",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-container": "#78653e",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed-dim": "#a3d1b2",
+                        "secondary": "#3c674e",
+                        "surface-tint": "#486272",
+                        "secondary-fixed": "#beeecd",
+                        "primary-fixed-dim": "#afcadd",
+                        "on-surface-variant": "#42474b",
+                        "on-primary-container": "#516b7c",
+                        "primary": "#486272",
+                        "surface": "#f8f9fa",
+                        "pastel-lunch": "#fee4b4",
+                        "pastel-dinner": "#e9d5ff",
+                        "pastel-vacation": "#beeecd",
+                        "pastel-other": "#e2e8f0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "0px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "1.25rem",
+                        "lg": "1.5rem",
+                        "base": "4px",
+                        "gutter": "1rem",
+                        "sm": "0.75rem",
+                        "md": "1rem",
+                        "xs": "0.5rem",
+                        "xl": "2rem"
+                    },
+                    "fontFamily": {
+                        "time-display": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-sm": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"],
+                        "label-caps": ["Be Vietnam Pro"]
+                    },
+                    "fontSize": {
+                        "time-display": ["18px", {"lineHeight": "1", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "display": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-lg": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .bottom-sheet-spring {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col items-center overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface flex items-center justify-between px-margin-mobile h-14 w-full z-40 relative flex-shrink-0 border-b border-outline-variant">
+<button class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-12 h-12">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-display text-display text-primary">약속 잡기</h1>
+<button class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-12 h-12">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</header>
+<main class="flex-1 w-full flex flex-col relative overflow-y-auto hide-scrollbar">
+<!-- Filters -->
+<section class="px-margin-mobile py-lg overflow-x-auto hide-scrollbar flex-shrink-0">
+<div class="flex space-x-sm">
+<button class="px-4 h-[48px] font-label-caps text-label-caps whitespace-nowrap bg-[#C6F6D5] text-on-secondary-fixed border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all active:scale-95">전체</button>
+<button class="px-4 h-[48px] font-label-caps text-label-caps whitespace-nowrap bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant transition-all active:scale-95">점심</button>
+<button class="px-4 h-[48px] font-label-caps text-label-caps whitespace-nowrap bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant transition-all active:scale-95">저녁</button>
+<button class="px-4 h-[48px] font-label-caps text-label-caps whitespace-nowrap bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant transition-all active:scale-95">휴가</button>
+<button class="px-4 h-[48px] font-label-caps text-label-caps whitespace-nowrap bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant transition-all active:scale-95">기타</button>
+</div>
+</section>
+<!-- Calendar Hero -->
+<section class="flex-1 flex flex-col">
+<div class="px-margin-mobile flex justify-between items-center mb-md">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-center">
+                    2024년 5월 <span class="material-symbols-outlined ml-1 text-outline cursor-pointer">arrow_drop_down</span>
+</h2>
+<div class="flex space-x-2">
+<button class="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+<button class="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+</div>
+</div>
+<!-- Calendar Table Container -->
+<div class="flex-1 flex flex-col border-t border-b border-outline-variant overflow-hidden bg-surface">
+<!-- Grid Header -->
+<div class="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low">
+<div class="py-3 text-center font-label-caps text-label-caps text-error">일</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">월</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">화</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">수</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">목</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">금</div>
+<div class="py-3 text-center font-label-caps text-label-caps text-outline-variant">토</div>
+</div>
+<!-- Grid Body -->
+<div class="grid grid-cols-7 flex-1">
+<!-- Row 1 -->
+<div class="aspect-square border-b border-r border-outline-variant flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30">28</div>
+<div class="aspect-square border-b border-r border-outline-variant flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30">29</div>
+<div class="aspect-square border-b border-r border-outline-variant flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30">30</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">1</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors relative">
+<span class="font-time-display text-time-display text-on-surface">2</span>
+<div class="mt-auto pb-1 flex space-x-1">
+<div class="w-1.5 h-1.5 bg-pastel-dinner"></div>
+</div>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">3</span>
+<div class="mt-auto w-full px-1 pb-1">
+<div class="bg-pastel-lunch/20 border-l-2 border-pastel-lunch text-[8px] leading-tight text-on-surface truncate px-1">점심</div>
+</div>
+</div>
+<div class="aspect-square border-b border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50">
+<span class="font-time-display text-time-display text-outline">4</span>
+</div>
+<!-- Row 2 -->
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50">
+<span class="font-time-display text-time-display text-error">5</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">6</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">7</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">8</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">9</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">10</span>
+<div class="mt-auto w-full px-1 pb-1">
+<div class="bg-pastel-vacation/20 border-l-2 border-pastel-vacation text-[8px] leading-tight text-on-surface truncate px-1 mb-0.5">휴가</div>
+</div>
+</div>
+<div class="aspect-square border-b border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50">
+<span class="font-time-display text-time-display text-outline">11</span>
+</div>
+<!-- Row 3 -->
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50">
+<span class="font-time-display text-time-display text-error">12</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">13</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">14</span>
+<div class="mt-auto pb-1 flex space-x-1">
+<div class="w-1.5 h-1.5 bg-pastel-other"></div>
+</div>
+</div>
+<!-- Today Cell -->
+<div class="aspect-square border-b border-r border-primary bg-primary-container/10 flex flex-col items-center justify-start pt-2 relative z-10">
+<div class="w-6 h-6 bg-primary flex items-center justify-center">
+<span class="font-time-display text-[14px] leading-none text-on-primary">15</span>
+</div>
+<div class="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5">
+<div class="bg-pastel-dinner/20 border-l-2 border-pastel-dinner text-[8px] leading-tight text-on-surface truncate px-1">저녁</div>
+</div>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">16</span>
+</div>
+<div class="aspect-square border-b border-r border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 hover:bg-surface-container-low cursor-pointer transition-colors">
+<span class="font-time-display text-time-display text-on-surface">17</span>
+</div>
+<div class="aspect-square border-b border-outline-variant bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50">
+<span class="font-time-display text-time-display text-outline">18</span>
+</div>
+</div>
+</div>
+<div class="h-24"></div> <!-- Spacer for bottom sheet -->
+</section>
+</main>
+<!-- Bottom Sheet -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-spring">
+<div class="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] border-t border-outline-variant p-lg flex flex-col">
+<div class="w-12 h-1.5 bg-outline-variant mx-auto mb-6"></div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">5월 15일 일정</h3>
+<button class="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">오후 7:00 • 저녁 약속</p>
+<div class="h-8"></div>
+</div>
+</div>
+</body></html>

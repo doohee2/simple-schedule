@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-container-highest: #e1e3e4;
+  --color-surface: #f8f9fa;
+  --color-surface-dim: #d9dadb;
+  --color-surface-bright: #f8f9fa;
+  --color-on-surface: #191c1d;
+  --color-on-surface-variant: #42474b;
+  --color-inverse-surface: #2e3132;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-surface-variant: #e1e3e4;
+  --color-surface-tint: #486272;
+  --color-outline: #73787c;
+  --color-outline-variant: #c2c7cc;
+
+  --color-primary: #486272;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #d0ebff;
+  --color-on-primary-container: #516b7c;
+  --color-inverse-primary: #afcadd;
+
+  --color-secondary: #3c674e;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #beeecd;
+  --color-on-secondary-container: #426d53;
+
+  --color-tertiary: #6e5c36;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #fee4b4;
+  --color-on-tertiary-container: #78653e;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-primary-fixed: #cbe6fa;
+  --color-primary-fixed-dim: #afcadd;
+  --color-on-primary-fixed: #011e2d;
+  --color-on-primary-fixed-variant: #304a5a;
+
+  --color-secondary-fixed: #beeecd;
+  --color-secondary-fixed-dim: #a3d1b2;
+  --color-on-secondary-fixed: #002111;
+  --color-on-secondary-fixed-variant: #244f37;
+
+  --color-tertiary-fixed: #f9dfb0;
+  --color-tertiary-fixed-dim: #dcc496;
+  --color-on-tertiary-fixed: #261a00;
+  --color-on-tertiary-fixed-variant: #554421;
+
+  --color-background: #f8f9fa;
+  --color-on-background: #191c1d;
+
+  --color-pastel-lunch: #fee4b4;
+  --color-pastel-dinner: #e9d5ff;
+  --color-pastel-vacation: #beeecd;
+  --color-pastel-other: #e2e8f0;
+
+  --radius-DEFAULT: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+
+  --spacing-base: 4px;
+  --spacing-gutter: 1rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xs: 0.5rem;
+  --spacing-margin-mobile: 1.25rem;
+  --spacing-xl: 2rem;
+  --spacing-sm: 0.75rem;
+
+  --font-time-display: "Plus Jakarta Sans", sans-serif;
+  --font-headline-lg: "Plus Jakarta Sans", sans-serif;
+  --font-body-sm: "Be Vietnam Pro", sans-serif;
+  --font-label-caps: "Be Vietnam Pro", sans-serif;
+  --font-headline-lg-mobile: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body-md: "Be Vietnam Pro", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-on-background);
+    min-height: max(884px, 100dvh);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark body {
+  background-color: #1a1c1e;
+  color: #e2e2e6;
+}
+
+.bottom-sheet-spring {
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.bottom-sheet-enter {
+  transform: translateY(100%);
+  opacity: 0;
+}
+.bottom-sheet-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease-out;
+}
+
+.backdrop-overlay {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@keyframes softPulse {
+  0% { box-shadow: 0 0 0 0 rgba(208, 235, 255, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(208, 235, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(208, 235, 255, 0); }
+}
+
+.pulse-available {
+  animation: softPulse 2s infinite;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar,
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
