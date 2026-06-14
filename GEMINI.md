@@ -82,9 +82,9 @@
 
 ## 5. 향후 유지보수 시 고려사항 (Implications)
 
-### 1) Google OAuth Refresh Token 전략
-현재 구현은 세션 유지 기간 동안 Google API Access Token을 활용하도록 구성되어 있습니다. 만약 Access Token이 만료(일반적으로 1시간)된 후 사용자가 앱에 장시간 머무르며 달력을 조작하려 할 경우, API가 `401 Unauthorized`를 반환할 수 있습니다. 
-**대응 방안:** 상용화 목적이라면 `auth.ts`에 Refresh Token 로직을 추가하여 Access Token이 만료될 경우 자동으로 갱신(Rotation)해 주어야 합니다.
+### 1) Google OAuth Refresh Token 전략 (구현 완료)
+현재 구현은 세션 유지 기간 동안 Google API Access Token을 활용하며, Access Token이 만료(일반적으로 1시간)될 경우 `auth.ts` 내부의 JWT 콜백을 통해 Refresh Token으로 **새로운 Access Token을 자동 갱신(Token Rotation)** 하도록 처리되어 있습니다.
+만약 토큰 갱신 중 문제가 발생할 경우 세션 객체에 `error: "RefreshAccessTokenError"`를 반환하여 클라이언트 측에서 재로그인을 유도할 수 있는 기반이 마련되어 있습니다.
 
 ### 2) Tailwind v4와 빌드 환경 (Turbopack)
 현재 프로젝트는 Tailwind CSS v4를 도입하여 css 파일 내 `@theme` 지시어로 테마를 관리하고 있습니다. Next.js 15+ 환경에서 Tailwind v4는 아직 기본 번들러인 Turbopack과 일부 호환성 이슈가 발생할 수 있어, `package.json`의 스크립트가 `next dev --webpack` 및 `next build --webpack`으로 강제되어 있습니다. 추후 호환성 이슈가 패치되면 `--webpack` 플래그를 제거하여 빌드 속도를 향상시킬 수 있습니다.
