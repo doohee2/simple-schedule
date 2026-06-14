@@ -24,6 +24,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   const [endTime, setEndTime] = useState("13:30");
   const [isAllDay, setIsAllDay] = useState(true);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isMultiDay, setIsMultiDay] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [editingCalendarId, setEditingCalendarId] = useState("primary");
 
@@ -42,6 +43,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       setIsAllDay(true);
       setEditingEventId(null);
       setIsRecurring(false);
+      setIsMultiDay(false);
       setIsReadOnly(false);
       setEditingCalendarId("primary");
       setEventDate(selectedDate || new Date());
@@ -129,6 +131,20 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     // @ts-ignore
     setIsRecurring(!!event.recurrence || !!event.recurringEventId);
     
+    let multiDay = false;
+    if (event.start.date && event.end?.date) {
+      const start = parseISO(event.start.date);
+      const end = parseISO(event.end.date);
+      if (end.getTime() - start.getTime() > 24 * 60 * 60 * 1000) multiDay = true;
+    } else if (event.start.dateTime && event.end?.dateTime) {
+      const start = parseISO(event.start.dateTime);
+      const end = parseISO(event.end.dateTime);
+      if (startOfDay(start).getTime() !== startOfDay(new Date(end.getTime() - 1)).getTime()) {
+        multiDay = true;
+      }
+    }
+    setIsMultiDay(multiDay);
+    
     if (event.start.dateTime) {
       setIsAllDay(false);
       const parsedDate = parseISO(event.start.dateTime);
@@ -149,12 +165,31 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   if (!isOpen || !selectedDate) return null;
 
-  // Compute events for the selected date
-  const dayEvents = events.filter(e => {
-    if (e.start.dateTime) return isSameDay(parseISO(e.start.dateTime), selectedDate);
-    if (e.start.date) return isSameDay(parseISO(e.start.date), selectedDate);
+  // Helper to check if event spans the selected date
+  const isEventOnDay = (e: CalendarEvent, targetDay: Date) => {
+    if (e.start.date && e.end?.date) {
+      const start = parseISO(e.start.date);
+      const end = parseISO(e.end.date);
+      return targetDay.getTime() >= start.getTime() && targetDay.getTime() < end.getTime();
+    } else if (e.start.dateTime && e.end?.dateTime) {
+      const start = parseISO(e.start.dateTime);
+      const end = parseISO(e.end.dateTime);
+      const targetTime = targetDay.getTime();
+      const startTime = startOfDay(start).getTime();
+      const endTimeObj = end.getTime();
+      if (start.getTime() === endTimeObj) return targetTime === startTime;
+      const lastInclusiveDay = startOfDay(new Date(endTimeObj - 1)).getTime();
+      return targetTime >= startTime && targetTime <= lastInclusiveDay;
+    } else if (e.start.dateTime) {
+      return isSameDay(parseISO(e.start.dateTime), targetDay);
+    } else if (e.start.date) {
+      return isSameDay(parseISO(e.start.date), targetDay);
+    }
     return false;
-  });
+  };
+
+  // Compute events for the selected date
+  const dayEvents = events.filter(e => isEventOnDay(e, selectedDate));
 
   // Sort events: all-day events first (alphabetical), then timed events (chronological)
   const sortedEvents = [...dayEvents].sort((a, b) => {
@@ -207,7 +242,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 {mode === "edit" && (
                   <button 
                     onClick={handleDelete}
-                    disabled={deleteEventMutation.isPending}
+                    disabled={deleteEventMutation.isPending || isReadOnly || isMultiDay}
                     className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
                   >
                     {deleteEventMutation.isPending ? (
@@ -219,7 +254,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 )}
                 <button 
                   onClick={handleSave}
-                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim()}
+                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly || isMultiDay}
                   className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
                 >
                   {(addEventMutation.isPending || updateEventMutation.isPending) ? (
@@ -272,6 +307,12 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <span>반복 일정은 날짜/시간을 수정할 수 없습니다. 제목과 메모만 수정 가능합니다.</span>
                 </div>
               )}
+              {isMultiDay && !isRecurring && (
+                <div className="bg-error-container text-on-error-container p-3 flex items-center gap-2 text-sm border border-error/20">
+                  <span className="material-symbols-outlined">date_range</span>
+                  <span>기간이 지정된(다일) 일정은 앱 내에서 직접 수정할 수 없습니다. 내용 확인만 가능합니다.</span>
+                </div>
+              )}
               {isReadOnly && (
                 <div className="bg-surface-variant text-on-surface p-3 flex items-center gap-2 text-sm border border-outline/20">
                   <span className="material-symbols-outlined">lock</span>
@@ -286,7 +327,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </div>
                 <input
                   value={summary}
-                  disabled={isReadOnly}
+                  disabled={isReadOnly || isMultiDay}
                   onChange={(e) => setSummary(e.target.value)}
                   className="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
                   placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
@@ -296,7 +337,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
               <div className="flex items-center gap-2">
                 <div className={`flex-1 p-3 flex items-center gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isRecurring || isReadOnly)
+                  (isRecurring || isReadOnly || isMultiDay)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -304,25 +345,25 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input
                     type="date"
                     value={format(eventDate, "yyyy-MM-dd")}
-                    disabled={isRecurring || isReadOnly}
+                    disabled={isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => {
                       if (e.target.value) {
                         setEventDate(new Date(e.target.value + 'T00:00:00'));
                       }
                     }}
                     className={`w-full font-body-md text-body-md tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 ${
-                      (isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-on-surface"
+                      (isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface"
                     }`}
                   />
                 </div>
               </div>
 
               <div className="flex items-center px-1">
-                <label className={`flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none ${(isRecurring || isReadOnly) ? 'opacity-50 pointer-events-none' : ''}`}>
+                <label className={`flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none ${(isRecurring || isReadOnly || isMultiDay) ? 'opacity-50 pointer-events-none' : ''}`}>
                   <input
                     type="checkbox"
                     checked={isAllDay}
-                    disabled={isRecurring || isReadOnly}
+                    disabled={isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => setIsAllDay(e.target.checked)}
                     className="w-4 h-4 accent-primary rounded-none border-outline-variant text-primary focus:ring-primary disabled:opacity-50"
                   />
@@ -332,7 +373,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
               <div className="grid grid-cols-2 gap-sm">
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring || isReadOnly)
+                  (isAllDay || isRecurring || isReadOnly || isMultiDay)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -340,15 +381,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={startTime}
-                    disabled={isAllDay || isRecurring || isReadOnly}
+                    disabled={isAllDay || isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => setStartTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-primary"
+                      (isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-primary"
                     }`}
                   />
                 </div>
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring || isReadOnly)
+                  (isAllDay || isRecurring || isReadOnly || isMultiDay)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -356,10 +397,10 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={endTime}
-                    disabled={isAllDay || isRecurring || isReadOnly}
+                    disabled={isAllDay || isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => setEndTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
+                      (isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
                     }`}
                   />
                 </div>
@@ -370,7 +411,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 <div className="relative group">
                   <textarea
                     value={description}
-                    disabled={isReadOnly}
+                    disabled={isReadOnly || isMultiDay}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none disabled:opacity-50"
                     placeholder="일정에 대한 메모를 입력하세요"

@@ -125,21 +125,35 @@ export default function MonthCalendar({
             const isTodayDay = isSameDay(day, today);
             const isWeekend = idx % 7 === 0 || idx % 7 === 6;
             
-            // Check if there are holidays on this day
-            const dayHolidays = holidays.filter(e => {
-              if (e.start.dateTime) return isSameDay(parseISO(e.start.dateTime), day);
-              if (e.start.date) return isSameDay(parseISO(e.start.date), day);
+            const isEventOnDay = (e: CalendarEvent, targetDay: Date) => {
+              if (e.start.date && e.end?.date) {
+                const start = parseISO(e.start.date);
+                const end = parseISO(e.end.date);
+                return targetDay.getTime() >= start.getTime() && targetDay.getTime() < end.getTime();
+              } else if (e.start.dateTime && e.end?.dateTime) {
+                const start = parseISO(e.start.dateTime);
+                const end = parseISO(e.end.dateTime);
+                const targetTime = targetDay.getTime();
+                const startTime = startOfDay(start).getTime();
+                const endTimeObj = end.getTime();
+                if (start.getTime() === endTimeObj) return targetTime === startTime;
+                const lastInclusiveDay = startOfDay(new Date(endTimeObj - 1)).getTime();
+                return targetTime >= startTime && targetTime <= lastInclusiveDay;
+              } else if (e.start.dateTime) {
+                return isSameDay(parseISO(e.start.dateTime), targetDay);
+              } else if (e.start.date) {
+                return isSameDay(parseISO(e.start.date), targetDay);
+              }
               return false;
-            });
+            };
+
+            // Check if there are holidays on this day
+            const dayHolidays = holidays.filter(e => isEventOnDay(e, day));
             const isHoliday = dayHolidays.length > 0;
             const isRedDay = idx % 7 === 0 || isHoliday;
             
             // Check if there are regular events on this day
-            const dayEvents = filteredEvents.filter(e => {
-              if (e.start.dateTime) return isSameDay(parseISO(e.start.dateTime), day);
-              if (e.start.date) return isSameDay(parseISO(e.start.date), day);
-              return false;
-            });
+            const dayEvents = filteredEvents.filter(e => isEventOnDay(e, day));
             
             // 카테고리 분류 및 제목 추출
             const displayItems: Array<{ id: string; text: string; keyword?: "점심" | "저녁" | "휴가" | "기타"; color: string }> = [];
