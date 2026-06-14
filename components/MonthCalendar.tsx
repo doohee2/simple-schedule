@@ -91,12 +91,12 @@ export default function MonthCalendar({
 
   return (
     <section className="flex-1 flex flex-col">
-      <div className="flex justify-between items-center mb-md px-margin-mobile">
-        <h2 className="text-2xl font-bold text-on-surface flex items-center">
+      <div className="flex justify-between items-end mb-md px-margin-mobile">
+        <h2 className="text-2xl font-bold text-on-surface flex items-center leading-none">
           {format(currentDate, "yyyy년 M월", { locale: ko })}
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
         </h2>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
           <button onClick={onPrevMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors">
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </button>

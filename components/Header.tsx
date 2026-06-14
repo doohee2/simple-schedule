@@ -36,33 +36,42 @@ export default function Header() {
           {mounted && isDark ? "light_mode" : "dark_mode"}
         </span>
       </button>
-      <h1 className="font-headline-lg-mobile text-headline-lg-mobile font-display text-display text-primary flex-1 text-center font-bold tracking-tight">약속 잡기</h1>
+      <h1 className="text-2xl font-bold text-primary flex-1 text-center tracking-tight">약속 잡기</h1>
       
       {session ? (
-        <button 
-          onClick={() => signOut()} 
-          title="로그아웃"
-          className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 relative group"
-        >
-          {session.user?.image ? (
-            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-primary/20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={session.user.image} 
-                alt="Profile" 
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover" 
-              />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                <span className="material-symbols-outlined text-white text-[16px]">logout</span>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => window.dispatchEvent(new Event("openCalendarSelector"))}
+            className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 text-primary bg-primary-container/20 rounded-full"
+            title="캘린더 선택"
+          >
+            <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+          </button>
+          <button 
+            onClick={() => signOut()} 
+            title="로그아웃"
+            className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 relative group"
+          >
+            {session.user?.image ? (
+              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={session.user.image} 
+                  alt="Profile" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
+                  <span className="material-symbols-outlined text-white text-[16px]">logout</span>
+                </div>
               </div>
-            </div>
-          ) : (
-            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-              account_circle
-            </span>
-          )}
-        </button>
+            ) : (
+              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                account_circle
+              </span>
+            )}
+          </button>
+        </div>
       ) : (
         <button 
           onClick={() => signIn("google")} 

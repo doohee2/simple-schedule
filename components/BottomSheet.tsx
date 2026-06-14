@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO, isSameDay, addDays } from "date-fns";
 import { ko } from "date-fns/locale";
-import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent } from "@/hooks/useCalendar";
+import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent, CalendarListEntry } from "@/hooks/useCalendar";
 
 interface BottomSheetProps {
   selectedDate: Date | null;
@@ -11,17 +11,21 @@ interface BottomSheetProps {
   onClose: () => void;
   events?: CalendarEvent[];
   selectedCategory?: string;
+  calendars?: CalendarListEntry[];
 }
 
-export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "" }: BottomSheetProps) {
+export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "", calendars = [] }: BottomSheetProps) {
   const [mode, setMode] = useState<"view" | "add" | "edit">("add");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
+  const [eventDate, setEventDate] = useState<Date>(new Date());
   const [startTime, setStartTime] = useState("12:00");
   const [endTime, setEndTime] = useState("13:30");
   const [isAllDay, setIsAllDay] = useState(true);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [editingCalendarId, setEditingCalendarId] = useState("primary");
 
   const addEventMutation = useAddCalendarEvent();
   const updateEventMutation = useUpdateCalendarEvent();
@@ -38,25 +42,29 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       setIsAllDay(true);
       setEditingEventId(null);
       setIsRecurring(false);
+      setIsReadOnly(false);
+      setEditingCalendarId("primary");
+      setEventDate(selectedDate || new Date());
     }
-  }, [isOpen, selectedCategory]);
+  }, [isOpen, selectedCategory, selectedDate]);
 
   const handleSave = () => {
-    if (!selectedDate || !summary.trim()) return;
+    if (!eventDate || !summary.trim()) return;
 
     const eventPayload: any = {
       summary,
       description,
+      calendarId: editingCalendarId,
     };
 
     if (!isRecurring) {
       if (isAllDay) {
-        const startLocalString = format(selectedDate, "yyyy-MM-dd");
-        const endLocalString = format(addDays(selectedDate, 1), "yyyy-MM-dd");
+        const startLocalString = format(eventDate, "yyyy-MM-dd");
+        const endLocalString = format(addDays(eventDate, 1), "yyyy-MM-dd");
         eventPayload.start = { date: startLocalString };
         eventPayload.end = { date: endLocalString };
       } else {
-        const startDateString = format(selectedDate, "yyyy-MM-dd");
+        const startDateString = format(eventDate, "yyyy-MM-dd");
         const startDateTimeStr = `${startDateString}T${startTime}:00`;
         const endDateTimeStr = `${startDateString}T${endTime}:00`;
 
@@ -106,15 +114,34 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     setEditingEventId(event.id);
     setSummary(event.summary || "");
     setDescription(event.description || "");
+    
+    // Check if the calendar is read-only
+    const calId = event.calendarId || "primary";
+    setEditingCalendarId(calId);
+    
+    const calInfo = calendars.find(c => c.id === calId);
+    if (calInfo && (calInfo.accessRole === "reader" || calInfo.accessRole === "freeBusyReader")) {
+      setIsReadOnly(true);
+    } else {
+      setIsReadOnly(false);
+    }
+
     // @ts-ignore
     setIsRecurring(!!event.recurrence || !!event.recurringEventId);
     
     if (event.start.dateTime) {
       setIsAllDay(false);
-      setStartTime(format(parseISO(event.start.dateTime), "HH:mm"));
-      setEndTime(event.end.dateTime ? format(parseISO(event.end.dateTime), "HH:mm") : format(parseISO(event.start.dateTime), "HH:mm"));
+      const parsedDate = parseISO(event.start.dateTime);
+      setEventDate(parsedDate);
+      setStartTime(format(parsedDate, "HH:mm"));
+      setEndTime(event.end.dateTime ? format(parseISO(event.end.dateTime), "HH:mm") : format(parsedDate, "HH:mm"));
     } else {
       setIsAllDay(true);
+      if (event.start.date) {
+        setEventDate(parseISO(event.start.date));
+      } else if (selectedDate) {
+        setEventDate(selectedDate);
+      }
       setStartTime("12:00");
       setEndTime("13:30");
     }
@@ -245,6 +272,12 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <span>반복 일정은 날짜/시간을 수정할 수 없습니다. 제목과 메모만 수정 가능합니다.</span>
                 </div>
               )}
+              {isReadOnly && (
+                <div className="bg-surface-variant text-on-surface p-3 flex items-center gap-2 text-sm border border-outline/20">
+                  <span className="material-symbols-outlined">lock</span>
+                  <span>이 캘린더는 읽기 전용이므로 일정을 수정하거나 삭제할 수 없습니다.</span>
+                </div>
+              )}
 
               <div className="relative group">
                 <label className="sr-only">약속 대상 및 내용</label>
@@ -253,21 +286,45 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </div>
                 <input
                   value={summary}
+                  disabled={isReadOnly}
                   onChange={(e) => setSummary(e.target.value)}
-                  className="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none"
+                  className="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
                   placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
                   type="text"
                 />
               </div>
 
+              <div className="flex items-center gap-2">
+                <div className={`flex-1 p-3 flex items-center gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
+                  (isRecurring || isReadOnly)
+                    ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
+                    : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+                }`}>
+                  <span className="material-symbols-outlined text-outline-variant">calendar_today</span>
+                  <input
+                    type="date"
+                    value={format(eventDate, "yyyy-MM-dd")}
+                    disabled={isRecurring || isReadOnly}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setEventDate(new Date(e.target.value + 'T00:00:00'));
+                      }
+                    }}
+                    className={`w-full font-body-md text-body-md tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 ${
+                      (isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-on-surface"
+                    }`}
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center px-1">
-                <label className={`flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none ${isRecurring ? 'opacity-50 pointer-events-none' : ''}`}>
+                <label className={`flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none ${(isRecurring || isReadOnly) ? 'opacity-50 pointer-events-none' : ''}`}>
                   <input
                     type="checkbox"
                     checked={isAllDay}
-                    disabled={isRecurring}
+                    disabled={isRecurring || isReadOnly}
                     onChange={(e) => setIsAllDay(e.target.checked)}
-                    className="w-4 h-4 accent-primary rounded-none border-outline-variant text-primary focus:ring-primary"
+                    className="w-4 h-4 accent-primary rounded-none border-outline-variant text-primary focus:ring-primary disabled:opacity-50"
                   />
                   <span>종일 일정으로 등록</span>
                 </label>
@@ -275,7 +332,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
               <div className="grid grid-cols-2 gap-sm">
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring)
+                  (isAllDay || isRecurring || isReadOnly)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -283,15 +340,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={startTime}
-                    disabled={isAllDay || isRecurring}
+                    disabled={isAllDay || isRecurring || isReadOnly}
                     onChange={(e) => setStartTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring) ? "text-outline cursor-not-allowed" : "text-primary"
+                      (isAllDay || isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-primary"
                     }`}
                   />
                 </div>
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring)
+                  (isAllDay || isRecurring || isReadOnly)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -299,10 +356,10 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={endTime}
-                    disabled={isAllDay || isRecurring}
+                    disabled={isAllDay || isRecurring || isReadOnly}
                     onChange={(e) => setEndTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
+                      (isAllDay || isRecurring || isReadOnly) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
                     }`}
                   />
                 </div>
@@ -313,8 +370,9 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 <div className="relative group">
                   <textarea
                     value={description}
+                    disabled={isReadOnly}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none"
+                    className="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none disabled:opacity-50"
                     placeholder="일정에 대한 메모를 입력하세요"
                   ></textarea>
                 </div>

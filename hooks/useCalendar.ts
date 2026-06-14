@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 export interface CalendarEvent {
   id: string;
@@ -13,16 +14,53 @@ export interface CalendarEvent {
     date?: string;
   };
   isHoliday?: boolean;
+  calendarId?: string;
+  recurrence?: string[];
+  recurringEventId?: string;
 }
 
-export const useCalendarEvents = (timeMin?: string, timeMax?: string) => {
+export interface CalendarListEntry {
+  id: string;
+  summary: string;
+  description?: string;
+  backgroundColor?: string;
+  foregroundColor?: string;
+  primary?: boolean;
+  accessRole?: string;
+}
+
+export const useCalendarList = () => {
+  const { status } = useSession();
+  
   return useQuery({
-    queryKey: ["calendar-events", timeMin, timeMax],
+    queryKey: ["calendar-list"],
+    queryFn: async () => {
+      const res = await fetch("/api/calendars");
+      if (!res.ok) {
+        if (res.status === 401) throw new Error("Unauthorized");
+        throw new Error("Failed to fetch calendars");
+      }
+      const data = await res.json();
+      return data.items as CalendarListEntry[];
+    },
+    enabled: status === "authenticated",
+    retry: false,
+  });
+};
+
+export const useCalendarEvents = (timeMin?: string, timeMax?: string, calendarIds?: string[]) => {
+  const { status } = useSession();
+  
+  return useQuery({
+    queryKey: ["calendar-events", timeMin, timeMax, calendarIds],
     queryFn: async () => {
       let url = "/api/calendar";
       const params = new URLSearchParams();
       if (timeMin) params.append("timeMin", timeMin);
       if (timeMax) params.append("timeMax", timeMax);
+      if (calendarIds && calendarIds.length > 0) {
+        params.append("calendarIds", calendarIds.join(","));
+      }
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -37,6 +75,7 @@ export const useCalendarEvents = (timeMin?: string, timeMax?: string) => {
       const data = await res.json();
       return data.items as CalendarEvent[];
     },
+    enabled: status === "authenticated",
     retry: false,
   });
 };
