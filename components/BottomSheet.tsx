@@ -110,7 +110,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              {mode === "add" && selectedCategory === "전체 조회" && (
+              {mode === "add" && (
                 <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface">
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>

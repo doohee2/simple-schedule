@@ -92,15 +92,15 @@ export default function MonthCalendar({
   return (
     <section className="flex-1 flex flex-col">
       <div className="flex justify-between items-center mb-md px-margin-mobile">
-        <h2 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-center">
+        <h2 className="text-2xl font-bold text-on-surface flex items-center">
           {format(currentDate, "yyyy년 M월", { locale: ko })}
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
         </h2>
         <div className="flex space-x-2">
-          <button onClick={onPrevMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant">
+          <button onClick={onPrevMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors">
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </button>
-          <button onClick={onNextMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant">
+          <button onClick={onNextMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors">
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
         </div>
@@ -114,7 +114,7 @@ export default function MonthCalendar({
           <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">수</div>
           <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">목</div>
           <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">금</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-outline-variant">토</div>
+          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">토</div>
         </div>
 
         <div className={`grid grid-cols-7 flex-1 ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
