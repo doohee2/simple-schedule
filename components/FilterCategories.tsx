@@ -9,23 +9,23 @@ const otherCategories = ["점심", "저녁", "휴가", "기타"];
 
 const categoryStyles: Record<string, { selectedClass: string; unselectedClass: string }> = {
   "전체 조회": {
-    selectedClass: "bg-white text-on-surface border border-dashed border-outline shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    selectedClass: "bg-pastel-all text-pastel-all-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-dashed border-outline-variant hover:bg-surface-variant"
   },
   "점심": {
-    selectedClass: "bg-[#c6f6d5] text-[#137333] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    selectedClass: "bg-pastel-lunch text-pastel-lunch-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   },
   "저녁": {
-    selectedClass: "bg-[#d0ebff] text-[#174ea6] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    selectedClass: "bg-pastel-dinner text-pastel-dinner-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   },
   "휴가": {
-    selectedClass: "bg-[#ffdad6] text-[#c5221f] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    selectedClass: "bg-pastel-vacation text-pastel-vacation-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   },
   "기타": {
-    selectedClass: "bg-[#e2e8f0] text-[#3c4043] border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    selectedClass: "bg-pastel-other text-pastel-other-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   }
 };

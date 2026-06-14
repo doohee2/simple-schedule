@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -37,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="light">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -47,6 +48,16 @@ export default function RootLayout({
         <meta name="theme-color" content="#1a1c1e" media="(prefers-color-scheme: dark)" />
       </head>
       <body className={`${plusJakartaSans.variable} ${beVietnamPro.variable} bg-background text-on-background font-body-md antialiased min-h-screen relative overflow-hidden flex flex-col`}>
+        <Script id="theme-script" strategy="beforeInteractive">
+          {`
+            try {
+              const isDark = localStorage.getItem('theme') === 'dark' || 
+                (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+              if (isDark) document.documentElement.classList.add('dark');
+              else document.documentElement.classList.remove('dark');
+            } catch (e) {}
+          `}
+        </Script>
         {/* Background Layer Level 0 */}
         <div className="fixed inset-0 bg-surface dark:bg-[#1a1c1e] z-[-1]"></div>
         <Providers>

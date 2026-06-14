@@ -29,24 +29,24 @@ const getCategoryStyle = (color: string) => {
   switch (color) {
     case "pastel-lunch":
       return {
-        block: "bg-[#c6f6d5] text-[#137333]",
-        dot: "bg-[#137333]"
+        block: "bg-pastel-lunch text-pastel-lunch-on",
+        dot: "bg-pastel-lunch-on"
       };
     case "pastel-dinner":
       return {
-        block: "bg-[#d0ebff] text-[#174ea6]",
-        dot: "bg-[#174ea6]"
+        block: "bg-pastel-dinner text-pastel-dinner-on",
+        dot: "bg-pastel-dinner-on"
       };
     case "pastel-vacation":
       return {
-        block: "bg-[#ffdad6] text-[#c5221f]",
-        dot: "bg-[#c5221f]"
+        block: "bg-pastel-vacation text-pastel-vacation-on",
+        dot: "bg-pastel-vacation-on"
       };
     case "pastel-other":
     default:
       return {
-        block: "bg-[#e2e8f0] text-[#3c4043]",
-        dot: "bg-[#3c4043]"
+        block: "bg-pastel-other text-pastel-other-on",
+        dot: "bg-pastel-other-on"
       };
   }
 };
