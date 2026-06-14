@@ -1,5 +1,9 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+import dns from "dns";
+
+// Fix Node.js 18+ Windows IPv6 resolution issue which causes 5+ seconds delay
+dns.setDefaultResultOrder('ipv4first');
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,9 +18,19 @@ export async function GET(req: NextRequest) {
     const timeMin = searchParams.get("timeMin");
     const timeMax = searchParams.get("timeMax");
 
-    let url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime";
-    if (timeMin) url += `&timeMin=${timeMin}`;
-    if (timeMax) url += `&timeMax=${timeMax}`;
+    let url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250";
+    if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
+    if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
+
+    const fs = require('fs');
+    const logToFile = (msg: string) => {
+      const timestamp = new Date().toISOString();
+      fs.appendFileSync('sync_debug.log', `[${timestamp}] ${msg}\n`);
+      console.log(msg);
+    };
+
+    const startTime = Date.now();
+    logToFile(`[Sync] Starting Google Calendar fetch for timeMin: ${timeMin}, timeMax: ${timeMax}`);
 
     const res = await fetch(url, {
       headers: {
@@ -25,14 +39,28 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    logToFile(`[Sync] Google API fetch completed in ${duration}ms with status ${res.status}`);
+
     if (!res.ok) {
       const errorText = await res.text();
+      logToFile(`[Sync] Google API Error: ${errorText}`);
       return NextResponse.json({ error: "Google API error", details: errorText }, { status: res.status });
     }
 
-    const data = await res.json();
-    return NextResponse.json(data);
+    try {
+      const data = await res.json();
+      logToFile(`[Sync] Successfully parsed JSON. Found ${data.items?.length || 0} events.`);
+      return NextResponse.json(data);
+    } catch (parseError) {
+      logToFile(`[Sync] Failed to parse JSON from Google API: ${parseError}`);
+      return NextResponse.json({ error: "Failed to parse JSON" }, { status: 500 });
+    }
   } catch (error: any) {
+    const fs = require('fs');
+    fs.appendFileSync('sync_debug.log', `[${new Date().toISOString()}] [Sync] Internal Server Error: ${error.message}\n`);
+    console.error("[Sync] Internal Server Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

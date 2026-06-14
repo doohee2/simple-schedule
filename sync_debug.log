@@ -1,0 +1,3 @@
+[2026-06-14T09:16:42.925Z] [Sync] Starting Google Calendar fetch for timeMin: 2026-05-31T15:00:00.000Z, timeMax: 2026-06-30T14:59:59.999Z
+[2026-06-14T09:16:43.559Z] [Sync] Google API fetch completed in 633ms with status 200
+[2026-06-14T09:16:43.922Z] [Sync] Successfully parsed JSON. Found 33 events.

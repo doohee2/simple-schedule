@@ -37,6 +37,7 @@ export const useCalendarEvents = (timeMin?: string, timeMax?: string) => {
       const data = await res.json();
       return data.items as CalendarEvent[];
     },
+    retry: false,
   });
 };
 

@@ -8,7 +8,7 @@ import MonthCalendar from "./MonthCalendar";
 import BottomSheet from "./BottomSheet";
 
 export default function CalendarContainer() {
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [selectedCategory, setSelectedCategory] = useState("전체 조회");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -45,6 +45,8 @@ export default function CalendarContainer() {
         selectedDate={selectedDate} 
         isOpen={!!selectedDate} 
         onClose={() => setSelectedDate(null)} 
+        events={events || []}
+        selectedCategory={selectedCategory}
       />
     </>
   );

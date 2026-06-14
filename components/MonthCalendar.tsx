@@ -25,6 +25,32 @@ interface MonthCalendarProps {
   selectedCategory: string;
 }
 
+const getCategoryStyle = (color: string) => {
+  switch (color) {
+    case "pastel-lunch":
+      return {
+        block: "bg-[#c6f6d5] text-[#137333]",
+        dot: "bg-[#137333]"
+      };
+    case "pastel-dinner":
+      return {
+        block: "bg-[#d0ebff] text-[#174ea6]",
+        dot: "bg-[#174ea6]"
+      };
+    case "pastel-vacation":
+      return {
+        block: "bg-[#ffdad6] text-[#c5221f]",
+        dot: "bg-[#c5221f]"
+      };
+    case "pastel-other":
+    default:
+      return {
+        block: "bg-[#e2e8f0] text-[#3c4043]",
+        dot: "bg-[#3c4043]"
+      };
+  }
+};
+
 export default function MonthCalendar({
   currentDate,
   selectedDate,
@@ -47,12 +73,12 @@ export default function MonthCalendar({
 
   // Filter events based on selected category
   const filteredEvents = events.filter((event) => {
-    if (selectedCategory === "전체") return true;
+    if (selectedCategory === "전체 조회") return true;
     
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
     
     if (selectedCategory === "기타") {
-      const predefined = ["점심", "저녁", "커피", "휴가"];
+      const predefined = ["점심", "저녁", "휴가"];
       return !predefined.some(cat => textToSearch.includes(cat.toLowerCase()));
     }
     
@@ -101,14 +127,31 @@ export default function MonthCalendar({
               return false;
             });
             
-            // Generate simple categories for visual representation
-            const categories = dayEvents.map(e => {
-              const text = (e.summary + " " + (e.description || "")).toLowerCase();
-              if (text.includes("점심")) return { label: "점심", color: "pastel-lunch" };
-              if (text.includes("저녁")) return { label: "저녁", color: "pastel-dinner" };
-              if (text.includes("휴가")) return { label: "휴가", color: "pastel-vacation" };
-              return { label: "기타", color: "pastel-other" };
+            // 카테고리 분류 및 제목 추출
+            const displayItems: Array<{ id: string; text: string; keyword?: "점심" | "저녁" | "휴가" | "기타"; color: string }> = [];
+            
+            const otherEvents: typeof dayEvents = [];
+
+            dayEvents.forEach(e => {
+              const text = e.summary || "";
+              const searchStr = (text + " " + (e.description || "")).toLowerCase();
+              
+              if (searchStr.includes("점심")) {
+                displayItems.push({ id: e.id, text, keyword: "점심", color: "pastel-lunch" });
+              } else if (searchStr.includes("저녁")) {
+                displayItems.push({ id: e.id, text, keyword: "저녁", color: "pastel-dinner" });
+              } else if (searchStr.includes("휴가")) {
+                displayItems.push({ id: e.id, text, keyword: "휴가", color: "pastel-vacation" });
+              } else {
+                otherEvents.push(e);
+              }
             });
+            
+            if (otherEvents.length === 1) {
+              displayItems.push({ id: otherEvents[0].id, text: "기타", keyword: "기타", color: "pastel-other" });
+            } else if (otherEvents.length > 1) {
+              displayItems.push({ id: "other-group", text: `기타 ${otherEvents.length}`, keyword: "기타", color: "pastel-other" });
+            }
 
             // Calculate border classes
             const isRightEdge = (idx + 1) % 7 === 0;
@@ -150,17 +193,45 @@ export default function MonthCalendar({
                   </span>
                 )}
                 
-                <div className="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5 max-h-[50%] overflow-hidden">
-                  {categories.slice(0, 2).map((cat, i) => (
-                    <div key={i} className={`bg-${cat.color}/20 border-l-2 border-${cat.color} text-[8px] leading-tight text-on-surface truncate px-1`}>
-                      {cat.label}
-                    </div>
-                  ))}
-                  {categories.length > 2 && (
+                <div className="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5 max-h-[60%] overflow-hidden">
+                  {displayItems.slice(0, 2).map((item, i) => {
+                    const style = getCategoryStyle(item.color);
+                    
+                    let content;
+                    if (item.keyword === "기타") {
+                      content = (
+                        <span className={`${style.block} px-1 rounded-sm`}>
+                          {item.text}
+                        </span>
+                      );
+                    } else if (item.keyword) {
+                      const parts = item.text.split(item.keyword);
+                      content = parts.map((part, index) => (
+                        <span key={index}>
+                          {part}
+                          {index < parts.length - 1 && (
+                            <span className={`${style.block} px-0.5 rounded-sm`}>{item.keyword}</span>
+                          )}
+                        </span>
+                      ));
+                    } else {
+                      content = <span>{item.text}</span>;
+                    }
+
+                    return (
+                      <div key={i} className="text-[11px] leading-tight text-on-surface truncate py-[1.5px]">
+                        {content}
+                      </div>
+                    );
+                  })}
+                  {displayItems.length > 2 && (
                     <div className="flex space-x-1 pl-1 mt-0.5">
-                      {categories.slice(2, 5).map((cat, i) => (
-                         <div key={i} className={`w-1.5 h-1.5 bg-${cat.color}`}></div>
-                      ))}
+                      {displayItems.slice(2, 5).map((item, i) => {
+                        const style = getCategoryStyle(item.color);
+                        return (
+                          <div key={i} className={`w-1.5 h-1.5 ${style.dot} rounded-full`} />
+                        );
+                      })}
                     </div>
                   )}
                 </div>
