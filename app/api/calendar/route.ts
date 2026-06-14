@@ -18,34 +18,67 @@ export async function GET(req: NextRequest) {
     const timeMin = searchParams.get("timeMin");
     const timeMax = searchParams.get("timeMax");
 
-    let url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250";
-    if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
-    if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
+    let primaryUrl = "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true&orderBy=startTime&maxResults=250";
+    let holidayUrl = "https://www.googleapis.com/calendar/v3/calendars/ko.south_korea%23holiday%40group.v.calendar.google.com/events?singleEvents=true&orderBy=startTime&maxResults=250";
+    
+    if (timeMin) {
+      const minParam = `&timeMin=${encodeURIComponent(timeMin)}`;
+      primaryUrl += minParam;
+      holidayUrl += minParam;
+    }
+    if (timeMax) {
+      const maxParam = `&timeMax=${encodeURIComponent(timeMax)}`;
+      primaryUrl += maxParam;
+      holidayUrl += maxParam;
+    }
 
     const startTime = Date.now();
     console.log(`[Sync] Starting Google Calendar fetch for timeMin: ${timeMin}, timeMax: ${timeMax}`);
 
-    const res = await fetch(url, {
-      headers: {
-        // @ts-ignore
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
+    const [primaryRes, holidayRes] = await Promise.all([
+      fetch(primaryUrl, {
+        headers: {
+          // @ts-ignore
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      }),
+      fetch(holidayUrl, {
+        headers: {
+          // @ts-ignore
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+      })
+    ]);
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    console.log(`[Sync] Google API fetch completed in ${duration}ms with status ${res.status}`);
+    console.log(`[Sync] Google API fetch completed in ${duration}ms. Primary: ${primaryRes.status}, Holiday: ${holidayRes.status}`);
 
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`[Sync] Google API Error: ${errorText}`);
-      return NextResponse.json({ error: "Google API error", details: errorText }, { status: res.status });
+    if (!primaryRes.ok) {
+      const errorText = await primaryRes.text();
+      console.error(`[Sync] Primary Google API Error: ${errorText}`);
+      return NextResponse.json({ error: "Google API error", details: errorText }, { status: primaryRes.status });
     }
 
     try {
-      const data = await res.json();
-      console.log(`[Sync] Successfully parsed JSON. Found ${data.items?.length || 0} events.`);
-      return NextResponse.json(data);
+      const primaryData = await primaryRes.json();
+      let holidayData = { items: [] };
+      
+      if (holidayRes.ok) {
+        holidayData = await holidayRes.json();
+      } else {
+        console.warn(`[Sync] Failed to fetch holidays: ${await holidayRes.text()}`);
+      }
+
+      const holidayItems = (holidayData.items || []).map((item: any) => ({
+        ...item,
+        isHoliday: true
+      }));
+
+      const combinedItems = [...(primaryData.items || []), ...holidayItems];
+
+      console.log(`[Sync] Successfully parsed JSON. Found ${primaryData.items?.length || 0} primary events and ${holidayItems.length} holiday events.`);
+      return NextResponse.json({ ...primaryData, items: combinedItems });
     } catch (parseError) {
       console.error(`[Sync] Failed to parse JSON from Google API: ${parseError}`);
       return NextResponse.json({ error: "Failed to parse JSON" }, { status: 500 });

@@ -71,8 +71,12 @@ export default function MonthCalendar({
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   const today = startOfDay(new Date());
 
-  // Filter events based on selected category
+  // Extract holidays separately
+  const holidays = events.filter(e => e.isHoliday);
+
+  // Filter regular events based on selected category
   const filteredEvents = events.filter((event) => {
+    if (event.isHoliday) return false;
     if (selectedCategory === "전체 조회") return true;
     
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
@@ -119,8 +123,18 @@ export default function MonthCalendar({
             const isCurrentMonth = isSameMonth(day, monthStart);
             const isPast = isBefore(day, today);
             const isTodayDay = isSameDay(day, today);
+            const isWeekend = idx % 7 === 0 || idx % 7 === 6;
             
-            // Check if there are events on this day
+            // Check if there are holidays on this day
+            const dayHolidays = holidays.filter(e => {
+              if (e.start.dateTime) return isSameDay(parseISO(e.start.dateTime), day);
+              if (e.start.date) return isSameDay(parseISO(e.start.date), day);
+              return false;
+            });
+            const isHoliday = dayHolidays.length > 0;
+            const isRedDay = idx % 7 === 0 || isHoliday;
+            
+            // Check if there are regular events on this day
             const dayEvents = filteredEvents.filter(e => {
               if (e.start.dateTime) return isSameDay(parseISO(e.start.dateTime), day);
               if (e.start.date) return isSameDay(parseISO(e.start.date), day);
@@ -160,7 +174,7 @@ export default function MonthCalendar({
             if (!isCurrentMonth) {
               return (
                 <div key={idx} className={`aspect-[5/6] ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
-                  {format(day, dateFormat)}
+                  <span className={`${isWeekend ? 'font-bold' : ''}`}>{format(day, dateFormat)}</span>
                 </div>
               );
             }
@@ -168,7 +182,10 @@ export default function MonthCalendar({
             if (isPast && !isTodayDay) {
               return (
                 <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-[5/6] ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer overflow-hidden`}>
-                  <span className={`font-time-display text-time-display ${idx % 7 === 0 ? 'text-error' : 'text-outline'} line-through`}>{format(day, dateFormat)}</span>
+                  <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : 'text-outline'} ${isWeekend ? 'font-bold' : ''} line-through`}>{format(day, dateFormat)}</span>
+                  {isHoliday && (
+                    <span className="text-[9px] text-error mt-0.5 truncate w-full text-center px-0.5 line-through">{dayHolidays[0].summary}</span>
+                  )}
                 </div>
               );
             }
@@ -185,11 +202,17 @@ export default function MonthCalendar({
               >
                 {isTodayDay ? (
                   <div className="w-6 h-6 bg-primary flex items-center justify-center">
-                    <span className="font-time-display text-[14px] leading-none text-on-primary">{format(day, dateFormat)}</span>
+                    <span className={`font-time-display text-[14px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, dateFormat)}</span>
                   </div>
                 ) : (
-                  <span className={`font-time-display text-time-display ${idx % 7 === 0 ? 'text-error' : 'text-on-surface'}`}>
+                  <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : 'text-on-surface'} ${isWeekend ? 'font-bold' : ''}`}>
                     {format(day, dateFormat)}
+                  </span>
+                )}
+
+                {isHoliday && (
+                  <span className={`text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate w-full text-center px-0.5`}>
+                    {dayHolidays[0].summary}
                   </span>
                 )}
                 

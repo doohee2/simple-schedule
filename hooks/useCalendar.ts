@@ -12,7 +12,7 @@ export interface CalendarEvent {
     dateTime?: string;
     date?: string;
   };
-  // other properties...
+  isHoliday?: boolean;
 }
 
 export const useCalendarEvents = (timeMin?: string, timeMax?: string) => {
