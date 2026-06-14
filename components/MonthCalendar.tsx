@@ -179,17 +179,6 @@ export default function MonthCalendar({
               );
             }
 
-            if (isPast && !isTodayDay) {
-              return (
-                <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-[2/3] sm:aspect-[5/6] ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer overflow-hidden`}>
-                  <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : 'text-outline'} ${isWeekend ? 'font-bold' : ''} line-through`}>{format(day, dateFormat)}</span>
-                  {isHoliday && (
-                    <span className="text-[9px] text-error mt-0.5 truncate w-full text-center px-0.5 line-through">{dayHolidays[0].summary}</span>
-                  )}
-                </div>
-              );
-            }
-
             return (
               <div 
                 key={idx} 
@@ -198,20 +187,20 @@ export default function MonthCalendar({
                   isTodayDay 
                     ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary bg-primary-container/10 z-10` 
                     : `${borderClasses} bg-surface-container-lowest hover:bg-surface-container-low transition-colors`
-                } flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${isSelected ? 'bg-secondary-container/30' : ''}`}
+                } flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${isSelected ? 'bg-secondary-container/30' : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
               >
                 {isTodayDay ? (
                   <div className="w-6 h-6 bg-primary flex items-center justify-center">
                     <span className={`font-time-display text-[14px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, dateFormat)}</span>
                   </div>
                 ) : (
-                  <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : 'text-on-surface'} ${isWeekend ? 'font-bold' : ''}`}>
+                  <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
                     {format(day, dateFormat)}
                   </span>
                 )}
 
                 {isHoliday && (
-                  <span className={`text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate w-full text-center px-0.5`}>
+                  <span className={`text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate w-full text-center px-0.5 ${isPast && !isTodayDay ? 'line-through' : ''}`}>
                     {dayHolidays[0].summary}
                   </span>
                 )}

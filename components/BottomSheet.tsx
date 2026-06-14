@@ -61,8 +61,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       if (isAllDay) {
         const startLocalString = format(eventDate, "yyyy-MM-dd");
         const endLocalString = format(addDays(eventDate, 1), "yyyy-MM-dd");
-        eventPayload.start = { date: startLocalString };
-        eventPayload.end = { date: endLocalString };
+        eventPayload.start = { date: startLocalString, dateTime: null };
+        eventPayload.end = { date: endLocalString, dateTime: null };
       } else {
         const startDateString = format(eventDate, "yyyy-MM-dd");
         const startDateTimeStr = `${startDateString}T${startTime}:00`;
@@ -71,8 +71,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
         const startDateTime = new Date(startDateTimeStr);
         const endDateTime = new Date(endDateTimeStr);
 
-        eventPayload.start = { dateTime: startDateTime.toISOString() };
-        eventPayload.end = { dateTime: endDateTime.toISOString() };
+        eventPayload.start = { dateTime: startDateTime.toISOString(), date: null };
+        eventPayload.end = { dateTime: endDateTime.toISOString(), date: null };
       }
     }
 

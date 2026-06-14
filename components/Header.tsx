@@ -42,7 +42,7 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <button 
             onClick={() => window.dispatchEvent(new Event("openCalendarSelector"))}
-            className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 text-primary bg-primary-container/20 rounded-full"
+            className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 text-primary bg-transparent rounded-full"
             title="캘린더 선택"
           >
             <span className="material-symbols-outlined text-[20px]">calendar_month</span>
