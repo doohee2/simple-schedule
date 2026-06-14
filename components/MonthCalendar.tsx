@@ -193,15 +193,22 @@ export default function MonthCalendar({
               );
             }
 
+            let cellBgClass = isTodayDay ? "bg-primary-container/10" : "bg-surface-container-lowest hover:bg-surface-container-low transition-colors";
+            let isCategoryHighlighted = false;
+            
+            if (dayEvents.length > 0) {
+              if (selectedCategory === "점심") { cellBgClass = "bg-pastel-lunch hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
+              else if (selectedCategory === "저녁") { cellBgClass = "bg-pastel-dinner hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
+              else if (selectedCategory === "휴가") { cellBgClass = "bg-pastel-vacation hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
+            }
+
+            const borderStyle = isTodayDay ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary z-10` : borderClasses;
+
             return (
               <div 
                 key={idx} 
                 onClick={() => onDateSelect(day)}
-                className={`aspect-[2/3] sm:aspect-[5/6] ${
-                  isTodayDay 
-                    ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary bg-primary-container/10 z-10` 
-                    : `${borderClasses} bg-surface-container-lowest hover:bg-surface-container-low transition-colors`
-                } flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${isSelected ? 'bg-secondary-container/30' : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                className={`aspect-[2/3] sm:aspect-[5/6] flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
               >
                 {isTodayDay ? (
                   <div className="w-6 h-6 bg-primary flex items-center justify-center">
