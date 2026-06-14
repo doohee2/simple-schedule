@@ -216,7 +216,7 @@ export default function MonthCalendar({
                   </span>
                 )}
                 
-                <div className="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5 flex-1 min-h-0 overflow-hidden">
+                <div className="mt-auto w-full px-1 pb-1 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
                   {displayItems.slice(0, 3).map((item, i) => {
                     const style = getCategoryStyle(item.color);
                     
