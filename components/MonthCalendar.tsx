@@ -173,7 +173,7 @@ export default function MonthCalendar({
 
             if (!isCurrentMonth) {
               return (
-                <div key={idx} className={`aspect-[5/6] ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
+                <div key={idx} className={`aspect-[2/3] sm:aspect-[5/6] ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
                   <span className={`${isWeekend ? 'font-bold' : ''}`}>{format(day, dateFormat)}</span>
                 </div>
               );
@@ -181,7 +181,7 @@ export default function MonthCalendar({
 
             if (isPast && !isTodayDay) {
               return (
-                <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-[5/6] ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer overflow-hidden`}>
+                <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-[2/3] sm:aspect-[5/6] ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer overflow-hidden`}>
                   <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : 'text-outline'} ${isWeekend ? 'font-bold' : ''} line-through`}>{format(day, dateFormat)}</span>
                   {isHoliday && (
                     <span className="text-[9px] text-error mt-0.5 truncate w-full text-center px-0.5 line-through">{dayHolidays[0].summary}</span>
@@ -194,7 +194,7 @@ export default function MonthCalendar({
               <div 
                 key={idx} 
                 onClick={() => onDateSelect(day)}
-                className={`aspect-[5/6] ${
+                className={`aspect-[2/3] sm:aspect-[5/6] ${
                   isTodayDay 
                     ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary bg-primary-container/10 z-10` 
                     : `${borderClasses} bg-surface-container-lowest hover:bg-surface-container-low transition-colors`

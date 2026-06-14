@@ -64,3 +64,86 @@ export const useAddCalendarEvent = () => {
     },
   });
 };
+
+export const useUpdateCalendarEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ eventId, event }: { eventId: string; event: Partial<CalendarEvent> }) => {
+      const res = await fetch(`/api/calendar/${eventId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(event),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update event");
+      }
+      return res.json();
+    },
+    onMutate: async ({ eventId, event }) => {
+      await queryClient.cancelQueries({ queryKey: ["calendar-events"] });
+      
+      const previousQueries = queryClient.getQueriesData({ queryKey: ["calendar-events"] });
+      
+      queryClient.setQueriesData({ queryKey: ["calendar-events"] }, (old: CalendarEvent[] | undefined) => {
+        if (!old) return old;
+        return old.map(e => e.id === eventId ? { ...e, ...event } : e);
+      });
+      
+      return { previousQueries };
+    },
+    onError: (err, newEvent, context) => {
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+};
+
+export const useDeleteCalendarEvent = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (eventId: string) => {
+      const res = await fetch(`/api/calendar/${eventId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete event");
+      }
+      return res.json();
+    },
+    onMutate: async (eventId) => {
+      await queryClient.cancelQueries({ queryKey: ["calendar-events"] });
+      
+      const previousQueries = queryClient.getQueriesData({ queryKey: ["calendar-events"] });
+      
+      queryClient.setQueriesData({ queryKey: ["calendar-events"] }, (old: CalendarEvent[] | undefined) => {
+        if (!old) return old;
+        return old.filter(e => e.id !== eventId);
+      });
+      
+      return { previousQueries };
+    },
+    onError: (err, eventId, context) => {
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+};
+

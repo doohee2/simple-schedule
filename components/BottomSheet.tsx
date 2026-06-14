@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO, isSameDay, addDays } from "date-fns";
 import { ko } from "date-fns/locale";
-import { useAddCalendarEvent, CalendarEvent } from "@/hooks/useCalendar";
+import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent } from "@/hooks/useCalendar";
 
 interface BottomSheetProps {
   selectedDate: Date | null;
@@ -14,14 +14,18 @@ interface BottomSheetProps {
 }
 
 export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "" }: BottomSheetProps) {
-  const [mode, setMode] = useState<"view" | "add">("add");
+  const [mode, setMode] = useState<"view" | "add" | "edit">("add");
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [startTime, setStartTime] = useState("12:00");
   const [endTime, setEndTime] = useState("13:30");
   const [isAllDay, setIsAllDay] = useState(true);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const addEventMutation = useAddCalendarEvent();
+  const updateEventMutation = useUpdateCalendarEvent();
+  const deleteEventMutation = useDeleteCalendarEvent();
 
   // Reset mode and form when sheet opens
   useEffect(() => {
@@ -32,6 +36,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       setStartTime("12:00");
       setEndTime("13:30");
       setIsAllDay(true);
+      setEditingEventId(null);
+      setIsRecurring(false);
     }
   }, [isOpen, selectedCategory]);
 
@@ -43,33 +49,75 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       description,
     };
 
-    if (isAllDay) {
-      const startLocalString = format(selectedDate, "yyyy-MM-dd");
-      const endLocalString = format(addDays(selectedDate, 1), "yyyy-MM-dd");
-      eventPayload.start = { date: startLocalString };
-      eventPayload.end = { date: endLocalString };
-    } else {
-      const startDateString = format(selectedDate, "yyyy-MM-dd");
-      const startDateTimeStr = `${startDateString}T${startTime}:00`;
-      const endDateTimeStr = `${startDateString}T${endTime}:00`;
+    if (!isRecurring) {
+      if (isAllDay) {
+        const startLocalString = format(selectedDate, "yyyy-MM-dd");
+        const endLocalString = format(addDays(selectedDate, 1), "yyyy-MM-dd");
+        eventPayload.start = { date: startLocalString };
+        eventPayload.end = { date: endLocalString };
+      } else {
+        const startDateString = format(selectedDate, "yyyy-MM-dd");
+        const startDateTimeStr = `${startDateString}T${startTime}:00`;
+        const endDateTimeStr = `${startDateString}T${endTime}:00`;
 
-      const startDateTime = new Date(startDateTimeStr);
-      const endDateTime = new Date(endDateTimeStr);
+        const startDateTime = new Date(startDateTimeStr);
+        const endDateTime = new Date(endDateTimeStr);
 
-      eventPayload.start = { dateTime: startDateTime.toISOString() };
-      eventPayload.end = { dateTime: endDateTime.toISOString() };
+        eventPayload.start = { dateTime: startDateTime.toISOString() };
+        eventPayload.end = { dateTime: endDateTime.toISOString() };
+      }
     }
 
-    addEventMutation.mutate(eventPayload, {
-      onSuccess: () => {
-        setSummary("");
-        setDescription("");
-        setStartTime("12:00");
-        setEndTime("13:30");
-        setIsAllDay(true);
-        onClose();
-      }
-    });
+    if (mode === "edit" && editingEventId) {
+      updateEventMutation.mutate({ eventId: editingEventId, event: eventPayload }, {
+        onSuccess: () => {
+          setMode("view");
+        }
+      });
+    } else {
+      addEventMutation.mutate(eventPayload, {
+        onSuccess: () => {
+          setSummary("");
+          setDescription("");
+          setStartTime("12:00");
+          setEndTime("13:30");
+          setIsAllDay(true);
+          onClose();
+        }
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (editingEventId && window.confirm("정말 이 일정을 삭제하시겠습니까?")) {
+      deleteEventMutation.mutate(editingEventId, {
+        onSuccess: () => {
+          setMode("view");
+        }
+      });
+    }
+  };
+
+  const handleEventClick = (event: CalendarEvent) => {
+    // Cannot edit holidays
+    if (event.isHoliday) return;
+
+    setMode("edit");
+    setEditingEventId(event.id);
+    setSummary(event.summary || "");
+    setDescription(event.description || "");
+    // @ts-ignore
+    setIsRecurring(!!event.recurrence || !!event.recurringEventId);
+    
+    if (event.start.dateTime) {
+      setIsAllDay(false);
+      setStartTime(format(parseISO(event.start.dateTime), "HH:mm"));
+      setEndTime(event.end.dateTime ? format(parseISO(event.end.dateTime), "HH:mm") : format(parseISO(event.start.dateTime), "HH:mm"));
+    } else {
+      setIsAllDay(true);
+      setStartTime("12:00");
+      setEndTime("13:30");
+    }
   };
 
   if (!isOpen || !selectedDate) return null;
@@ -110,13 +158,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              {mode === "add" && (
+              {(mode === "add" || mode === "edit") && (
                 <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface">
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
               )}
               <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
-                {format(selectedDate, "M월 d일", { locale: ko })} 일정 {mode === "add" ? "추가" : ""}
+                {format(selectedDate, "M월 d일", { locale: ko })} 일정 {mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}
               </h3>
             </div>
             
@@ -128,24 +176,39 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 <span className="material-symbols-outlined">add</span>
               </button>
             ) : (
-              <button 
-                onClick={handleSave}
-                disabled={addEventMutation.isPending || !summary.trim()}
-                className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
-              >
-                {addEventMutation.isPending ? (
-                  <span className="material-symbols-outlined animate-spin">refresh</span>
-                ) : (
-                  <span className="material-symbols-outlined">check</span>
+              <div className="flex gap-2">
+                {mode === "edit" && (
+                  <button 
+                    onClick={handleDelete}
+                    disabled={deleteEventMutation.isPending}
+                    className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
+                  >
+                    {deleteEventMutation.isPending ? (
+                      <span className="material-symbols-outlined animate-spin">refresh</span>
+                    ) : (
+                      <span className="material-symbols-outlined">delete</span>
+                    )}
+                  </button>
                 )}
-              </button>
+                <button 
+                  onClick={handleSave}
+                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim()}
+                  className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
+                >
+                  {(addEventMutation.isPending || updateEventMutation.isPending) ? (
+                    <span className="material-symbols-outlined animate-spin">refresh</span>
+                  ) : (
+                    <span className="material-symbols-outlined">check</span>
+                  )}
+                </button>
+              </div>
             )}
           </div>
           
           <p className="font-body-sm text-body-sm text-on-surface-variant mb-6">
             {mode === "view" 
               ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
-              : "새로운 일정을 추가하세요"}
+              : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
           </p>
 
           {mode === "view" ? (
@@ -157,9 +220,9 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   : format(parseISO(event.start.dateTime as string), "a h:mm", { locale: ko });
 
                 return (
-                  <div key={event.id} className="flex items-center justify-between p-4 border border-outline-variant bg-surface-container-lowest">
+                  <div key={event.id} onClick={() => handleEventClick(event)} className={`flex items-center justify-between p-4 border border-outline-variant bg-surface-container-lowest ${!event.isHoliday ? 'cursor-pointer hover:bg-surface-container-low transition-colors' : ''}`}>
                     <div className="flex flex-col">
-                      <span className="font-body-md text-on-surface font-semibold">{event.summary}</span>
+                      <span className={`font-body-md font-semibold ${event.isHoliday ? 'text-error' : 'text-on-surface'}`}>{event.summary}</span>
                     </div>
                     <div className="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-2 py-1">
                       {timeStr}
@@ -176,6 +239,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             </div>
           ) : (
             <div className="flex flex-col gap-md pb-8">
+              {isRecurring && (
+                <div className="bg-error-container text-on-error-container p-3 flex items-center gap-2 text-sm border border-error/20">
+                  <span className="material-symbols-outlined">event_repeat</span>
+                  <span>반복 일정은 날짜/시간을 수정할 수 없습니다. 제목과 메모만 수정 가능합니다.</span>
+                </div>
+              )}
+
               <div className="relative group">
                 <label className="sr-only">약속 대상 및 내용</label>
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -191,10 +261,11 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </div>
 
               <div className="flex items-center px-1">
-                <label className="flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none">
+                <label className={`flex items-center gap-2 cursor-pointer font-body-sm text-body-sm text-on-surface select-none ${isRecurring ? 'opacity-50 pointer-events-none' : ''}`}>
                   <input
                     type="checkbox"
                     checked={isAllDay}
+                    disabled={isRecurring}
                     onChange={(e) => setIsAllDay(e.target.checked)}
                     className="w-4 h-4 accent-primary rounded-none border-outline-variant text-primary focus:ring-primary"
                   />
@@ -204,7 +275,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
               <div className="grid grid-cols-2 gap-sm">
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  isAllDay 
+                  (isAllDay || isRecurring)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -212,15 +283,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={startTime}
-                    disabled={isAllDay}
+                    disabled={isAllDay || isRecurring}
                     onChange={(e) => setStartTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      isAllDay ? "text-outline cursor-not-allowed" : "text-primary"
+                      (isAllDay || isRecurring) ? "text-outline cursor-not-allowed" : "text-primary"
                     }`}
                   />
                 </div>
                 <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  isAllDay 
+                  (isAllDay || isRecurring)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
                 }`}>
@@ -228,10 +299,10 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <input 
                     type="time" 
                     value={endTime}
-                    disabled={isAllDay}
+                    disabled={isAllDay || isRecurring}
                     onChange={(e) => setEndTime(e.target.value)}
                     className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      isAllDay ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
+                      (isAllDay || isRecurring) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
                     }`}
                   />
                 </div>
