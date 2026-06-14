@@ -242,7 +242,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 {mode === "edit" && (
                   <button 
                     onClick={handleDelete}
-                    disabled={deleteEventMutation.isPending || isReadOnly || isMultiDay}
+                    disabled={deleteEventMutation.isPending || isReadOnly}
                     className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
                   >
                     {deleteEventMutation.isPending ? (
@@ -254,7 +254,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 )}
                 <button 
                   onClick={handleSave}
-                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly || isMultiDay}
+                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly}
                   className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
                 >
                   {(addEventMutation.isPending || updateEventMutation.isPending) ? (
@@ -310,7 +310,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               {isMultiDay && !isRecurring && (
                 <div className="bg-error-container text-on-error-container p-3 flex items-center gap-2 text-sm border border-error/20">
                   <span className="material-symbols-outlined">date_range</span>
-                  <span>기간이 지정된(다일) 일정은 앱 내에서 직접 수정할 수 없습니다. 내용 확인만 가능합니다.</span>
+                  <span>기간 지정(다일) 일정은 날짜/시간을 수정할 수 없습니다. 제목과 메모만 수정 가능합니다.</span>
                 </div>
               )}
               {isReadOnly && (
@@ -327,7 +327,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </div>
                 <input
                   value={summary}
-                  disabled={isReadOnly || isMultiDay}
+                  disabled={isReadOnly}
                   onChange={(e) => setSummary(e.target.value)}
                   className="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
                   placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
@@ -411,7 +411,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 <div className="relative group">
                   <textarea
                     value={description}
-                    disabled={isReadOnly || isMultiDay}
+                    disabled={isReadOnly}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none disabled:opacity-50"
                     placeholder="일정에 대한 메모를 입력하세요"
