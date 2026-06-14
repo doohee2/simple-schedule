@@ -22,15 +22,8 @@ export async function GET(req: NextRequest) {
     if (timeMin) url += `&timeMin=${encodeURIComponent(timeMin)}`;
     if (timeMax) url += `&timeMax=${encodeURIComponent(timeMax)}`;
 
-    const fs = require('fs');
-    const logToFile = (msg: string) => {
-      const timestamp = new Date().toISOString();
-      fs.appendFileSync('sync_debug.log', `[${timestamp}] ${msg}\n`);
-      console.log(msg);
-    };
-
     const startTime = Date.now();
-    logToFile(`[Sync] Starting Google Calendar fetch for timeMin: ${timeMin}, timeMax: ${timeMax}`);
+    console.log(`[Sync] Starting Google Calendar fetch for timeMin: ${timeMin}, timeMax: ${timeMax}`);
 
     const res = await fetch(url, {
       headers: {
@@ -41,25 +34,23 @@ export async function GET(req: NextRequest) {
 
     const endTime = Date.now();
     const duration = endTime - startTime;
-    logToFile(`[Sync] Google API fetch completed in ${duration}ms with status ${res.status}`);
+    console.log(`[Sync] Google API fetch completed in ${duration}ms with status ${res.status}`);
 
     if (!res.ok) {
       const errorText = await res.text();
-      logToFile(`[Sync] Google API Error: ${errorText}`);
+      console.error(`[Sync] Google API Error: ${errorText}`);
       return NextResponse.json({ error: "Google API error", details: errorText }, { status: res.status });
     }
 
     try {
       const data = await res.json();
-      logToFile(`[Sync] Successfully parsed JSON. Found ${data.items?.length || 0} events.`);
+      console.log(`[Sync] Successfully parsed JSON. Found ${data.items?.length || 0} events.`);
       return NextResponse.json(data);
     } catch (parseError) {
-      logToFile(`[Sync] Failed to parse JSON from Google API: ${parseError}`);
+      console.error(`[Sync] Failed to parse JSON from Google API: ${parseError}`);
       return NextResponse.json({ error: "Failed to parse JSON" }, { status: 500 });
     }
   } catch (error: any) {
-    const fs = require('fs');
-    fs.appendFileSync('sync_debug.log', `[${new Date().toISOString()}] [Sync] Internal Server Error: ${error.message}\n`);
     console.error("[Sync] Internal Server Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

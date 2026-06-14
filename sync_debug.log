@@ -1,3 +1,12 @@
 [2026-06-14T09:16:42.925Z] [Sync] Starting Google Calendar fetch for timeMin: 2026-05-31T15:00:00.000Z, timeMax: 2026-06-30T14:59:59.999Z
 [2026-06-14T09:16:43.559Z] [Sync] Google API fetch completed in 633ms with status 200
 [2026-06-14T09:16:43.922Z] [Sync] Successfully parsed JSON. Found 33 events.
+[2026-06-14T09:30:00.051Z] [Sync] Starting Google Calendar fetch for timeMin: 2026-05-31T15:00:00.000Z, timeMax: 2026-06-30T14:59:59.999Z
+[2026-06-14T09:30:00.666Z] [Sync] Google API fetch completed in 615ms with status 200
+[2026-06-14T09:30:00.742Z] [Sync] Successfully parsed JSON. Found 33 events.
+[2026-06-14T09:36:55.291Z] [Sync] Starting Google Calendar fetch for timeMin: 2026-05-31T15:00:00.000Z, timeMax: 2026-06-30T14:59:59.999Z
+[2026-06-14T09:36:55.933Z] [Sync] Google API fetch completed in 642ms with status 200
+[2026-06-14T09:36:56.179Z] [Sync] Successfully parsed JSON. Found 33 events.
+[2026-06-14T09:37:09.482Z] [Sync] Starting Google Calendar fetch for timeMin: 2026-05-31T15:00:00.000Z, timeMax: 2026-06-30T14:59:59.999Z
+[2026-06-14T09:37:10.025Z] [Sync] Google API fetch completed in 543ms with status 200
+[2026-06-14T09:37:10.562Z] [Sync] Successfully parsed JSON. Found 33 events.
