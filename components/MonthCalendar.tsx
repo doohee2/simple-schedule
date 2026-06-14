@@ -159,7 +159,7 @@ export default function MonthCalendar({
 
             if (!isCurrentMonth) {
               return (
-                <div key={idx} className={`aspect-square ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30`}>
+                <div key={idx} className={`aspect-[5/6] ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
                   {format(day, dateFormat)}
                 </div>
               );
@@ -167,7 +167,7 @@ export default function MonthCalendar({
 
             if (isPast && !isTodayDay) {
               return (
-                <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-square ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer`}>
+                <div key={idx} onClick={() => onDateSelect(day)} className={`aspect-[5/6] ${borderClasses} bg-surface-container-lowest flex flex-col items-center justify-start pt-2 opacity-50 cursor-pointer overflow-hidden`}>
                   <span className={`font-time-display text-time-display ${idx % 7 === 0 ? 'text-error' : 'text-outline'} line-through`}>{format(day, dateFormat)}</span>
                 </div>
               );
@@ -177,11 +177,11 @@ export default function MonthCalendar({
               <div 
                 key={idx} 
                 onClick={() => onDateSelect(day)}
-                className={`aspect-square ${
+                className={`aspect-[5/6] ${
                   isTodayDay 
                     ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary bg-primary-container/10 z-10` 
                     : `${borderClasses} bg-surface-container-lowest hover:bg-surface-container-low transition-colors`
-                } flex flex-col items-center justify-start pt-2 cursor-pointer relative ${isSelected ? 'bg-secondary-container/30' : ''}`}
+                } flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${isSelected ? 'bg-secondary-container/30' : ''}`}
               >
                 {isTodayDay ? (
                   <div className="w-6 h-6 bg-primary flex items-center justify-center">
@@ -193,8 +193,8 @@ export default function MonthCalendar({
                   </span>
                 )}
                 
-                <div className="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5 max-h-[60%] overflow-hidden">
-                  {displayItems.slice(0, 2).map((item, i) => {
+                <div className="mt-auto w-full px-1 pb-1 flex flex-col gap-0.5 flex-1 min-h-0 overflow-hidden">
+                  {displayItems.slice(0, 3).map((item, i) => {
                     const style = getCategoryStyle(item.color);
                     
                     let content;
@@ -224,9 +224,9 @@ export default function MonthCalendar({
                       </div>
                     );
                   })}
-                  {displayItems.length > 2 && (
-                    <div className="flex space-x-1 pl-1 mt-0.5">
-                      {displayItems.slice(2, 5).map((item, i) => {
+                  {displayItems.length > 3 && (
+                    <div className="flex space-x-1 pl-1 mt-0.5 shrink-0">
+                      {displayItems.slice(3, 6).map((item, i) => {
                         const style = getCategoryStyle(item.color);
                         return (
                           <div key={i} className={`w-1.5 h-1.5 ${style.dot} rounded-full`} />

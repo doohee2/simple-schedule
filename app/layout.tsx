@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "약속 잡기 - Appointment Booking",
   description: "Effortless Coordination PWA App",
   manifest: "/manifest.json",
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
