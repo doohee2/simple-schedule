@@ -10,8 +10,8 @@ const otherCategories = ["점심", "저녁", "휴가", "기타"];
 const categoryStyles: Record<string, { icon: string; selectedClass: string; unselectedClass: string }> = {
   "전체 조회": {
     icon: "search",
-    selectedClass: "bg-pastel-all text-pastel-all-on border border-dashed border-outline-variant shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
-    unselectedClass: "bg-transparent text-on-surface border border-dashed border-outline-variant hover:bg-surface-variant"
+    selectedClass: "bg-pastel-all text-pastel-all-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   },
   "점심": {
     icon: "restaurant",
