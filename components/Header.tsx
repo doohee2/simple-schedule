@@ -2,11 +2,13 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export default function Header() {
   const { data: session } = useSession();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -36,7 +38,24 @@ export default function Header() {
           {mounted && isDark ? "light_mode" : "dark_mode"}
         </span>
       </button>
-      <h1 className="text-2xl font-bold text-primary flex-1 text-center tracking-tight">약속 잡기</h1>
+      <button 
+        onClick={() => setIsHelpOpen(true)} 
+        className="flex-1 flex justify-center items-center hover:opacity-80 transition-opacity focus:outline-none"
+        title="도움말"
+      >
+        {mounted ? (
+          <Image 
+            src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
+            alt="약속 잡기 로고"
+            width={120}
+            height={32}
+            className="h-8 w-auto object-contain"
+            priority
+          />
+        ) : (
+          <div className="h-8 w-[120px] bg-transparent"></div>
+        )}
+      </button>
       
       {session ? (
         <div className="flex items-center gap-2">
@@ -82,6 +101,30 @@ export default function Header() {
             account_circle
           </span>
         </button>
+      )}
+
+      {/* Help Modal */}
+      {isHelpOpen && (
+        <>
+          <div className="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-[60] transition-opacity duration-300" onClick={() => setIsHelpOpen(false)}></div>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[400px] bg-surface border border-outline-variant rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] z-[70] overflow-hidden bottom-sheet-enter-active">
+            <div className="p-6 pb-6">
+              <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-2xl">info</span>
+              </div>
+              <h3 className="text-xl font-bold text-on-surface mb-3">안내사항</h3>
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-6 font-body-sm">
+                이 페이지를 사용하기 위해서는 구글 계정에 로그인하고 캘린더 권한을 부여받아야 하며, 현재는 테스트용 앱으로 지정된 사용자 외에는 서비스가 불가합니다.
+              </p>
+              <button 
+                onClick={() => setIsHelpOpen(false)}
+                className="w-full h-12 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </header>
   );
