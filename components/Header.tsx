@@ -28,7 +28,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-surface flex items-center justify-between px-margin-mobile h-14 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[768px] mx-auto transition-colors duration-300">
+    <header className="bg-surface flex items-center justify-between px-2 sm:px-margin-mobile h-14 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[768px] mx-auto transition-colors duration-300">
       <button 
         onClick={toggleTheme}
         className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-12 h-12"
@@ -43,13 +43,13 @@ export default function Header() {
         className="flex-1 flex justify-center items-center hover:opacity-80 transition-opacity focus:outline-none"
         title="도움말"
       >
-        <h1 className="text-3xl text-black dark:text-primary text-center tracking-tight">
+        <h1 className="text-[26px] sm:text-3xl text-black dark:text-primary text-center tracking-tight whitespace-nowrap">
           <span className="font-black">S</span>imple <span className="font-black">S</span>chedule
         </h1>
       </button>
       
       {session ? (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button 
             onClick={() => window.dispatchEvent(new Event("openCalendarSelector"))}
             className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 text-primary bg-transparent rounded-full"
