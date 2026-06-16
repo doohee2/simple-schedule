@@ -116,9 +116,9 @@ export default function MonthCalendar({
           <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">토</div>
         </div>
 
-        <div className={`flex-1 overflow-y-auto ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+        <div className={`flex-1 overflow-y-auto [container-type:size] ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
           <div className="flex flex-col">
-            <div className="grid grid-cols-7">
+            <div className="grid grid-cols-7 auto-rows-[20cqh]">
               {(() => {
                 const month1Start = startOfDay(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
                 const month2End = startOfDay(new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0));
@@ -208,7 +208,7 @@ export default function MonthCalendar({
 
                   if (!isCurrentMonth) {
                     return (
-                      <div key={idx} className={`aspect-[2/3] sm:aspect-[5/6] ${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
+                      <div key={idx} className={`${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
                         <span className={`${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
                       </div>
                     );
@@ -231,7 +231,7 @@ export default function MonthCalendar({
                     <div 
                       key={idx} 
                       onClick={() => onDateSelect(day)}
-                      className={`aspect-[2/3] sm:aspect-[5/6] flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                      className={`flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
                       {isTodayDay ? (
                         <div className="w-6 h-6 bg-primary flex items-center justify-center">
