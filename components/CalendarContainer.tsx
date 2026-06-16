@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { useCalendarEvents, useCalendarList } from "@/hooks/useCalendar";
 import FilterCategories from "./FilterCategories";
@@ -17,6 +18,22 @@ export default function CalendarContainer() {
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
   const [isCalendarSelectorOpen, setIsCalendarSelectorOpen] = useState(false);
+  const { data: session } = useSession();
+
+  // Load saved calendars when session is available
+  useEffect(() => {
+    if (session?.user?.email) {
+      const saved = localStorage.getItem(`selectedCalendars_${session.user.email}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedCalendars(parsed);
+          }
+        } catch (e) {}
+      }
+    }
+  }, [session?.user?.email]);
 
   const { data: calendars } = useCalendarList();
 
@@ -37,13 +54,21 @@ export default function CalendarContainer() {
 
   const handleToggleCalendar = (calId: string) => {
     setSelectedCalendars(prev => {
+      let next;
       if (prev.includes(calId)) {
         // Prevent deselecting if it's the only one left
         if (prev.length === 1) return prev;
-        return prev.filter(id => id !== calId);
+        next = prev.filter(id => id !== calId);
       } else {
-        return [...prev, calId];
+        next = [...prev, calId];
       }
+      
+      // Save to localStorage using user's email as key
+      if (session?.user?.email) {
+        localStorage.setItem(`selectedCalendars_${session.user.email}`, JSON.stringify(next));
+      }
+      
+      return next;
     });
   };
 
