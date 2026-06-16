@@ -20,9 +20,9 @@ export default function CalendarContainer() {
 
   const { data: calendars } = useCalendarList();
 
-  // Fetch events for the current month
+  // Fetch events for the current and next month
   const timeMin = startOfMonth(currentDate).toISOString();
-  const timeMax = endOfMonth(currentDate).toISOString();
+  const timeMax = endOfMonth(addMonths(currentDate, 1)).toISOString();
   
   const { data: events, isLoading } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
 
@@ -49,7 +49,7 @@ export default function CalendarContainer() {
 
   return (
     <>
-      <div className="flex-1 w-full flex flex-col relative overflow-y-auto hide-scrollbar">
+      <div className="flex-1 w-full flex flex-col relative min-h-0">
         <div className="px-margin-mobile py-lg pb-4 flex flex-col gap-3 border-b border-outline-variant/50 mb-2">
           <FilterCategories 
             selected={selectedCategory} 
