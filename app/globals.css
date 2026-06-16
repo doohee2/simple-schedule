@@ -97,7 +97,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-on-background);
-    min-height: max(884px, 100dvh);
+    height: 100dvh;
   }
 }
 

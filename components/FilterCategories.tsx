@@ -45,7 +45,7 @@ export default function FilterCategories({ selected, onSelect }: FilterCategorie
         {/* 전체 조회 버튼 - 점선 윤곽선 적용 및 mr-lg로 간격 분리 */}
         <button
           onClick={() => onSelect("전체 조회")}
-          className={`h-[48px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-lg rounded-md flex items-center justify-center ${
+          className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-lg rounded-md flex items-center justify-center ${
             isAllSelected ? `px-4 ${allStyle.selectedClass} font-bold gap-2` : `w-[48px] ${allStyle.unselectedClass}`
           }`}
           title="전체 조회"
@@ -63,7 +63,7 @@ export default function FilterCategories({ selected, onSelect }: FilterCategorie
               <button
                 key={category}
                 onClick={() => onSelect(category)}
-                className={`h-[48px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 rounded-md flex items-center justify-center ${
+                className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 rounded-md flex items-center justify-center ${
                   isSelected ? `px-4 ${style.selectedClass} font-bold gap-2` : `w-[48px] ${style.unselectedClass}`
                 }`}
                 title={category}

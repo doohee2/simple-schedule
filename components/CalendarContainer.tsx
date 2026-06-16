@@ -50,7 +50,7 @@ export default function CalendarContainer() {
   return (
     <>
       <div className="flex-1 w-full flex flex-col relative min-h-0">
-        <div className="px-margin-mobile py-lg pb-4 flex flex-col gap-3 border-b border-outline-variant/50 mb-2">
+        <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
           <FilterCategories 
             selected={selectedCategory} 
             onSelect={setSelectedCategory} 

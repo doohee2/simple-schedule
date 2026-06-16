@@ -90,7 +90,7 @@ export default function MonthCalendar({
 
   return (
     <section className="flex-1 flex flex-col min-h-0">
-      <div className="flex justify-between items-end mb-4 px-margin-mobile shrink-0">
+      <div className="flex justify-between items-end mb-3 px-margin-mobile shrink-0">
         <h2 className="text-xl text-on-surface flex items-center leading-none tracking-tight">
           {titleText}
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
@@ -191,9 +191,20 @@ export default function MonthCalendar({
                     displayItems.push({ id: "other-group", text: `기타 ${otherEvents.length}`, keyword: "기타", color: "pastel-other" });
                   }
 
-                  // Calculate border classes
+                  // Check boundaries for Month 1 vs Month 2
+                  const isM1 = isSameMonth(day, month1Start);
+                  const isNextDayM2 = idx + 1 < days.length && isSameMonth(days[idx + 1], nextMonth);
+                  const isNextWeekM2 = idx + 7 < days.length && isSameMonth(days[idx + 7], nextMonth);
+                  
                   const isRightEdge = (idx + 1) % 7 === 0;
-                  const borderClasses = `border-b ${!isRightEdge ? 'border-r' : ''} border-outline-variant`;
+                  
+                  const thickRight = isM1 && isNextDayM2 && !isRightEdge;
+                  const thickBottom = isM1 && isNextWeekM2;
+
+                  const borderR = thickRight ? 'border-r-2 border-r-outline z-10' : (!isRightEdge ? 'border-r border-outline-variant' : '');
+                  const borderB = thickBottom ? 'border-b-2 border-b-outline z-10' : 'border-b border-outline-variant';
+                  
+                  const borderClasses = `${borderR} ${borderB}`;
 
                   if (!isCurrentMonth) {
                     return (
@@ -212,7 +223,9 @@ export default function MonthCalendar({
                     else if (selectedCategory === "휴가") { cellBgClass = "bg-pastel-vacation hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
                   }
 
-                  const borderStyle = isTodayDay ? `border-b ${!isRightEdge ? 'border-r' : ''} border-primary z-10` : borderClasses;
+                  const todayBorderR = thickRight ? 'border-r-2' : (!isRightEdge ? 'border-r' : '');
+                  const todayBorderB = thickBottom ? 'border-b-2' : 'border-b';
+                  const borderStyle = isTodayDay ? `${todayBorderR} ${todayBorderB} border-primary z-20` : borderClasses;
 
                   return (
                     <div 
