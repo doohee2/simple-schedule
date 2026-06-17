@@ -1,30 +1,22 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { HELP_MESSAGE } from "@/config";
 
 export default function Header() {
   const { data: session } = useSession();
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 
   const toggleTheme = () => {
-    if (isDark) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setIsDark(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setIsDark(true);
-    }
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -35,7 +27,7 @@ export default function Header() {
         title="테마 변경"
       >
         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
-          {mounted && isDark ? "light_mode" : "dark_mode"}
+          {mounted && resolvedTheme === "dark" ? "light_mode" : "dark_mode"}
         </span>
       </button>
       <button 

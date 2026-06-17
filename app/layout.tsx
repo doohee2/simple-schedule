@@ -46,18 +46,6 @@ export default function RootLayout({
         />
         <meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1a1c1e" media="(prefers-color-scheme: dark)" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const isDark = localStorage.getItem('theme') === 'dark' || 
-                  (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                if (isDark) document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-              } catch (e) {}
-            `,
-          }}
-        />
       </head>
       <body className={`${plusJakartaSans.variable} ${beVietnamPro.variable} bg-background text-on-background font-body-md antialiased min-h-screen relative overflow-hidden flex flex-col`}>
         {/* Background Layer Level 0 */}

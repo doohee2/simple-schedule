@@ -35,8 +35,12 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   // Reset mode and form when sheet opens
   useEffect(() => {
     if (isOpen) {
-      setMode(selectedCategory === "전체 조회" ? "view" : "add");
-      setSummary("");
+      setMode((selectedCategory === "전체 조회" || selectedCategory === "기타") ? "view" : "add");
+      if (selectedCategory === "점심" || selectedCategory === "저녁" || selectedCategory === "휴가") {
+        setSummary(selectedCategory);
+      } else {
+        setSummary("");
+      }
       setDescription("");
       setStartTime("12:00");
       setEndTime("13:30");
