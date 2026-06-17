@@ -35,9 +35,13 @@ export default function Header() {
         className="flex-1 flex justify-center items-center hover:opacity-80 transition-opacity focus:outline-none"
         title="도움말"
       >
-        <h1 className="text-[26px] sm:text-3xl text-black dark:text-primary text-center tracking-tight whitespace-nowrap">
-          <span className="font-black">S</span>imple <span className="font-black">S</span>chedule
-        </h1>
+        <div className="flex items-center justify-center pointer-events-none">
+          <svg viewBox="0 0 360 60" className="h-[31px] sm:h-[38px] w-auto drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
+            <text x="0" y="45" fontWeight="800" fontSize="42" letterSpacing="-0.02em" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300">Simple</text>
+            <circle cx="18" cy="10" r="4" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300"/>
+            <text x="145" y="45" fontWeight="700" fontSize="42" letterSpacing="-0.02em" className="fill-[#1e293b] dark:fill-[#ffffff] transition-colors duration-300">Schedule</text>
+          </svg>
+        </div>
       </button>
       
       {session ? (
