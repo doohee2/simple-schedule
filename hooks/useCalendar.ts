@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 export interface CalendarEvent {
   id: string;
@@ -37,7 +37,10 @@ export const useCalendarList = () => {
     queryFn: async () => {
       const res = await fetch("/api/calendars");
       if (!res.ok) {
-        if (res.status === 401) throw new Error("Unauthorized");
+        if (res.status === 401) {
+          signOut();
+          throw new Error("Unauthorized");
+        }
         throw new Error("Failed to fetch calendars");
       }
       const data = await res.json();
@@ -68,6 +71,7 @@ export const useCalendarEvents = (timeMin?: string, timeMax?: string, calendarId
       const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
+          signOut();
           throw new Error("Unauthorized");
         }
         throw new Error("Failed to fetch events");

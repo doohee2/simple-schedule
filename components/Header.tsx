@@ -15,6 +15,13 @@ export default function Header() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    // @ts-ignore
+    if (session?.error === "RefreshAccessTokenError") {
+      signOut();
+    }
+  }, [session]);
+
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };

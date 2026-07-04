@@ -166,7 +166,7 @@ export default function MonthCalendar({
                   const dayEvents = filteredEvents.filter(e => isEventOnDay(e, day));
                   
                   // 카테고리 분류 및 제목 추출
-                  const displayItems: Array<{ id: string; text: string; keyword?: "점심" | "저녁" | "휴가" | "기타"; color: string }> = [];
+                  const displayItems: Array<{ id: string; text: string; isOther: boolean; firstColor: string }> = [];
                   
                   const otherEvents: typeof dayEvents = [];
 
@@ -174,21 +174,24 @@ export default function MonthCalendar({
                     const text = e.summary || "";
                     const searchStr = (text + " " + (e.description || "")).toLowerCase();
                     
-                    if (searchStr.includes("점심")) {
-                      displayItems.push({ id: e.id, text, keyword: "점심", color: "pastel-lunch" });
-                    } else if (searchStr.includes("저녁")) {
-                      displayItems.push({ id: e.id, text, keyword: "저녁", color: "pastel-dinner" });
-                    } else if (searchStr.includes("휴가")) {
-                      displayItems.push({ id: e.id, text, keyword: "휴가", color: "pastel-vacation" });
+                    let firstColor = "pastel-other";
+                    let hasKeyword = false;
+                    
+                    if (searchStr.includes("점심")) { hasKeyword = true; firstColor = "pastel-lunch"; }
+                    else if (searchStr.includes("저녁")) { hasKeyword = true; firstColor = "pastel-dinner"; }
+                    else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
+                    
+                    if (hasKeyword) {
+                      displayItems.push({ id: e.id, text, isOther: false, firstColor });
                     } else {
                       otherEvents.push(e);
                     }
                   });
                   
                   if (otherEvents.length === 1) {
-                    displayItems.push({ id: otherEvents[0].id, text: "기타", keyword: "기타", color: "pastel-other" });
+                    displayItems.push({ id: otherEvents[0].id, text: "기타", isOther: true, firstColor: "pastel-other" });
                   } else if (otherEvents.length > 1) {
-                    displayItems.push({ id: "other-group", text: `기타 ${otherEvents.length}`, keyword: "기타", color: "pastel-other" });
+                    displayItems.push({ id: "other-group", text: `기타 ${otherEvents.length}`, isOther: true, firstColor: "pastel-other" });
                   }
 
                   // Check boundaries for Month 1 vs Month 2
@@ -251,27 +254,26 @@ export default function MonthCalendar({
                       
                       <div className="mt-auto w-full px-1 pb-1 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
                         {displayItems.slice(0, 3).map((item, i) => {
-                          const style = getCategoryStyle(item.color);
+                          const style = getCategoryStyle(item.firstColor);
                           
                           let content;
-                          if (item.keyword === "기타") {
+                          if (item.isOther) {
                             content = (
                               <span className={`${style.block} px-1 rounded-sm`}>
                                 {item.text}
                               </span>
                             );
-                          } else if (item.keyword) {
-                            const parts = item.text.split(item.keyword);
-                            content = parts.map((part, index) => (
-                              <span key={index}>
-                                {part}
-                                {index < parts.length - 1 && (
-                                  <span className={`${style.block} px-0.5 rounded-sm`}>{item.keyword}</span>
-                                )}
-                              </span>
-                            ));
                           } else {
-                            content = <span>{item.text}</span>;
+                            const keywords = ["점심", "저녁", "휴가"];
+                            const regex = new RegExp(`(${keywords.join("|")})`, "g");
+                            const parts = item.text.split(regex);
+                            
+                            content = parts.map((part, index) => {
+                              if (part === "점심") return <span key={index} className="bg-pastel-lunch text-pastel-lunch-on px-0.5 rounded-sm">{part}</span>;
+                              if (part === "저녁") return <span key={index} className="bg-pastel-dinner text-pastel-dinner-on px-0.5 rounded-sm">{part}</span>;
+                              if (part === "휴가") return <span key={index} className="bg-pastel-vacation text-pastel-vacation-on px-0.5 rounded-sm">{part}</span>;
+                              return <span key={index}>{part}</span>;
+                            });
                           }
 
                           return (
@@ -283,7 +285,7 @@ export default function MonthCalendar({
                         {displayItems.length > 3 && (
                           <div className="flex space-x-1 pl-1 mt-0.5 shrink-0">
                             {displayItems.slice(3, 6).map((item, i) => {
-                              const style = getCategoryStyle(item.color);
+                              const style = getCategoryStyle(item.firstColor);
                               return (
                                 <div key={i} className={`w-1.5 h-1.5 ${style.dot} rounded-full`} />
                               );
