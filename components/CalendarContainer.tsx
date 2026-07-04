@@ -41,7 +41,7 @@ export default function CalendarContainer() {
   const timeMin = startOfMonth(currentDate).toISOString();
   const timeMax = endOfMonth(addMonths(currentDate, 1)).toISOString();
   
-  const { data: events, isLoading, refetch } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
+  const { data: events, isLoading, isFetching, refetch } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
 
   useEffect(() => {
     const handleOpenCalendarSelector = () => setIsCalendarSelectorOpen(true);
@@ -89,7 +89,7 @@ export default function CalendarContainer() {
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
           events={events || []}
-          isLoading={isLoading}
+          isLoading={isLoading || isFetching}
           selectedCategory={selectedCategory}
         />
         <div className="px-margin-mobile py-2 text-right">
