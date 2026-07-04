@@ -3,6 +3,7 @@
 interface FilterCategoriesProps {
   selected: string;
   onSelect: (category: string) => void;
+  onRefetch?: () => void;
 }
 
 const otherCategories = ["점심", "저녁", "휴가", "기타"];
@@ -35,7 +36,7 @@ const categoryStyles: Record<string, { icon: string; selectedClass: string; unse
   }
 };
 
-export default function FilterCategories({ selected, onSelect }: FilterCategoriesProps) {
+export default function FilterCategories({ selected, onSelect, onRefetch }: FilterCategoriesProps) {
   const isAllSelected = selected === "전체 조회";
   const allStyle = categoryStyles["전체 조회"];
 
@@ -44,7 +45,13 @@ export default function FilterCategories({ selected, onSelect }: FilterCategorie
       <div className="flex items-center">
         {/* 전체 조회 버튼 - 점선 윤곽선 적용 및 mr-lg로 간격 분리 */}
         <button
-          onClick={() => onSelect("전체 조회")}
+          onClick={() => {
+            if (isAllSelected && onRefetch) {
+              onRefetch();
+            } else {
+              onSelect("전체 조회");
+            }
+          }}
           className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-lg rounded-md flex items-center justify-center ${
             isAllSelected ? `px-4 ${allStyle.selectedClass} font-bold gap-2` : `w-[48px] ${allStyle.unselectedClass}`
           }`}

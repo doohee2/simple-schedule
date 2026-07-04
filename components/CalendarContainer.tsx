@@ -41,7 +41,7 @@ export default function CalendarContainer() {
   const timeMin = startOfMonth(currentDate).toISOString();
   const timeMax = endOfMonth(addMonths(currentDate, 1)).toISOString();
   
-  const { data: events, isLoading } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
+  const { data: events, isLoading, refetch } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
 
   useEffect(() => {
     const handleOpenCalendarSelector = () => setIsCalendarSelectorOpen(true);
@@ -79,6 +79,7 @@ export default function CalendarContainer() {
           <FilterCategories 
             selected={selectedCategory} 
             onSelect={setSelectedCategory} 
+            onRefetch={refetch}
           />
         </div>
         <MonthCalendar 
