@@ -74,7 +74,7 @@ export default function CalendarContainer() {
 
   return (
     <>
-      <div className="flex-1 w-full flex flex-col relative min-h-0">
+      <div className="w-full flex flex-col relative h-[75dvh] min-h-[400px] shrink-0 resize-y overflow-hidden border-b border-outline-variant/50">
         <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
           <FilterCategories 
             selected={selectedCategory} 
