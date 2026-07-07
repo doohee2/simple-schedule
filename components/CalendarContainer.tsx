@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { useCalendarEvents, useCalendarList } from "@/hooks/useCalendar";
@@ -18,6 +18,13 @@ export default function CalendarContainer() {
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
   const [isCalendarSelectorOpen, setIsCalendarSelectorOpen] = useState(false);
+  
+  // Custom resize state
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const startY = useRef(0);
+  const currentOffset = useRef(0);
+  
   const { data: session } = useSession();
 
   // Load saved calendars when session is available
@@ -72,9 +79,30 @@ export default function CalendarContainer() {
     });
   };
 
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    startY.current = e.clientY;
+    currentOffset.current = dragOffset;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const diff = e.clientY - startY.current;
+    setDragOffset(currentOffset.current + diff);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    setIsDragging(false);
+    e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
   return (
     <>
-      <div className="w-full flex flex-col relative h-[75dvh] min-h-[400px] shrink-0 resize-y overflow-hidden border-b border-outline-variant/50">
+      <div 
+        className="w-full flex flex-col relative min-h-[400px] shrink-0 overflow-hidden border-b border-outline-variant/50 bg-background"
+        style={{ height: `calc(75dvh + ${dragOffset}px)` }}
+      >
         <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
           <FilterCategories 
             selected={selectedCategory} 
@@ -92,8 +120,17 @@ export default function CalendarContainer() {
           isLoading={isLoading || isFetching}
           selectedCategory={selectedCategory}
         />
-        <div className="px-margin-mobile py-2 text-right">
-          <span className="text-[10px] text-outline-variant">{APP_VERSION}</span>
+        <div 
+          className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          <div className={`w-16 h-1.5 rounded-full transition-colors ${isDragging ? 'bg-primary' : 'bg-outline-variant/40 group-hover:bg-primary/50'}`} />
+          <div className="absolute right-margin-mobile text-[10px] text-outline-variant pointer-events-none">
+            {APP_VERSION}
+          </div>
         </div>
       </div>
       
