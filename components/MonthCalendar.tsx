@@ -188,10 +188,9 @@ export default function MonthCalendar({
                     }
                   });
                   
-                  if (otherEvents.length === 1) {
-                    displayItems.push({ id: otherEvents[0].id, text: "...", isOther: true, firstColor: "transparent" });
-                  } else if (otherEvents.length > 1) {
-                    displayItems.push({ id: "other-group", text: `... (${otherEvents.length})`, isOther: true, firstColor: "transparent" });
+                  if (otherEvents.length > 0) {
+                    const dots = ".".repeat(otherEvents.length);
+                    displayItems.push({ id: "other-group", text: `... ${dots}`, isOther: true, firstColor: "transparent" });
                   }
 
                   // Check boundaries for Month 1 vs Month 2
