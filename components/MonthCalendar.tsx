@@ -189,8 +189,8 @@ export default function MonthCalendar({
                   });
                   
                   if (otherEvents.length > 0) {
-                    const dots = ".".repeat(otherEvents.length);
-                    displayItems.push({ id: "other-group", text: `... ${dots}`, isOther: true, firstColor: "transparent" });
+                    const stars = "⁎".repeat(otherEvents.length);
+                    displayItems.push({ id: "other-group", text: stars, isOther: true, firstColor: "transparent" });
                   }
 
                   // Check boundaries for Month 1 vs Month 2
