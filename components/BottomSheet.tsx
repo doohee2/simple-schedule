@@ -34,13 +34,53 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   // Reset mode and form when sheet opens
   useEffect(() => {
-    if (isOpen) {
-      setMode((selectedCategory === "전체 조회" || selectedCategory === "기타") ? "view" : "add");
-      if (selectedCategory === "점심" || selectedCategory === "저녁" || selectedCategory === "휴가") {
+    if (isOpen && selectedDate) {
+      const isEventOnDayLocal = (e: CalendarEvent, targetDay: Date) => {
+        if (e.start.date && e.end?.date) {
+          const start = parseISO(e.start.date);
+          const end = parseISO(e.end.date);
+          return targetDay.getTime() >= start.getTime() && targetDay.getTime() < end.getTime();
+        } else if (e.start.dateTime && e.end?.dateTime) {
+          const start = parseISO(e.start.dateTime);
+          const end = parseISO(e.end.dateTime);
+          const targetTime = targetDay.getTime();
+          const startTime = startOfDay(start).getTime();
+          const endTimeObj = end.getTime();
+          if (start.getTime() === endTimeObj) return targetTime === startTime;
+          const lastInclusiveDay = startOfDay(new Date(endTimeObj - 1)).getTime();
+          return targetTime >= startTime && targetTime <= lastInclusiveDay;
+        } else if (e.start.dateTime) {
+          return isSameDay(parseISO(e.start.dateTime), targetDay);
+        } else if (e.start.date) {
+          return isSameDay(parseISO(e.start.date), targetDay);
+        }
+        return false;
+      };
+
+      let initialMode: "view" | "add" | "edit" = "add";
+      
+      if (selectedCategory === "전체 조회" || selectedCategory === "기타") {
+        initialMode = "view";
+      } else if (selectedCategory) {
+        const dayEvents = events.filter(e => isEventOnDayLocal(e, selectedDate));
+        const hasMatchingEvent = dayEvents.some(e => {
+          if (e.isHoliday) return false;
+          const searchStr = (e.summary + " " + (e.description || "")).toLowerCase();
+          return searchStr.includes(selectedCategory.toLowerCase());
+        });
+        if (hasMatchingEvent) {
+          initialMode = "view";
+        }
+      }
+
+      setMode(initialMode);
+
+      if (initialMode === "add" && (selectedCategory === "점심" || selectedCategory === "저녁" || selectedCategory === "휴가")) {
         setSummary(selectedCategory);
       } else {
         setSummary("");
       }
+      
       setDescription("");
       setStartTime("12:00");
       setEndTime("13:30");
@@ -50,8 +90,9 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       setIsMultiDay(false);
       setIsReadOnly(false);
       setEditingCalendarId("primary");
-      setEventDate(selectedDate || new Date());
+      setEventDate(selectedDate);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedCategory, selectedDate]);
 
   const handleSave = () => {
@@ -271,7 +312,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             )}
           </div>
           
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-6">
+          <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
             {mode === "view" 
               ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
               : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
@@ -304,7 +345,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-md pb-8">
+            <div className="flex flex-col gap-2 pb-8">
               {isRecurring && (
                 <div className="bg-error-container text-on-error-container p-3 flex items-center gap-2 text-sm border border-error/20">
                   <span className="material-symbols-outlined">event_repeat</span>
@@ -376,7 +417,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </div>
 
               <div className="grid grid-cols-2 gap-sm">
-                <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
+                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
                   (isAllDay || isRecurring || isReadOnly || isMultiDay)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
@@ -392,7 +433,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                     }`}
                   />
                 </div>
-                <div className={`p-4 flex flex-col items-start gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
+                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
                   (isAllDay || isRecurring || isReadOnly || isMultiDay)
                     ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
                     : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
@@ -417,7 +458,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                     value={description}
                     disabled={isReadOnly}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full min-h-[100px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none disabled:opacity-50"
+                    className="w-full min-h-[200px] p-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none rounded-none disabled:opacity-50"
                     placeholder="일정에 대한 메모를 입력하세요"
                   ></textarea>
                 </div>

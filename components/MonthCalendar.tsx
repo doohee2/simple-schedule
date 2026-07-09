@@ -189,9 +189,9 @@ export default function MonthCalendar({
                   });
                   
                   if (otherEvents.length === 1) {
-                    displayItems.push({ id: otherEvents[0].id, text: "기타", isOther: true, firstColor: "pastel-other" });
+                    displayItems.push({ id: otherEvents[0].id, text: "...", isOther: true, firstColor: "transparent" });
                   } else if (otherEvents.length > 1) {
-                    displayItems.push({ id: "other-group", text: `기타 ${otherEvents.length}`, isOther: true, firstColor: "pastel-other" });
+                    displayItems.push({ id: "other-group", text: `... (${otherEvents.length})`, isOther: true, firstColor: "transparent" });
                   }
 
                   // Check boundaries for Month 1 vs Month 2
@@ -259,7 +259,7 @@ export default function MonthCalendar({
                           let content;
                           if (item.isOther) {
                             content = (
-                              <span className={`${style.block} px-1 rounded-sm`}>
+                              <span className="text-on-surface font-bold px-1">
                                 {item.text}
                               </span>
                             );

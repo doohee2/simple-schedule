@@ -29,9 +29,12 @@ export default function Header() {
   return (
     <header className="bg-surface flex items-center justify-between px-2 sm:px-margin-mobile h-12 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[768px] mx-auto transition-colors duration-300">
       {/* Left side: Title + 'i' button */}
-      <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center pointer-events-none">
-          <svg viewBox="0 0 360 60" className="h-[31px] sm:h-[38px] w-auto drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
+      <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center pointer-events-none gap-1.5">
+          <span className="material-symbols-outlined text-[28px] sm:text-[32px] text-[#0066ff] dark:text-[#d0ebff] transition-colors duration-300 drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+            calendar_month
+          </span>
+          <svg viewBox="0 0 360 60" className="h-[28px] sm:h-[34px] w-auto drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
             <text x="0" y="45" fontWeight="800" fontSize="42" letterSpacing="-0.02em" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300">Simple</text>
             <circle cx="18" cy="10" r="4" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300"/>
             <text x="145" y="45" fontWeight="700" fontSize="42" letterSpacing="-0.02em" className="fill-[#1e293b] dark:fill-[#ffffff] transition-colors duration-300">Schedule</text>
@@ -47,10 +50,10 @@ export default function Header() {
       </div>
       
       {/* Right side: Theme + Session controls */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0">
         <button 
           onClick={toggleTheme}
-          className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-12 h-12"
+          className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-10 h-10"
           title="테마 변경"
         >
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
@@ -58,10 +61,10 @@ export default function Header() {
           </span>
         </button>
         {session ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0">
             <button 
               onClick={() => window.dispatchEvent(new Event("openCalendarSelector"))}
-              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 text-primary bg-transparent rounded-full"
+              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 text-primary bg-transparent rounded-full"
               title="캘린더 선택"
             >
               <span className="material-symbols-outlined text-[20px]">calendar_month</span>
@@ -69,10 +72,10 @@ export default function Header() {
             <button 
               onClick={() => signOut()} 
               title="로그아웃"
-              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-12 h-12 relative group"
+              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 relative group ml-1"
             >
               {session.user?.image ? (
-                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-primary/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
                     src={session.user.image} 
@@ -81,7 +84,7 @@ export default function Header() {
                     className="w-full h-full object-cover" 
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="material-symbols-outlined text-white text-[16px]">logout</span>
+                    <span className="material-symbols-outlined text-white text-[14px]">logout</span>
                   </div>
                 </div>
               ) : (
@@ -95,7 +98,7 @@ export default function Header() {
           <button 
             onClick={() => signIn("google")} 
             title="로그인"
-            className="text-outline hover:text-primary hover:opacity-80 transition-all active:scale-95 flex items-center justify-center w-12 h-12"
+            className="text-outline hover:text-primary hover:opacity-80 transition-all active:scale-95 flex items-center justify-center w-10 h-10 ml-1"
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
               account_circle
