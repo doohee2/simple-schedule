@@ -64,7 +64,7 @@ export default function MonthCalendar({
 }: MonthCalendarProps) {
   const nextMonth = addMonths(currentDate, 1);
   const isSameYr = currentDate.getFullYear() === nextMonth.getFullYear();
-  const titleText = isSameYr 
+  const titleText = isSameYr
     ? `${format(currentDate, "yyyy년 M월", { locale: ko })}~${format(nextMonth, "M월", { locale: ko })}`
     : `${format(currentDate, "yyyy년 M월", { locale: ko })}~${format(nextMonth, "yyyy년 M월", { locale: ko })}`;
 
@@ -77,14 +77,14 @@ export default function MonthCalendar({
   const filteredEvents = events.filter((event) => {
     if (event.isHoliday) return false;
     if (selectedCategory === "전체 조회") return true;
-    
+
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
-    
+
     if (selectedCategory === "기타") {
       const predefined = ["점심", "저녁", "휴가"];
       return !predefined.some(cat => textToSearch.includes(cat.toLowerCase()));
     }
-    
+
     return textToSearch.includes(selectedCategory.toLowerCase());
   });
 
@@ -122,7 +122,7 @@ export default function MonthCalendar({
               {(() => {
                 const month1Start = startOfDay(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
                 const month2End = startOfDay(new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0));
-                
+
                 const startDate = startOfWeek(month1Start);
                 const endDate = endOfWeek(month2End);
                 const days = eachDayOfInterval({ start: startDate, end: endDate });
@@ -134,7 +134,7 @@ export default function MonthCalendar({
                   const isTodayDay = isSameDay(day, today);
                   const isWeekend = idx % 7 === 0 || idx % 7 === 6;
                   const displayDayFormat = day.getDate() === 1 ? "M.d" : "d";
-                  
+
                   const isEventOnDay = (e: CalendarEvent, targetDay: Date) => {
                     if (e.start.date && e.end?.date) {
                       const start = parseISO(e.start.date);
@@ -161,35 +161,35 @@ export default function MonthCalendar({
                   const dayHolidays = holidays.filter(e => isEventOnDay(e, day));
                   const isHoliday = dayHolidays.length > 0;
                   const isRedDay = idx % 7 === 0 || isHoliday;
-                  
+
                   // Check if there are regular events on this day
                   const dayEvents = filteredEvents.filter(e => isEventOnDay(e, day));
-                  
+
                   // 카테고리 분류 및 제목 추출
                   const displayItems: Array<{ id: string; text: string; isOther: boolean; firstColor: string }> = [];
-                  
+
                   const otherEvents: typeof dayEvents = [];
 
                   dayEvents.forEach(e => {
                     const text = e.summary || "";
                     const searchStr = (text + " " + (e.description || "")).toLowerCase();
-                    
+
                     let firstColor = "pastel-other";
                     let hasKeyword = false;
-                    
+
                     if (searchStr.includes("점심")) { hasKeyword = true; firstColor = "pastel-lunch"; }
                     else if (searchStr.includes("저녁")) { hasKeyword = true; firstColor = "pastel-dinner"; }
                     else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
-                    
+
                     if (hasKeyword) {
                       displayItems.push({ id: e.id, text, isOther: false, firstColor });
                     } else {
                       otherEvents.push(e);
                     }
                   });
-                  
+
                   if (otherEvents.length > 0) {
-                    const stars = "⁎".repeat(otherEvents.length);
+                    const stars = "*".repeat(otherEvents.length);
                     displayItems.push({ id: "other-group", text: stars, isOther: true, firstColor: "transparent" });
                   }
 
@@ -197,15 +197,15 @@ export default function MonthCalendar({
                   const isM1 = isSameMonth(day, month1Start);
                   const isNextDayM2 = idx + 1 < days.length && isSameMonth(days[idx + 1], nextMonth);
                   const isNextWeekM2 = idx + 7 < days.length && isSameMonth(days[idx + 7], nextMonth);
-                  
+
                   const isRightEdge = (idx + 1) % 7 === 0;
-                  
+
                   const thickRight = isM1 && isNextDayM2 && !isRightEdge;
                   const thickBottom = isM1 && isNextWeekM2;
 
                   const borderR = thickRight ? 'border-r-2 border-r-outline z-10' : (!isRightEdge ? 'border-r border-outline-variant' : '');
                   const borderB = thickBottom ? 'border-b-2 border-b-outline z-10' : 'border-b border-outline-variant';
-                  
+
                   const borderClasses = `${borderR} ${borderB}`;
 
                   if (!isCurrentMonth) {
@@ -218,7 +218,7 @@ export default function MonthCalendar({
 
                   let cellBgClass = isTodayDay ? "bg-primary-container/10" : "bg-surface-container-lowest hover:bg-surface-container-low transition-colors";
                   let isCategoryHighlighted = false;
-                  
+
                   if (dayEvents.length > 0) {
                     if (selectedCategory === "점심") { cellBgClass = "bg-pastel-lunch hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
                     else if (selectedCategory === "저녁") { cellBgClass = "bg-pastel-dinner hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
@@ -230,8 +230,8 @@ export default function MonthCalendar({
                   const borderStyle = isTodayDay ? `${todayBorderR} ${todayBorderB} border-primary z-20` : borderClasses;
 
                   return (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       onClick={() => onDateSelect(day)}
                       className={`flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
@@ -250,11 +250,11 @@ export default function MonthCalendar({
                           {dayHolidays[0].summary}
                         </span>
                       )}
-                      
+
                       <div className="mt-auto w-full px-1 pb-1 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
                         {displayItems.slice(0, 3).map((item, i) => {
                           const style = getCategoryStyle(item.firstColor);
-                          
+
                           let content;
                           if (item.isOther) {
                             content = (
@@ -266,7 +266,7 @@ export default function MonthCalendar({
                             const keywords = ["점심", "저녁", "휴가"];
                             const regex = new RegExp(`(${keywords.join("|")})`, "g");
                             const parts = item.text.split(regex);
-                            
+
                             content = parts.map((part, index) => {
                               if (part === "점심") return <span key={index} className="bg-pastel-lunch text-pastel-lunch-on px-0.5 rounded-sm">{part}</span>;
                               if (part === "저녁") return <span key={index} className="bg-pastel-dinner text-pastel-dinner-on px-0.5 rounded-sm">{part}</span>;
