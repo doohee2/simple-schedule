@@ -189,7 +189,7 @@ export default function MonthCalendar({
                   });
 
                   if (otherEvents.length > 0) {
-                    const stars = "*".repeat(otherEvents.length);
+                    const stars = ".".repeat(otherEvents.length);
                     displayItems.push({ id: "other-group", text: stars, isOther: true, firstColor: "transparent" });
                   }
 
