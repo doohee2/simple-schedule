@@ -99,49 +99,51 @@ export default function CalendarContainer() {
 
   return (
     <>
-      <div 
-        className="w-full flex flex-col relative min-h-[400px] shrink-0 overflow-hidden border-b border-outline-variant/50 bg-background"
-        style={{ height: `calc(85dvh + ${dragOffset}px)` }}
-      >
-        <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
-          <FilterCategories 
-            selected={selectedCategory} 
-            onSelect={setSelectedCategory} 
-            onRefetch={refetch}
-          />
-        </div>
-        <MonthCalendar 
-          currentDate={currentDate}
-          selectedDate={selectedDate}
-          onDateSelect={setSelectedDate}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          events={events || []}
-          isLoading={isLoading || isFetching}
-          selectedCategory={selectedCategory}
-        />
+      <div className="flex flex-col md:flex-row w-full flex-1 items-stretch min-h-0">
         <div 
-          className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          className="w-full md:flex-1 flex flex-col relative min-h-[400px] shrink-0 overflow-hidden border-b border-outline-variant/50 bg-background"
+          style={{ height: `calc(85dvh + ${dragOffset}px)` }}
         >
-          <div className={`w-16 h-1.5 rounded-full transition-colors ${isDragging ? 'bg-primary' : 'bg-outline-variant/40 group-hover:bg-primary/50'}`} />
-          <div className="absolute right-margin-mobile text-[10px] text-outline-variant pointer-events-none">
-            {APP_VERSION}
+          <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
+            <FilterCategories 
+              selected={selectedCategory} 
+              onSelect={setSelectedCategory} 
+              onRefetch={refetch}
+            />
+          </div>
+          <MonthCalendar 
+            currentDate={currentDate}
+            selectedDate={selectedDate}
+            onDateSelect={setSelectedDate}
+            onPrevMonth={handlePrevMonth}
+            onNextMonth={handleNextMonth}
+            events={events || []}
+            isLoading={isLoading || isFetching}
+            selectedCategory={selectedCategory}
+          />
+          <div 
+            className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0 md:hidden"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+          >
+            <div className={`w-16 h-1.5 rounded-full transition-colors ${isDragging ? 'bg-primary' : 'bg-outline-variant/40 group-hover:bg-primary/50'}`} />
+            <div className="absolute right-margin-mobile text-[10px] text-outline-variant pointer-events-none">
+              {APP_VERSION}
+            </div>
           </div>
         </div>
+        
+        <BottomSheet 
+          selectedDate={selectedDate} 
+          isOpen={!!selectedDate} 
+          onClose={() => setSelectedDate(null)} 
+          events={events || []}
+          selectedCategory={selectedCategory}
+          calendars={calendars || []}
+        />
       </div>
-      
-      <BottomSheet 
-        selectedDate={selectedDate} 
-        isOpen={!!selectedDate} 
-        onClose={() => setSelectedDate(null)} 
-        events={events || []}
-        selectedCategory={selectedCategory}
-        calendars={calendars || []}
-      />
 
       <CalendarSelectorSheet
         isOpen={isCalendarSelectorOpen}

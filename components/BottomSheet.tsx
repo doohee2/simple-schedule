@@ -210,7 +210,17 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     }
   };
 
-  if (!isOpen || !selectedDate) return null;
+  if (!selectedDate) {
+    return (
+      <div className="hidden md:flex md:w-[360px] lg:w-[400px] shrink-0 border-l border-outline-variant bg-surface items-center justify-center p-8 text-outline-variant">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="material-symbols-outlined text-[48px] opacity-50">event_note</span>
+          <p className="font-medium text-lg text-on-surface">날짜를 선택하세요</p>
+          <p className="text-sm opacity-80">달력에서 날짜를 클릭하면<br />일정을 조회하고 추가할 수 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Helper to check if event spans the selected date
   const isEventOnDay = (e: CalendarEvent, targetDay: Date) => {
@@ -258,12 +268,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   return (
     <>
-      <div className="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
+      <div className="md:hidden fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-enter bottom-sheet-enter-active">
-        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] border-t border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[80vh] overflow-y-auto">
+      <div className={`
+        fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-enter bottom-sheet-enter-active
+        md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0
+      `}>
+        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[80vh] md:max-h-none md:h-full overflow-y-auto">
           {/* Grabber Handle */}
-          <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer" onClick={onClose}></div>
+          <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer md:hidden" onClick={onClose}></div>
           
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">

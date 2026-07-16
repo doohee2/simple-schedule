@@ -27,7 +27,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-surface flex items-center justify-between px-2 sm:px-margin-mobile h-12 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[768px] mx-auto transition-colors duration-300">
+    <header className="bg-surface flex items-center justify-between px-2 sm:px-margin-mobile h-12 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[1200px] mx-auto transition-colors duration-300">
       {/* Left side: Title + 'i' button */}
       <div className="flex items-center gap-1">
         <div className="flex items-center justify-center pointer-events-none gap-1.5">
