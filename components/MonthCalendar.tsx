@@ -91,7 +91,7 @@ export default function MonthCalendar({
   return (
     <section className="flex-1 flex flex-col min-h-0">
       <div className="flex justify-between items-end mb-3 px-margin-mobile shrink-0">
-        <h2 className="text-lg font-bold text-on-surface flex items-center leading-none tracking-tight">
+        <h2 className="text-base font-bold text-on-surface flex items-center leading-none tracking-tight">
           {titleText}
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
         </h2>
@@ -106,17 +106,16 @@ export default function MonthCalendar({
       </div>
 
       <div className="flex-1 flex flex-col border-t border-b border-outline-variant bg-surface transition-opacity duration-300 min-h-0">
-        <div className="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low shrink-0">
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-error">일</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">월</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">화</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">수</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">목</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">금</div>
-          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">토</div>
-        </div>
-
         <div className={`flex-1 overflow-y-auto [container-type:size] ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
+          <div className="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low shrink-0 sticky top-0 z-30">
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-error">일</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">월</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">화</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">수</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">목</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">금</div>
+            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">토</div>
+          </div>
           <div className="flex flex-col">
             <div className="grid grid-cols-7 auto-rows-[20cqh]">
               {(() => {
