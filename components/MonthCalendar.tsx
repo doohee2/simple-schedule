@@ -91,7 +91,7 @@ export default function MonthCalendar({
   return (
     <section className="flex-1 flex flex-col min-h-0">
       <div className="flex justify-between items-end mb-3 px-margin-mobile shrink-0">
-        <h2 className="text-xl text-on-surface flex items-center leading-none tracking-tight">
+        <h2 className="text-lg font-bold text-on-surface flex items-center leading-none tracking-tight">
           {titleText}
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
         </h2>
@@ -107,13 +107,13 @@ export default function MonthCalendar({
 
       <div className="flex-1 flex flex-col border-t border-b border-outline-variant bg-surface transition-opacity duration-300 min-h-0">
         <div className="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low shrink-0">
-          <div className="py-3 text-center font-label-caps text-label-caps text-error">일</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">월</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">화</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">수</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">목</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">금</div>
-          <div className="py-3 text-center font-label-caps text-label-caps text-on-surface-variant">토</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-error">일</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">월</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">화</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">수</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">목</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">금</div>
+          <div className="py-1.5 text-center font-label-caps text-label-caps text-on-surface-variant">토</div>
         </div>
 
         <div className={`flex-1 overflow-y-auto [container-type:size] ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
@@ -233,25 +233,25 @@ export default function MonthCalendar({
                     <div
                       key={idx}
                       onClick={() => onDateSelect(day)}
-                      className={`flex flex-col items-center justify-start pt-2 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                      className={`flex flex-col justify-start pt-1 pr-1.5 pl-1 pb-1 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
                       {isTodayDay ? (
-                        <div className="w-6 h-6 bg-primary flex items-center justify-center">
-                          <span className={`font-time-display text-[14px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
+                        <div className="w-5 h-5 bg-primary flex items-center justify-center self-end -mr-0.5 -mt-0.5 rounded-sm">
+                          <span className={`font-time-display text-[11px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
                         </div>
                       ) : (
-                        <span className={`font-time-display text-time-display ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
+                        <span className={`self-end font-time-display text-[12px] leading-none ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
                           {format(day, displayDayFormat)}
                         </span>
                       )}
 
                       {isHoliday && (
-                        <span className={`text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate w-full text-center px-0.5 ${isPast && !isTodayDay ? 'line-through' : ''}`}>
+                        <span className={`self-end text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate max-w-full text-right ${isPast && !isTodayDay ? 'line-through' : ''}`}>
                           {dayHolidays[0].summary}
                         </span>
                       )}
 
-                      <div className="mt-auto w-full px-1 pb-1 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
+                      <div className="mt-auto w-full px-0 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
                         {displayItems.slice(0, 3).map((item, i) => {
                           const style = getCategoryStyle(item.firstColor);
 

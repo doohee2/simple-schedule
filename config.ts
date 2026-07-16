@@ -1,2 +1,2 @@
-export const APP_VERSION = "2026.6.14 by doohee2";
+export const APP_VERSION = "2026.7.16 by doohee2";
 export const HELP_MESSAGE = "Simple Schedule 페이지는 구글 캘린더를 간편하게 조회, 사용하기 위한 페이지닙니다. 따라서 구글 계정에 연동하기 위해 로그인 및 캘린더 권한을 부여받아야 합니다. 다만, 현재는 테스트 중으로 지정된 사용자 외에는 서비스가 불가합니다.";

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO, isSameDay, addDays, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
+import { Lunar } from "lunar-javascript";
 import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent, CalendarListEntry } from "@/hooks/useCalendar";
 
 interface BottomSheetProps {
@@ -270,8 +271,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
               )}
-              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
-                {format(selectedDate, "M월 d일", { locale: ko })} 일정 {mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}
+              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
+                <span>{format(selectedDate, "M월 d일", { locale: ko })} 일정 {mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}</span>
+                {selectedDate && (
+                  <span className="text-sm font-normal text-outline-variant tracking-tight">
+                    (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
+                  </span>
+                )}
               </h3>
             </div>
             
