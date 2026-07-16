@@ -14,6 +14,7 @@ export default function CalendarContainer() {
   const [selectedCategory, setSelectedCategory] = useState("전체 조회");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
@@ -109,18 +110,25 @@ export default function CalendarContainer() {
               selected={selectedCategory} 
               onSelect={(cat) => {
                 setSelectedCategory(cat);
-                if (cat === "전체 조회") setSelectedDate(new Date());
+                if (cat === "전체 조회") {
+                  setSelectedDate(new Date());
+                  setIsMobileSheetOpen(false);
+                }
               }} 
               onRefetch={() => {
                 refetch();
                 setSelectedDate(new Date());
+                setIsMobileSheetOpen(false);
               }}
             />
           </div>
           <MonthCalendar 
             currentDate={currentDate}
             selectedDate={selectedDate}
-            onDateSelect={setSelectedDate}
+            onDateSelect={(date) => {
+              setSelectedDate(date);
+              setIsMobileSheetOpen(true);
+            }}
             onPrevMonth={handlePrevMonth}
             onNextMonth={handleNextMonth}
             events={events || []}
@@ -143,8 +151,8 @@ export default function CalendarContainer() {
         
         <BottomSheet 
           selectedDate={selectedDate} 
-          isOpen={!!selectedDate} 
-          onClose={() => setSelectedDate(null)} 
+          isOpen={isMobileSheetOpen} 
+          onClose={() => setIsMobileSheetOpen(false)} 
           events={events || []}
           selectedCategory={selectedCategory}
           calendars={calendars || []}
