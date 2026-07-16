@@ -268,11 +268,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   return (
     <>
-      <div className="md:hidden fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
+      )}
 
       <div className={`
-        fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-enter bottom-sheet-enter-active
-        md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0
+        ${isOpen ? 'fixed bottom-0 bottom-sheet-enter bottom-sheet-enter-active' : 'hidden'} left-1/2 -translate-x-1/2 w-full z-50 
+        md:flex md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0
       `}>
         <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[80vh] md:max-h-none md:h-full overflow-y-auto">
           {/* Grabber Handle */}
@@ -294,6 +296,11 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 )}
               </h3>
             </div>
+            
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors md:hidden">
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
             
             {mode === "view" ? (
               <button 
