@@ -136,7 +136,7 @@ export default function CalendarContainer() {
             selectedCategory={selectedCategory}
           />
           <div 
-            className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0 md:hidden"
+            className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}

@@ -296,47 +296,46 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 )}
               </h3>
             </div>
-            
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors md:hidden">
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
-            
-            {mode === "view" ? (
-              <button 
-                onClick={() => setMode("add")}
-                className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
-              >
-                <span className="material-symbols-outlined">add</span>
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                {mode === "edit" && (
+            <div className="flex items-center gap-2">
+              {mode === "view" ? (
+                <button 
+                  onClick={() => setMode("add")}
+                  className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+                >
+                  <span className="material-symbols-outlined">add</span>
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  {mode === "edit" && (
+                    <button 
+                      onClick={handleDelete}
+                      disabled={deleteEventMutation.isPending || isReadOnly}
+                      className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
+                    >
+                      {deleteEventMutation.isPending ? (
+                        <span className="material-symbols-outlined animate-spin">refresh</span>
+                      ) : (
+                        <span className="material-symbols-outlined">delete</span>
+                      )}
+                    </button>
+                  )}
                   <button 
-                    onClick={handleDelete}
-                    disabled={deleteEventMutation.isPending || isReadOnly}
-                    className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
+                    onClick={handleSave}
+                    disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly}
+                    className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
                   >
-                    {deleteEventMutation.isPending ? (
+                    {(addEventMutation.isPending || updateEventMutation.isPending) ? (
                       <span className="material-symbols-outlined animate-spin">refresh</span>
                     ) : (
-                      <span className="material-symbols-outlined">delete</span>
+                      <span className="material-symbols-outlined">check</span>
                     )}
                   </button>
-                )}
-                <button 
-                  onClick={handleSave}
-                  disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly}
-                  className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
-                >
-                  {(addEventMutation.isPending || updateEventMutation.isPending) ? (
-                    <span className="material-symbols-outlined animate-spin">refresh</span>
-                  ) : (
-                    <span className="material-symbols-outlined">check</span>
-                  )}
-                </button>
-              </div>
-            )}
+                </div>
+              )}
+              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors md:hidden">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
           </div>
           
           <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
