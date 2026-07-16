@@ -107,17 +107,17 @@ export default function MonthCalendar({
 
       <div className="flex-1 flex flex-col border-t border-b border-outline-variant bg-surface transition-opacity duration-300 min-h-0">
         <div className={`flex-1 overflow-y-auto [container-type:size] ${isLoading ? 'opacity-50' : 'opacity-100'}`}>
-          <div className="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low shrink-0 sticky top-0 z-30">
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-error">일</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">월</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">화</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">수</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">목</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">금</div>
-            <div className="py-1.5 text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">토</div>
+          <div className="h-[28px] grid grid-cols-7 border-b border-outline-variant bg-surface-container-low shrink-0 sticky top-0 z-30 items-center">
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-error">일</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">월</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">화</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">수</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">목</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">금</div>
+            <div className="text-right pr-1.5 font-label-caps text-[11px] tracking-wide text-on-surface-variant">토</div>
           </div>
           <div className="flex flex-col">
-            <div className="grid grid-cols-7 auto-rows-[20cqh]">
+            <div className="grid grid-cols-7 auto-rows-[calc((100cqh-28px)/5)]">
               {(() => {
                 const month1Start = startOfDay(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
                 const month2End = startOfDay(new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0));

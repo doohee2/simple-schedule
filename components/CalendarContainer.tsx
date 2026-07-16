@@ -13,7 +13,7 @@ import { APP_VERSION } from "@/config";
 export default function CalendarContainer() {
   const [selectedCategory, setSelectedCategory] = useState("전체 조회");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
@@ -107,8 +107,14 @@ export default function CalendarContainer() {
           <div className="px-margin-mobile py-4 pb-3 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
             <FilterCategories 
               selected={selectedCategory} 
-              onSelect={setSelectedCategory} 
-              onRefetch={refetch}
+              onSelect={(cat) => {
+                setSelectedCategory(cat);
+                if (cat === "전체 조회") setSelectedDate(new Date());
+              }} 
+              onRefetch={() => {
+                refetch();
+                setSelectedDate(new Date());
+              }}
             />
           </div>
           <MonthCalendar 
