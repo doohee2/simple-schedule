@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { format, parseISO, isSameDay, addDays, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
+// @ts-ignore
 import { Lunar } from "lunar-javascript";
 import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent, CalendarListEntry } from "@/hooks/useCalendar";
 
