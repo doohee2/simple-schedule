@@ -338,14 +338,14 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             </div>
           </div>
           
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-4">
+          <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">
             {mode === "view" 
               ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
               : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
           </p>
 
           {mode === "view" ? (
-            <div className="flex flex-col gap-sm pb-8">
+            <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {
                 const isAllDay = !!event.start.date && !event.start.dateTime;
                 const timeStr = isAllDay 
@@ -371,7 +371,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-2 pb-8">
+            <div className="flex flex-col gap-1 pb-4">
               {isRecurring && (
                 <div className="bg-error-container text-on-error-container p-3 flex items-center gap-2 text-sm border border-error/20">
                   <span className="material-symbols-outlined">event_repeat</span>
@@ -477,7 +477,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col gap-1 mt-1">
                 <label className="text-xs font-label-caps text-label-caps text-outline px-1">메모</label>
                 <div className="relative group">
                   <textarea

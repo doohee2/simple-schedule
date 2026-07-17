@@ -209,8 +209,8 @@ export default function MonthCalendar({
 
                   if (!isCurrentMonth) {
                     return (
-                      <div key={idx} className={`${borderClasses} flex flex-col items-center justify-start pt-2 text-outline-variant opacity-30 overflow-hidden`}>
-                        <span className={`${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
+                      <div key={idx} className={`${borderClasses} flex flex-col justify-start pt-1 pr-1.5 pl-1 pb-1 text-outline-variant opacity-30 overflow-hidden`}>
+                        <span className={`self-end font-time-display text-[12px] leading-none ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
                       </div>
                     );
                   }
