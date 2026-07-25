@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@serwist/next": "^9.5.11",
+    "@supabase/supabase-js": "^2.110.8",
     "@tanstack/react-query": "^5.101.0",
     "date-fns": "^4.4.0",
     "jimp": "^0.22.12",

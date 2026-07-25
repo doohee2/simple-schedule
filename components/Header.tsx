@@ -4,12 +4,14 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { HELP_MESSAGE } from "@/config";
+import NotionTokenModal from "./NotionTokenModal";
 
 export default function Header() {
   const { data: session } = useSession();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -50,32 +52,42 @@ export default function Header() {
       </div>
       
       {/* Right side: Theme + Session controls */}
-      <div className="flex items-center gap-0">
+      <div className="flex items-center gap-0.5">
         <button 
           onClick={toggleTheme}
-          className="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform flex items-center justify-center w-10 h-10"
+          className="text-primary hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9"
           title="테마 변경"
         >
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
+          <span className="material-symbols-outlined text-[20px] sm:text-[22px]" style={{ fontVariationSettings: "'FILL' 0" }}>
             {mounted && resolvedTheme === "dark" ? "light_mode" : "dark_mode"}
           </span>
         </button>
         {session ? (
-          <div className="flex items-center gap-0">
+          <div className="flex items-center gap-0 sm:gap-0.5">
             <button 
               onClick={() => window.dispatchEvent(new Event("openCalendarSelector"))}
-              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 text-primary bg-transparent rounded-full"
+              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 text-primary bg-transparent rounded-full"
               title="캘린더 선택"
             >
               <span className="material-symbols-outlined text-[20px]">calendar_month</span>
             </button>
             <button 
+              onClick={() => setIsNotionModalOpen(true)}
+              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 text-primary bg-transparent rounded-full"
+              title="노션 연동 설정"
+            >
+              <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] fill-current" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.981-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.841-.046.935-.56.935-1.167V5.354c0-.606-.233-.933-.888-.887L5.86 5.308c-.467.046-.608.28-.608.98z" />
+                <path d="M14.643 8.337v7.697c0 .42-.14.7-.514.7L12.5 16.828c-.28.046-.373-.093-.373-.373v-5.692L8.719 17.06c-.187.234-.327.327-.607.327l-1.354-.093c-.234-.047-.327-.234-.327-.514V8.943c0-.373.14-.606.514-.606l1.354-.093c.28-.047.373.093.373.373v5.692l3.361-6.158c.234-.373.467-.467.747-.514l1.354-.093c.327 0 .5.14.5.793z" />
+              </svg>
+            </button>
+            <button 
               onClick={() => signOut()} 
               title="로그아웃"
-              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-10 h-10 relative group ml-1"
+              className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 relative group ml-0.5"
             >
               {session.user?.image ? (
-                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-primary/20">
+                <div className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden border border-primary/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
                     src={session.user.image} 
@@ -84,11 +96,11 @@ export default function Header() {
                     className="w-full h-full object-cover" 
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                    <span className="material-symbols-outlined text-white text-[14px]">logout</span>
+                    <span className="material-symbols-outlined text-white text-[13px]">logout</span>
                   </div>
                 </div>
               ) : (
-                <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="material-symbols-outlined text-primary text-[22px] sm:text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   account_circle
                 </span>
               )}
@@ -98,9 +110,9 @@ export default function Header() {
           <button 
             onClick={() => signIn("google")} 
             title="로그인"
-            className="text-outline hover:text-primary hover:opacity-80 transition-all active:scale-95 flex items-center justify-center w-10 h-10 ml-1"
+            className="text-outline hover:text-primary hover:opacity-80 transition-all active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 ml-0.5"
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-[22px] sm:text-[24px]" style={{ fontVariationSettings: "'FILL' 0" }}>
               account_circle
             </span>
           </button>
@@ -127,6 +139,12 @@ export default function Header() {
           </div>
         </>
       )}
+
+      {/* Notion Token Management Modal */}
+      <NotionTokenModal 
+        isOpen={isNotionModalOpen} 
+        onClose={() => setIsNotionModalOpen(false)} 
+      />
     </header>
   );
 }
