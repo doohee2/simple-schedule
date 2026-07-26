@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, isSameDay } from "date-fns";
-import { useCalendarEvents, useCalendarList } from "@/hooks/useCalendar";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useCalendarEvents, useCalendarList, useNotionHabitSummary } from "@/hooks/useCalendar";
 import FilterCategories from "./FilterCategories";
 import MonthCalendar from "./MonthCalendar";
 import BottomSheet from "./BottomSheet";
@@ -36,9 +36,9 @@ export default function CalendarContainer() {
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setSelectedCalendars(parsed);
+            setTimeout(() => setSelectedCalendars(parsed), 0);
           }
-        } catch (e) {}
+        } catch {}
       }
     }
   }, [session?.user?.email]);
@@ -50,6 +50,11 @@ export default function CalendarContainer() {
   const timeMax = endOfMonth(addMonths(currentDate, 1)).toISOString();
   
   const { data: events, isLoading, isFetching, refetch } = useCalendarEvents(timeMin, timeMax, selectedCalendars);
+
+  // Background fetch for Notion habit summary across the 2-month interval
+  const startStr = format(startOfMonth(currentDate), "yyyy-MM-dd");
+  const endStr = format(endOfMonth(addMonths(currentDate, 1)), "yyyy-MM-dd");
+  const { data: habitSummary } = useNotionHabitSummary(startStr, endStr);
 
   useEffect(() => {
     const handleOpenCalendarSelector = () => setIsCalendarSelectorOpen(true);
@@ -134,6 +139,7 @@ export default function CalendarContainer() {
             events={events || []}
             isLoading={isLoading || isFetching}
             selectedCategory={selectedCategory}
+            habitSummary={habitSummary}
           />
           <div 
             className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"

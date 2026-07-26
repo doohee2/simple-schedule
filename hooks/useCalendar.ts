@@ -190,3 +190,30 @@ export const useDeleteCalendarEvent = () => {
   });
 };
 
+export interface HabitSummary {
+  total: number;
+  checked: number;
+  completed: boolean;
+}
+
+export type HabitSummaryMap = Record<string, HabitSummary>;
+
+export const useNotionHabitSummary = (start?: string, end?: string) => {
+  const { status } = useSession();
+
+  return useQuery({
+    queryKey: ["notion-habits-summary", start, end],
+    queryFn: async () => {
+      if (!start || !end) return {};
+      const res = await fetch(`/api/notion/habits/summary?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch habit summary");
+      }
+      const data = await res.json();
+      return (data.summary || {}) as HabitSummaryMap;
+    },
+    enabled: status === "authenticated" && Boolean(start) && Boolean(end),
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    retry: false,
+  });
+};

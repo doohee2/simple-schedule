@@ -37,6 +37,7 @@
   - `POST`: 새로운 일정을 구글 캘린더에 생성합니다.
 - **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰 및 데이터베이스 ID(`database_id`)를 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
 - **`api/notion/habits/route.ts`**: Supabase DB에 저장된 계정별 노션 자격증명으로 Notion Database Query API를 대행 호출하여, 선택한 날짜("날짜" 속성 기준 기본 매칭)의 습관 체크리스트(체크박스, 상태, 코멘트)를 조회(`GET`) 및 실시간 반영(`POST`)하는 Proxy 백엔드 API 라우트입니다.
+- **`api/notion/habits/summary/route.ts`**: 캘린더에 로드된 2달간(`start`~`end`)의 노션 습관 레코드를 단 1번의 Batch Query로 일괄 조회하고, 날짜별 체크박스 총합과 완료 여부 스냅샷(`{ total, checked, completed }`)을 반환하는 백그라운드 실시간 렌더링 API입니다.
 
 ### 📂 `components/` (클라이언트 UI 컴포넌트)
 - **`Providers.tsx`**: NextAuth의 `SessionProvider`와 React Query의 `QueryClientProvider`를 묶어 하위 컴포넌트들에 제공합니다.
@@ -109,6 +110,13 @@
    - **날짜 매칭 기본 정책**: Notion Database 속성 중 **"날짜"**라는 이름의 `date` 속성을 우선(Primary Default)으로 필터링하여 선택된 날짜와 일치하는 일일 체크리스트 페이지를 정확히 찾아오며, 없을 시 생성 유도 및 설정 미완료 안내 UI를 깔끔하게 보여줍니다.
    - **속성별 맞춤 편집 UI**: 체크박스(`checkbox`) 속성의 원클릭 토글(취소선 및 마이크로 인터랙션), 상태/선택(`status`, `select`)의 커스텀 드롭다운 변경, 코멘트/메모(`rich_text`, `title`, `number`) 텍스트 수정 및 실시간 노션 페이지 동기화(`PATCH /api/notion/habits`)를 지원합니다.
    - 체크리스트 조회 상태에서 언제든 이전 일정 조회 화면으로 돌아올 수 있는 백 버튼(`←`)과 노션 원문 페이지로 이동하는 외부 링크(`open_in_new`) 기능을 포함했습니다.
+13. **캘린더 내 노션 습관 체크리스트 진행 현황 실시간 표기 (Zero-Latency Background Batch Query)**:
+   - 캘린더 영역에서 표시되는 2달(현재 달 + 다음 달) 동안의 노션 습관 데이터를 `GET /api/notion/habits/summary`를 통해 **단 1번의 Batch Query**로 백그라운드 비동기(`useNotionHabitSummary`) 호출합니다. 화면 지연(Latency)나 로딩 Block이 전혀 없이 구글 일정이 먼저 렌더링된 직후 부드럽게 나타납니다.
+   - 각 날짜 칸의 번호 바로 왼쪽에 체크리스트 상태 아이콘을 직관적으로 렌더링합니다:
+     1. **진행 완료 (체크박스 100% 완료)**: 체크된 초록 아이콘 (`check_box`)
+     2. **진행 중 (체크리스트 항목이 존재하나 모두 완료되지는 않음)**: 비어있는 박스 아이콘 (`check_box_outline_blank`)
+     3. **항목 없음 (데이터베이스에 해당 날짜 레코드 또는 체크박스 속성이 없음)**: 아무것도 표시하지 않음
+   - 바텀 시트/우측 패널의 노션 체크리스트 화면에서 체크박스를 변경하고 **[저장]**을 누르는 즉시 React Query 캐시를 `invalidate` 하여 메인 달력 아이콘도 100% 실시간 동기화됩니다.
 
 ---
 

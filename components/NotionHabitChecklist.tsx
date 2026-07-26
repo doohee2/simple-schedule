@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type HabitPropertyValue = boolean | string | number | null | undefined;
 
@@ -19,6 +20,7 @@ interface NotionHabitChecklistProps {
 }
 
 export default function NotionHabitChecklist({ selectedDate }: NotionHabitChecklistProps) {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
@@ -106,6 +108,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       if (res.ok && data.success) {
         setSaveSuccess(true);
         setHasChanges(false);
+        queryClient.invalidateQueries({ queryKey: ["notion-habits-summary"] });
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
         setErrorMsg(data.error || data.details || "저장 중 오류가 발생했습니다.");

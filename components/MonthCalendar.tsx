@@ -13,7 +13,7 @@ import {
   addMonths,
 } from "date-fns";
 import { ko } from "date-fns/locale";
-import { CalendarEvent } from "@/hooks/useCalendar";
+import { CalendarEvent, HabitSummaryMap } from "@/hooks/useCalendar";
 
 interface MonthCalendarProps {
   currentDate: Date;
@@ -24,6 +24,7 @@ interface MonthCalendarProps {
   events: CalendarEvent[];
   isLoading: boolean;
   selectedCategory: string;
+  habitSummary?: HabitSummaryMap;
 }
 
 const getCategoryStyle = (color: string) => {
@@ -61,6 +62,7 @@ export default function MonthCalendar({
   events,
   isLoading,
   selectedCategory,
+  habitSummary,
 }: MonthCalendarProps) {
   const nextMonth = addMonths(currentDate, 1);
   const isSameYr = currentDate.getFullYear() === nextMonth.getFullYear();
@@ -228,21 +230,37 @@ export default function MonthCalendar({
                   const todayBorderB = thickBottom ? 'border-b-2' : 'border-b';
                   const borderStyle = isTodayDay ? `${todayBorderR} ${todayBorderB} border-primary z-20` : borderClasses;
 
+                  const dateKey = format(day, "yyyy-MM-dd");
+                  const habitStat = habitSummary?.[dateKey];
+
                   return (
                     <div
                       key={idx}
                       onClick={() => onDateSelect(day)}
                       className={`flex flex-col justify-start pt-1 pr-1.5 pl-1 pb-1 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
-                      {isTodayDay ? (
-                        <div className="w-5 h-5 bg-primary flex items-center justify-center self-end -mr-0.5 -mt-0.5 rounded-sm">
-                          <span className={`font-time-display text-[11px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
-                        </div>
-                      ) : (
-                        <span className={`self-end font-time-display text-[12px] leading-none ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
-                          {format(day, displayDayFormat)}
-                        </span>
-                      )}
+                      <div className="w-full flex items-center justify-end gap-1">
+                        {habitStat && habitStat.total > 0 && (
+                          habitStat.completed ? (
+                            <span className="material-symbols-outlined text-[13px] text-primary select-none" title={`노션 습관 완료 (${habitStat.checked}/${habitStat.total})`}>
+                              check_box
+                            </span>
+                          ) : (
+                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/60 select-none" title={`노션 습관 진행 중 (${habitStat.checked}/${habitStat.total})`}>
+                              check_box_outline_blank
+                            </span>
+                          )
+                        )}
+                        {isTodayDay ? (
+                          <div className="w-5 h-5 bg-primary flex items-center justify-center -mr-0.5 -mt-0.5 rounded-sm shrink-0">
+                            <span className={`font-time-display text-[11px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
+                          </div>
+                        ) : (
+                          <span className={`font-time-display text-[12px] leading-none shrink-0 ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
+                            {format(day, displayDayFormat)}
+                          </span>
+                        )}
+                      </div>
 
                       {isHoliday && (
                         <span className={`self-end text-[9px] ${isTodayDay ? 'text-primary' : 'text-error'} mt-0.5 truncate max-w-full text-right ${isPast && !isTodayDay ? 'line-through' : ''}`}>
@@ -252,8 +270,6 @@ export default function MonthCalendar({
 
                       <div className="mt-auto w-full px-0 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
                         {displayItems.slice(0, 3).map((item, i) => {
-                          const style = getCategoryStyle(item.firstColor);
-
                           let content;
                           if (item.isOther) {
                             content = (
