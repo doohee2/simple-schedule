@@ -50,10 +50,10 @@ export default function Header() {
         </div>
         {!isOnline && (
           <div 
-            className="flex items-center justify-center w-7 h-7 rounded-full bg-error/15 text-error animate-pulse ml-0.5"
+            className="flex items-center justify-center text-error ml-0.5"
             title="오프라인 상태 (조회 전용 모드)"
           >
-            <span className="material-symbols-outlined text-[18px]">cloud_off</span>
+            <span className="material-symbols-outlined text-[22px] sm:text-[24px]">cloud_off</span>
           </div>
         )}
       </div>
