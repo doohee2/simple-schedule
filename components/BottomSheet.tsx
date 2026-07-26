@@ -6,6 +6,7 @@ import { ko } from "date-fns/locale";
 // @ts-ignore
 import { Lunar } from "lunar-javascript";
 import { useAddCalendarEvent, useUpdateCalendarEvent, useDeleteCalendarEvent, CalendarEvent, CalendarListEntry } from "@/hooks/useCalendar";
+import NotionHabitChecklist from "./NotionHabitChecklist";
 
 interface BottomSheetProps {
   selectedDate: Date | null;
@@ -17,7 +18,7 @@ interface BottomSheetProps {
 }
 
 export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "", calendars = [] }: BottomSheetProps) {
-  const [mode, setMode] = useState<"view" | "add" | "edit">("add");
+  const [mode, setMode] = useState<"view" | "add" | "edit" | "habit">("add");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
@@ -59,7 +60,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
         return false;
       };
 
-      let initialMode: "view" | "add" | "edit" = "add";
+      let initialMode: "view" | "add" | "edit" | "habit" = "add";
       
       if (selectedCategory === "전체 조회" || selectedCategory === "기타") {
         initialMode = "view";
@@ -282,13 +283,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              {(mode === "add" || mode === "edit") && (
-                <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface">
+              {(mode === "add" || mode === "edit" || mode === "habit") && (
+                <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface" title="뒤로가기">
                   <span className="material-symbols-outlined">arrow_back</span>
                 </button>
               )}
               <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
-                <span>{format(selectedDate, "M월 d일", { locale: ko })} 일정 {mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}</span>
+                <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "습관 체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
                 {selectedDate && (
                   <span className="text-sm font-normal text-outline-variant tracking-tight">
                     (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
@@ -298,13 +299,23 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             </div>
             <div className="flex items-center gap-2">
               {mode === "view" ? (
-                <button 
-                  onClick={() => setMode("add")}
-                  className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
-                >
-                  <span className="material-symbols-outlined">add</span>
-                </button>
-              ) : (
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={() => setMode("habit")}
+                    title="노션 습관 체크리스트"
+                    className="w-10 h-10 bg-surface-variant text-primary border border-outline-variant/60 flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">check_box</span>
+                  </button>
+                  <button 
+                    onClick={() => setMode("add")}
+                    title="일정 추가"
+                    className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+                  >
+                    <span className="material-symbols-outlined">add</span>
+                  </button>
+                </div>
+              ) : mode === "habit" ? null : (
                 <div className="flex gap-2">
                   {mode === "edit" && (
                     <button 
@@ -339,12 +350,16 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           </div>
           
           <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">
-            {mode === "view" 
+            {mode === "habit"
+              ? "노션과 동기화되는 오늘의 습관 및 체크리스트입니다."
+              : mode === "view" 
               ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
               : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
           </p>
 
-          {mode === "view" ? (
+          {mode === "habit" ? (
+            <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} />
+          ) : mode === "view" ? (
             <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {
                 const isAllDay = !!event.start.date && !event.start.dateTime;

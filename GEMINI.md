@@ -36,6 +36,7 @@
   - `GET`: 구글 캘린더의 일정 목록을 가져옵니다. (`timeMin`, `timeMax`로 기간 필터링)
   - `POST`: 새로운 일정을 구글 캘린더에 생성합니다.
 - **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰 및 데이터베이스 ID(`database_id`)를 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
+- **`api/notion/habits/route.ts`**: Supabase DB에 저장된 계정별 노션 자격증명으로 Notion Database Query API를 대행 호출하여, 선택한 날짜("날짜" 속성 기준 기본 매칭)의 습관 체크리스트(체크박스, 상태, 코멘트)를 조회(`GET`) 및 실시간 반영(`POST`)하는 Proxy 백엔드 API 라우트입니다.
 
 ### 📂 `components/` (클라이언트 UI 컴포넌트)
 - **`Providers.tsx`**: NextAuth의 `SessionProvider`와 React Query의 `QueryClientProvider`를 묶어 하위 컴포넌트들에 제공합니다.
@@ -43,8 +44,9 @@
 - **`CalendarContainer.tsx`**: 달력 시스템의 **상태 관리 허브**입니다. 사용자가 선택한 날짜(`selectedDate`), 선택한 카테고리(`selectedCategory`), 현재 보고 있는 달(`currentDate`)의 상태를 관리하고, `useCalendarEvents` 훅을 호출해 데이터를 하위 컴포넌트들로 내려줍니다(Props Drilling).
 - **`MonthCalendar.tsx`**: 실제 7열(그리드) 구조의 달력을 그리는 컴포넌트입니다. `date-fns`를 이용해 해당 월의 날짜 배열을 생성하고, 이벤트 데이터와 매핑하여 점심/저녁/휴가 등 파스텔톤 블록으로 일정을 표시합니다. 플랫(Flat)한 풀 위드스 디자인이 적용되어 있습니다.
 - **`FilterCategories.tsx`**: '전체', '점심', '저녁', '기타' 등 카테고리 칩 버튼들을 렌더링하며, 사용자의 클릭에 따라 필터 상태를 변경합니다.
-- **`BottomSheet.tsx`**: 달력에서 특정 날짜를 클릭 시 하단에서 올라오는 시트 컴포넌트입니다. 약속 대상(제목), 메모, 시작/종료 시간을 입력받는 폼(Form)을 가지고 있으며, 작성 후 `POST` API를 호출해 이벤트를 추가합니다.
+- **`BottomSheet.tsx`**: 달력에서 특정 날짜를 클릭 시 하단(모바일) 또는 우측 패널(데스크톱)에서 표시되는 일정 관리 UI 컴포넌트입니다. 일정 조회(`"view"`), 추가(`"add"`), 수정(`"edit"`), 노션 습관(`"habit"`) 모드 간 원활한 전환과 백 버튼(`←`)을 제공합니다.
 - **`NotionTokenModal.tsx`**: 상단 헤더의 노션 연동 아이콘을 클릭하면 호출되는 토큰 및 DB ID 관리 모달입니다. 마스킹 없이(`type="text"`) 직관적으로 구글 계정에 연동할 노션 API 액세스 토큰과 데이터베이스 ID를 확인하고 Supabase DB에 안전하게 보존합니다.
+- **`NotionHabitChecklist.tsx`**: 노션의 일일 습관 및 체크리스트 레코드를 화면에 직관적으로 렌더링하는 실시간 컨트롤러 컴포넌트입니다. 체크박스 토글, 상태 드롭다운 수정, 메모·코멘트 입력을 지원하며 변경 즉시 노션 페이지와 동기화합니다.
 
 ### 📂 `hooks/` & 기타
 - **`hooks/useCalendar.ts`**: React Query를 래핑한 커스텀 훅입니다.
@@ -102,6 +104,11 @@
    - 구글 로그인이 완료된 상태에서만 상단 헤더의 캘린더 선택 아이콘 바로 옆에 노션 연동 아이콘이 나타나도록 구현하였습니다. 여러 개의 컨트롤 아이콘이 안정적이고 쾌적하게 배치되도록 버튼 크기(`w-9 h-9`)와 간격을 컴팩트하게 조율했습니다.
    - 노션 아이콘을 누르면 기존 모달 스타일과 통일성 있는 `NotionTokenModal` 창이 띄워지며, 저장된 기존 토큰과 데이터베이스 ID를 자동 로딩하거나 신규 값을 바로 입력할 수 있습니다. 마스킹 없이(`type="text"`) 토큰과 ID 값을 있는 그대로 명확하게 확인할 수 있습니다.
    - "저장" 버튼 클릭 시 NextAuth의 로그인 세션 이메일을 고유 키(`user_email`)로 사용하여 Supabase의 `user_notion_tokens` 테이블(`access_token`, `database_id`)에 안전하게 Upsert(추가/수정) 처리합니다 (이를 위해 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 환경 변수를 활용합니다).
+12. **노션(Notion) 실시간 습관 체크리스트(Habit Tracker) 연동 및 조회/편집 기능 구축**:
+   - 일정 조회 화면(`BottomSheet` / 우측 패널)의 `+` 일정 추가 버튼 바로 옆에 직관적인 체크박스(`check_box`) 모양 버튼을 신설하여 언제든 오늘의 노션 습관 체크리스트 화면으로 즉시 넘어갈 수 있는 진입점을 만들었습니다.
+   - **날짜 매칭 기본 정책**: Notion Database 속성 중 **"날짜"**라는 이름의 `date` 속성을 우선(Primary Default)으로 필터링하여 선택된 날짜와 일치하는 일일 체크리스트 페이지를 정확히 찾아오며, 없을 시 생성 유도 및 설정 미완료 안내 UI를 깔끔하게 보여줍니다.
+   - **속성별 맞춤 편집 UI**: 체크박스(`checkbox`) 속성의 원클릭 토글(취소선 및 마이크로 인터랙션), 상태/선택(`status`, `select`)의 커스텀 드롭다운 변경, 코멘트/메모(`rich_text`, `title`, `number`) 텍스트 수정 및 실시간 노션 페이지 동기화(`PATCH /api/notion/habits`)를 지원합니다.
+   - 체크리스트 조회 상태에서 언제든 이전 일정 조회 화면으로 돌아올 수 있는 백 버튼(`←`)과 노션 원문 페이지로 이동하는 외부 링크(`open_in_new`) 기능을 포함했습니다.
 
 ---
 
