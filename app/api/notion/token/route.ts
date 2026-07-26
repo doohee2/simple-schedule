@@ -13,6 +13,19 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
+const cleanDatabaseId = (id?: string) => {
+  if (!id) return "";
+  let clean = id.trim();
+  if (clean.includes("?")) {
+    clean = clean.split("?")[0];
+  }
+  if (clean.includes("/")) {
+    const parts = clean.split("/");
+    clean = parts[parts.length - 1];
+  }
+  return clean.replace(/[^a-zA-Z0-9-]/g, "");
+};
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -63,7 +76,7 @@ export async function POST(req: NextRequest) {
         {
           user_email: session.user.email,
           access_token: token.trim(),
-          database_id: (databaseId || "").trim(),
+          database_id: cleanDatabaseId(databaseId || ""),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_email" }

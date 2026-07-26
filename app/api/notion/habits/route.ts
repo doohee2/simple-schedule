@@ -15,6 +15,19 @@ const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseKey);
 };
 
+const cleanDatabaseId = (id?: string) => {
+  if (!id) return "";
+  let clean = id.trim();
+  if (clean.includes("?")) {
+    clean = clean.split("?")[0];
+  }
+  if (clean.includes("/")) {
+    const parts = clean.split("/");
+    clean = parts[parts.length - 1];
+  }
+  return clean.replace(/[^a-zA-Z0-9-]/g, "");
+};
+
 export type HabitPropertyValue = boolean | string | number | null | undefined;
 
 export interface HabitProperty {
@@ -78,7 +91,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const { access_token: token, database_id: databaseId } = dbData;
+    const token = (dbData.access_token || "").trim();
+    const databaseId = cleanDatabaseId(dbData.database_id);
     const headers = {
       "Authorization": `Bearer ${token}`,
       "Notion-Version": NOTION_API_VERSION,
@@ -94,10 +108,18 @@ export async function GET(req: NextRequest) {
     if (!dbRes.ok) {
       const errText = await dbRes.text();
       console.error("[Notion DB Schema] Error:", errText);
+
+      let reasonMsg = `노션 데이터베이스 접근 실패 (상태: ${dbRes.status}). 토큰 및 데이터베이스 ID를 확인해 주세요.`;
+      if (dbRes.status === 404) {
+        reasonMsg = `[상태: 404 Not Found] 노션 API가 해당 데이터베이스에 접근할 수 없습니다. \n👉 해결 방법: 1) 노션의 대상 데이터베이스 페이지 열기 → 우측 상단 '•••' (더보기) 메뉴 → '연결(Add connections)'에서 발급받으신 '노션 통합(Bot)'을 검색해 추가(권한 공유)해 주세요. \n2) 입력하신 데이터베이스 ID(${databaseId})가 올바른지 확인해 주세요.`;
+      } else if (dbRes.status === 401) {
+        reasonMsg = `[상태: 401 Unauthorized] 노션 액세스 토큰 인증에 실패했습니다. 상단 헤더의 노션 설정에서 시크릿 토큰(secret_... 또는 ntn_...)을 다시 확인해 주세요.`;
+      }
+
       return NextResponse.json({
         found: false,
         configured: true,
-        message: `노션 데이터베이스 접근 실패 (상태: ${dbRes.status}). 토큰 권한 및 데이터베이스 ID를 확인해 주세요.`,
+        message: reasonMsg,
         errorDetails: errText,
       });
     }
@@ -184,7 +206,9 @@ export async function GET(req: NextRequest) {
     const parsedProperties: HabitProperty[] = [];
     
     for (const [name, prop] of Object.entries(page.properties)) {
-      if (name === datePropName) continue;
+      if (name === datePropName || name === "날짜" || name === "제목" || prop.type === "date" || prop.type === "title") {
+        continue;
+      }
 
       const schema = schemaProps[name] || {};
 
@@ -225,27 +249,18 @@ export async function GET(req: NextRequest) {
           type: "number",
           value: prop.number !== null && prop.number !== undefined ? String(prop.number) : "",
         });
-      } else if (prop.type === "title") {
-        parsedProperties.push({
-          id: prop.id,
-          name,
-          type: "title",
-          value: prop.title?.map((t) => t.plain_text).join("") || "",
-        });
       }
     }
 
-    // Sort: checkboxes first, then status/select, then title/text/number
+    // Sort: "상태" (status type or named "상태") first, then alphabetical (가나다) order
     parsedProperties.sort((a, b) => {
-      const typeWeight = (t: string) => {
-        if (t === 'checkbox') return 1;
-        if (t === 'status' || t === 'select') return 2;
-        return 3;
-      };
-      const wA = typeWeight(a.type);
-      const wB = typeWeight(b.type);
-      if (wA !== wB) return wA - wB;
-      return a.name.localeCompare(b.name);
+      const isStatusA = a.type === "status" || a.name === "상태";
+      const isStatusB = b.type === "status" || b.name === "상태";
+      
+      if (isStatusA && !isStatusB) return -1;
+      if (!isStatusA && isStatusB) return 1;
+      
+      return a.name.localeCompare(b.name, "ko");
     });
 
     return NextResponse.json({
