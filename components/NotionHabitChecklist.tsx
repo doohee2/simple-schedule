@@ -168,27 +168,31 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
   if (!configured) {
     return (
-      <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest w-full my-1">
-        <span className="material-symbols-outlined text-4xl text-outline mb-2">settings_ethernet</span>
-        <h4 className="font-bold text-on-surface text-sm mb-1">노션 연동이 설정되지 않았습니다</h4>
-        <p className="text-xs text-on-surface-variant leading-relaxed w-full max-w-lg mb-4">
-          {message || "상단 헤더의 노션 아이콘을 눌러 액세스 토큰과 데이터베이스 ID를 등록해 주세요."}
-        </p>
+      <div className="flex flex-col items-center justify-center py-8 w-full text-center my-2 gap-2">
+        <span className="material-symbols-outlined text-4xl text-outline-variant opacity-60">settings_ethernet</span>
+        <div className="flex flex-col gap-1 w-full px-2">
+          <h4 className="font-bold text-on-surface text-sm">노션 연동이 설정되지 않았습니다</h4>
+          <p className="text-xs text-on-surface-variant leading-relaxed break-keep w-full">
+            상단 헤더의 노션 아이콘을 눌러 액세스 토큰과 데이터베이스 ID를 등록해주세요.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!found) {
     return (
-      <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest w-full my-1">
-        <span className="material-symbols-outlined text-4xl text-outline mb-2">event_busy</span>
-        <h4 className="font-bold text-on-surface text-sm mb-1">체크리스트가 없습니다</h4>
-        <p className="text-xs text-on-surface-variant leading-relaxed w-full max-w-lg mb-4">
-          {message || `${dateStr} 날짜에 매핑되는 노션 데이터베이스 레코드를 찾지 못했습니다.`}
-        </p>
+      <div className="flex flex-col items-center justify-center py-8 w-full text-center my-2 gap-3">
+        <span className="material-symbols-outlined text-4xl text-outline-variant opacity-60">event_busy</span>
+        <div className="flex flex-col gap-1 w-full px-2">
+          <h4 className="font-bold text-on-surface text-sm">체크리스트가 없습니다</h4>
+          <p className="text-xs text-on-surface-variant leading-relaxed break-keep w-full">
+            {`${dateStr} 날짜의 노션 레코드가 없습니다. 노션 데이터베이스에서 레코드를 생성해주세요.`}
+          </p>
+        </div>
         <button
           onClick={() => fetchHabits(true)}
-          className="px-4 py-2 bg-surface-variant text-on-surface-variant rounded-xl text-xs font-bold hover:opacity-80 transition-opacity flex items-center gap-1.5"
+          className="mt-1 px-4 py-2 bg-surface-variant text-on-surface-variant rounded-xl text-xs font-bold hover:opacity-80 transition-opacity flex items-center gap-1.5"
         >
           <span className="material-symbols-outlined text-[16px]">refresh</span>
           다시 확인

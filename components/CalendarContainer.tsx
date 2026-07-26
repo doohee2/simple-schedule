@@ -14,7 +14,7 @@ export default function CalendarContainer() {
   const [selectedCategory, setSelectedCategory] = useState("전체 조회");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(true);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
