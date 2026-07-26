@@ -11,7 +11,7 @@
 - **React Query (`@tanstack/react-query`)**: 서버 상태(Server State) 관리 라이브러리입니다. 구글 캘린더 API 호출의 캐싱, 로딩 상태 관리, 낙관적 업데이트 및 데이터 동기화를 처리합니다.
 - **date-fns**: 자바스크립트의 복잡한 날짜 연산을 직관적이고 쉽게 처리하기 위해 사용된 유틸리티 라이브러리입니다. 달력의 그리드 계산 및 날짜 포맷팅에 사용됩니다.
 - **Serwist (next-pwa 대체)**: 애플리케이션이 모바일 기기에서 네이티브 앱처럼 동작(오프라인 캐싱, 홈 화면 추가 등)할 수 있도록 Service Worker와 `manifest.json`을 구성해 줍니다.
-- **Supabase (`@supabase/supabase-js`)**: 구글 계정별 노션 연동 액세스 토큰 및 설정 정보를 안전하게 관리하기 위한 클라우드 데이터베이스 서비스입니다.
+- **Supabase (`@supabase/supabase-js`)**: 구글 계정별 노션 연동 액세스 토큰 및 데이터베이스 ID 등의 설정 정보를 안전하게 관리하기 위한 클라우드 데이터베이스 서비스입니다.
 
 ---
 
@@ -35,7 +35,7 @@
 - **`api/calendar/route.ts`**: 구글 API와의 통신을 대행하는 백엔드 라우트입니다.
   - `GET`: 구글 캘린더의 일정 목록을 가져옵니다. (`timeMin`, `timeMax`로 기간 필터링)
   - `POST`: 새로운 일정을 구글 캘린더에 생성합니다.
-- **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰을 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
+- **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰 및 데이터베이스 ID(`database_id`)를 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
 
 ### 📂 `components/` (클라이언트 UI 컴포넌트)
 - **`Providers.tsx`**: NextAuth의 `SessionProvider`와 React Query의 `QueryClientProvider`를 묶어 하위 컴포넌트들에 제공합니다.
@@ -44,7 +44,7 @@
 - **`MonthCalendar.tsx`**: 실제 7열(그리드) 구조의 달력을 그리는 컴포넌트입니다. `date-fns`를 이용해 해당 월의 날짜 배열을 생성하고, 이벤트 데이터와 매핑하여 점심/저녁/휴가 등 파스텔톤 블록으로 일정을 표시합니다. 플랫(Flat)한 풀 위드스 디자인이 적용되어 있습니다.
 - **`FilterCategories.tsx`**: '전체', '점심', '저녁', '기타' 등 카테고리 칩 버튼들을 렌더링하며, 사용자의 클릭에 따라 필터 상태를 변경합니다.
 - **`BottomSheet.tsx`**: 달력에서 특정 날짜를 클릭 시 하단에서 올라오는 시트 컴포넌트입니다. 약속 대상(제목), 메모, 시작/종료 시간을 입력받는 폼(Form)을 가지고 있으며, 작성 후 `POST` API를 호출해 이벤트를 추가합니다.
-- **`NotionTokenModal.tsx`**: 상단 헤더의 노션 연동 아이콘을 클릭하면 호출되는 토큰 관리 모달입니다. 구글 계정에 연동할 노션 API 액세스 토큰을 확인하고 Supabase DB에 안전하게 보존합니다.
+- **`NotionTokenModal.tsx`**: 상단 헤더의 노션 연동 아이콘을 클릭하면 호출되는 토큰 및 DB ID 관리 모달입니다. 마스킹 없이(`type="text"`) 직관적으로 구글 계정에 연동할 노션 API 액세스 토큰과 데이터베이스 ID를 확인하고 Supabase DB에 안전하게 보존합니다.
 
 ### 📂 `hooks/` & 기타
 - **`hooks/useCalendar.ts`**: React Query를 래핑한 커스텀 훅입니다.
@@ -98,10 +98,10 @@
    - 앱의 최대 너비(Max-width)를 768px에서 1200px로 확장하여 넓은 데스크톱 모니터 환경을 적극 활용하도록 개편했습니다.
    - 브라우저 폭이 넓은 환경(`md` 이상)에서는 모바일용 바텀 시트 팝업이 우측 사이드 패널(Side Panel)로 자연스럽게 전환되어, 좌측 달력과 우측 일정을 동시에 보면서 관리할 수 있는 반응형 2분할 UI를 구현했습니다.
    - 데스크톱 환경에서는 특정 날짜 클릭 시 모달이 튀어나오지 않고, 우측 사이드 패널 데이터만 즉각적으로 연동(Data Binding)되며, 날짜 미선택 시 Empty State UI가 친절히 안내를 도와줍니다.
-11. **노션(Notion) 액세스 토큰 관리 모달 및 Supabase DB 연동**:
+11. **노션(Notion) 액세스 토큰 & DB ID 관리 모달 및 Supabase DB 연동**:
    - 구글 로그인이 완료된 상태에서만 상단 헤더의 캘린더 선택 아이콘 바로 옆에 노션 연동 아이콘이 나타나도록 구현하였습니다. 여러 개의 컨트롤 아이콘이 안정적이고 쾌적하게 배치되도록 버튼 크기(`w-9 h-9`)와 간격을 컴팩트하게 조율했습니다.
-   - 노션 아이콘을 누르면 기존 모달 스타일과 통일성 있는 `NotionTokenModal` 창이 띄워지며, 저장된 기존 토큰을 자동 로딩하거나 신규 토큰을 바로 입력할 수 있습니다.
-   - "저장" 버튼 클릭 시 NextAuth의 로그인 세션 이메일을 고유 키(`user_email`)로 사용하여 Supabase의 `user_notion_tokens` 테이블에 안전하게 Upsert(추가/수정) 처리합니다 (이를 위해 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 환경 변수를 활용합니다).
+   - 노션 아이콘을 누르면 기존 모달 스타일과 통일성 있는 `NotionTokenModal` 창이 띄워지며, 저장된 기존 토큰과 데이터베이스 ID를 자동 로딩하거나 신규 값을 바로 입력할 수 있습니다. 마스킹 없이(`type="text"`) 토큰과 ID 값을 있는 그대로 명확하게 확인할 수 있습니다.
+   - "저장" 버튼 클릭 시 NextAuth의 로그인 세션 이메일을 고유 키(`user_email`)로 사용하여 Supabase의 `user_notion_tokens` 테이블(`access_token`, `database_id`)에 안전하게 Upsert(추가/수정) 처리합니다 (이를 위해 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 환경 변수를 활용합니다).
 
 ---
 

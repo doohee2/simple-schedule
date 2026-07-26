@@ -9,6 +9,7 @@ interface NotionTokenModalProps {
 
 export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalProps) {
   const [token, setToken] = useState<string>("");
+  const [databaseId, setDatabaseId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
@@ -23,6 +24,7 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
             if (res.ok) {
               const data = await res.json();
               setToken(data.token || "");
+              setDatabaseId(data.databaseId || "");
             }
           })
           .catch((err) => {
@@ -46,13 +48,16 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token: token.trim() }),
+        body: JSON.stringify({ 
+          token: token.trim(),
+          databaseId: databaseId.trim(),
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
-        setStatusMsg({ text: "노션 액세스 토큰이 성공적으로 저장되었습니다!", type: "success" });
+        setStatusMsg({ text: "노션 연동 정보(토큰/DB ID)가 성공적으로 저장되었습니다!", type: "success" });
         setTimeout(() => {
           onClose();
         }, 1200);
@@ -95,7 +100,7 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
 
           <div className="flex flex-col gap-2">
             <p className="text-on-surface-variant text-sm leading-relaxed font-body-sm">
-              노션 API의 <strong>프라이빗 통합(Internal Integration) 액세스 토큰</strong>을 입력하시면, 로그인한 구글 계정과 안전하게 연결되어 일정을 동기화할 수 있습니다.
+              노션 API의 <strong>프라이빗 통합 액세스 토큰</strong>과 일정을 동기화할 <strong>데이터베이스 ID</strong>를 함께 입력해 주세요.
             </p>
 
             <div className="flex flex-col gap-1.5 mt-2">
@@ -104,10 +109,24 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
                 {loading && <span className="text-[11px] text-primary flex items-center gap-1"><span className="material-symbols-outlined text-[13px] animate-spin">refresh</span> 조회 중...</span>}
               </label>
               <input
-                type="password"
+                type="text"
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder="ntv_... 또는 secret_..."
+                disabled={loading || saving}
+                className="w-full px-3.5 py-2.5 bg-surface-container-lowest border border-outline-variant text-on-surface rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all disabled:opacity-50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5 mt-1">
+              <label className="text-xs font-bold text-on-surface">
+                <span>노션 데이터베이스 ID (Database ID)</span>
+              </label>
+              <input
+                type="text"
+                value={databaseId}
+                onChange={(e) => setDatabaseId(e.target.value)}
+                placeholder="32자리 고유 ID (예: a1b2c3... 또는 URL 내부 ID)"
                 disabled={loading || saving}
                 className="w-full px-3.5 py-2.5 bg-surface-container-lowest border border-outline-variant text-on-surface rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all disabled:opacity-50"
               />
@@ -137,7 +156,7 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
             </button>
             <button
               onClick={handleSave}
-              disabled={loading || saving || !token.trim()}
+              disabled={loading || saving}
               className="flex-1 h-11 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               {saving ? (
