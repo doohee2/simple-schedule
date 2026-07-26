@@ -18,9 +18,10 @@ export interface HabitProperty {
 interface NotionHabitChecklistProps {
   selectedDate: Date | null;
   onBack?: () => void;
+  isOffline?: boolean;
 }
 
-export default function NotionHabitChecklist({ selectedDate }: NotionHabitChecklistProps) {
+export default function NotionHabitChecklist({ selectedDate, isOffline = false }: NotionHabitChecklistProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -111,6 +112,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
   }, [dateStr]);
 
   const handleValueChange = (index: number, newValue: HabitPropertyValue) => {
+    if (isOffline) return;
     setProperties((prev) => {
       const copy = [...prev];
       copy[index] = { ...copy[index], value: newValue };
@@ -121,7 +123,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
   };
 
   const handleSave = async () => {
-    if (!pageId) return;
+    if (isOffline || !pageId) return;
 
     setSaving(true);
     setErrorMsg(null);
@@ -222,6 +224,13 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
         )}
       </div>
 
+      {isOffline && (
+        <div className="bg-error/10 text-error py-2 px-3 text-xs font-semibold flex items-center gap-2 border border-error/20 rounded-lg">
+          <span className="material-symbols-outlined text-[16px]">cloud_off</span>
+          <span>오프라인 모드입니다. 로컬에 저장된 노션 습관 조회만 가능하며 변경사항 저장 및 실시간 갱신이 차단됩니다.</span>
+        </div>
+      )}
+
       {errorMsg && (
         <div className="bg-error-container/40 text-error py-2 px-3 text-xs font-medium flex items-center gap-2 border border-error/20">
           <span className="material-symbols-outlined text-[16px]">error</span>
@@ -245,7 +254,9 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
               <div
                 key={prop.id}
                 onClick={() => handleValueChange(idx, !isChecked)}
-                className={`flex items-center justify-between py-3.5 px-3.5 border transition-all cursor-pointer select-none ${
+                className={`flex items-center justify-between py-3.5 px-3.5 border transition-all select-none ${
+                  isOffline ? "opacity-70 cursor-not-allowed pointer-events-none" : "cursor-pointer"
+                } ${
                   isChecked
                     ? "bg-primary/10 border-primary/40 text-on-surface"
                     : "bg-surface-container-lowest border-outline-variant text-on-surface hover:bg-surface-container-low"
@@ -276,8 +287,9 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                 </label>
                 <select
                   value={String(prop.value || "")}
+                  disabled={isOffline}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
-                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer"
+                  className={`w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <option value="">선택 없음</option>
                   {(prop.options || []).map((opt) => (
@@ -301,10 +313,11 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                 </label>
                 <input
                   type={prop.type === "number" ? "number" : "text"}
+                  disabled={isOffline}
                   value={String(prop.value ?? "")}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
                   placeholder={`${prop.name} 입력...`}
-                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all"
+                  className={`w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : ""}`}
                 />
               </div>
             );
@@ -318,15 +331,15 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       <div className="mt-1 pt-1.5 border-t border-outline-variant flex items-center gap-2.5">
         <button
           onClick={() => fetchHabits(true)}
-          disabled={loading || saving}
+          disabled={loading || saving || isOffline}
           className="h-[42px] px-3.5 bg-surface-variant text-on-surface-variant font-bold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
-          title="새로고침"
+          title={isOffline ? "오프라인 상태에서는 갱신할 수 없습니다." : "새로고침"}
         >
           <span className="material-symbols-outlined text-[18px]">refresh</span>
         </button>
         <button
           onClick={handleSave}
-          disabled={saving || !hasChanges}
+          disabled={saving || !hasChanges || isOffline}
           className="flex-1 h-[42px] bg-primary text-on-primary font-bold text-xs md:text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {saving ? (
@@ -337,7 +350,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
           ) : (
             <>
               <span className="material-symbols-outlined text-[18px]">save</span>
-              {hasChanges ? "변경사항 노션에 저장" : "저장됨 (변경사항 없음)"}
+              {isOffline ? "오프라인 (조회 전용 모드)" : hasChanges ? "변경사항 노션에 저장" : "저장됨 (변경사항 없음)"}
             </>
           )}
         </button>

@@ -9,8 +9,10 @@ import MonthCalendar from "./MonthCalendar";
 import BottomSheet from "./BottomSheet";
 import CalendarSelectorSheet from "./CalendarSelectorSheet";
 import { APP_VERSION } from "@/config";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 export default function CalendarContainer() {
+  const isOnline = useNetworkStatus();
   const [selectedCategory, setSelectedCategory] = useState("전체 조회");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -62,8 +64,8 @@ export default function CalendarContainer() {
     return () => window.removeEventListener("openCalendarSelector", handleOpenCalendarSelector);
   }, []);
 
-  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const handlePrevMonth = () => { if (isOnline) setCurrentDate(subMonths(currentDate, 1)); };
+  const handleNextMonth = () => { if (isOnline) setCurrentDate(addMonths(currentDate, 1)); };
 
   const handleToggleCalendar = (calId: string) => {
     setSelectedCalendars(prev => {
@@ -140,6 +142,7 @@ export default function CalendarContainer() {
             isLoading={isLoading || isFetching}
             selectedCategory={selectedCategory}
             habitSummary={habitSummary}
+            isOffline={!isOnline}
           />
           <div 
             className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
@@ -162,6 +165,7 @@ export default function CalendarContainer() {
           events={events || []}
           selectedCategory={selectedCategory}
           calendars={calendars || []}
+          isOffline={!isOnline}
         />
       </div>
 

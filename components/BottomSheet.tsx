@@ -15,9 +15,10 @@ interface BottomSheetProps {
   events?: CalendarEvent[];
   selectedCategory?: string;
   calendars?: CalendarListEntry[];
+  isOffline?: boolean;
 }
 
-export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "", calendars = [] }: BottomSheetProps) {
+export default function BottomSheet({ selectedDate, isOpen, onClose, events = [], selectedCategory = "", calendars = [], isOffline = false }: BottomSheetProps) {
   const [mode, setMode] = useState<"view" | "add" | "edit" | "habit">("add");
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [summary, setSummary] = useState("");
@@ -79,6 +80,10 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
         if (hasMatchingEvent) {
           initialMode = "view";
         }
+      }
+
+      if (isOffline && initialMode === "add") {
+        initialMode = "view";
       }
 
       setMode(initialMode);
@@ -175,7 +180,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     setEditingCalendarId(calId);
     
     const calInfo = calendars.find(c => c.id === calId);
-    if (calInfo && (calInfo.accessRole === "reader" || calInfo.accessRole === "freeBusyReader")) {
+    if (isOffline || (calInfo && (calInfo.accessRole === "reader" || calInfo.accessRole === "freeBusyReader"))) {
       setIsReadOnly(true);
     } else {
       setIsReadOnly(false);
@@ -312,13 +317,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   >
                     <span className="material-symbols-outlined text-[22px]">check_box</span>
                   </button>
-                  <button 
-                    onClick={() => setMode("add")}
-                    title="일정 추가"
-                    className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
-                  >
-                    <span className="material-symbols-outlined">add</span>
-                  </button>
+                  {!isOffline && (
+                    <button 
+                      onClick={() => setMode("add")}
+                      title="일정 추가"
+                      className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+                    >
+                      <span className="material-symbols-outlined">add</span>
+                    </button>
+                  )}
                 </div>
               ) : mode === "habit" ? null : (
                 <div className="flex gap-2">
@@ -354,6 +361,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             </div>
           </div>
           
+          {isOffline && mode === "view" && (
+            <div className="bg-error/10 text-error p-2.5 mb-3 flex items-center gap-2 text-xs font-semibold border border-error/20 rounded-lg">
+              <span className="material-symbols-outlined text-[18px]">cloud_off</span>
+              <span>오프라인 모드입니다. 로컬에 캐시된 일정 조회만 가능합니다.</span>
+            </div>
+          )}
+
           {mode !== "habit" && (
             <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">
               {mode === "view"
@@ -363,7 +377,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           )}
 
           {mode === "habit" ? (
-            <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} />
+            <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} isOffline={isOffline} />
           ) : mode === "view" ? (
             <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {
@@ -407,7 +421,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               {isReadOnly && (
                 <div className="bg-surface-variant text-on-surface p-3 flex items-center gap-2 text-sm border border-outline/20">
                   <span className="material-symbols-outlined">lock</span>
-                  <span>이 캘린더는 읽기 전용이므로 일정을 수정하거나 삭제할 수 없습니다.</span>
+                  <span>{isOffline ? "오프라인 상태에서는 일정을 수정하거나 삭제할 수 없습니다 (조회 전용)." : "이 캘린더는 읽기 전용이므로 일정을 수정하거나 삭제할 수 없습니다."}</span>
                 </div>
               )}
 

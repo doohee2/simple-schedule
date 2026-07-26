@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "약속 잡기",
+    statusBarStyle: "black-translucent",
+    title: "Simple Reader",
   },
   formatDetection: {
     telephone: false,

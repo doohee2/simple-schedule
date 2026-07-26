@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { HELP_MESSAGE } from "@/config";
 import NotionTokenModal from "./NotionTokenModal";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -12,6 +13,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
+  const isOnline = useNetworkStatus();
 
   useEffect(() => {
     setMounted(true);
@@ -30,20 +32,30 @@ export default function Header() {
 
   return (
     <header className="bg-surface flex items-center justify-between px-2 sm:px-margin-mobile h-12 w-full z-40 relative flex-shrink-0 border-b border-outline-variant max-w-[1200px] mx-auto transition-colors duration-300">
-      {/* Left side: Title */}
-      <div 
-        onClick={() => setIsHelpOpen(true)}
-        className="flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-85 transition-opacity active:scale-[0.98]"
-        title="앱 정보 및 안내"
-      >
-        <span className="material-symbols-outlined text-[28px] sm:text-[32px] text-[#0066ff] dark:text-[#d0ebff] transition-colors duration-300 drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
-          calendar_month
-        </span>
-        <svg viewBox="0 0 360 60" className="h-[28px] sm:h-[34px] w-auto drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
-          <text x="0" y="45" fontWeight="800" fontSize="42" letterSpacing="-0.02em" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300">Simple</text>
-          <circle cx="18" cy="10" r="4" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300"/>
-          <text x="145" y="45" fontWeight="700" fontSize="42" letterSpacing="-0.02em" className="fill-[#1e293b] dark:fill-[#ffffff] transition-colors duration-300">Schedule</text>
-        </svg>
+      {/* Left side: Title + Offline Badge */}
+      <div className="flex items-center gap-1">
+        <div 
+          onClick={() => setIsHelpOpen(true)}
+          className="flex items-center justify-center gap-1.5 cursor-pointer hover:opacity-85 transition-opacity active:scale-[0.98]"
+          title="앱 정보 및 안내"
+        >
+          <span className="material-symbols-outlined text-[28px] sm:text-[32px] text-[#0066ff] dark:text-[#d0ebff] transition-colors duration-300 drop-shadow-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+            calendar_month
+          </span>
+          <svg viewBox="0 0 360 60" className="h-[28px] sm:h-[34px] w-auto drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ fontFamily: 'var(--font-plus-jakarta-sans), sans-serif' }}>
+            <text x="0" y="45" fontWeight="800" fontSize="42" letterSpacing="-0.02em" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300">Simple</text>
+            <circle cx="18" cy="10" r="4" className="fill-[#0066ff] dark:fill-[#d0ebff] transition-colors duration-300"/>
+            <text x="145" y="45" fontWeight="700" fontSize="42" letterSpacing="-0.02em" className="fill-[#1e293b] dark:fill-[#ffffff] transition-colors duration-300">Schedule</text>
+          </svg>
+        </div>
+        {!isOnline && (
+          <div 
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-error/15 text-error animate-pulse ml-0.5"
+            title="오프라인 상태 (조회 전용 모드)"
+          >
+            <span className="material-symbols-outlined text-[18px]">cloud_off</span>
+          </div>
+        )}
       </div>
       
       {/* Right side: Theme + Session controls */}
@@ -138,12 +150,37 @@ export default function Header() {
               <p className="text-on-surface-variant text-sm leading-relaxed mb-6 font-body-sm">
                 {HELP_MESSAGE}
               </p>
-              <button 
-                onClick={() => setIsHelpOpen(false)}
-                className="w-full h-12 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
-              >
-                확인
-              </button>
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={async () => {
+                    if ("serviceWorker" in navigator && "caches" in window) {
+                      try {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const reg of registrations) {
+                          await reg.unregister();
+                        }
+                        const cacheKeys = await caches.keys();
+                        for (const key of cacheKeys) {
+                          await caches.delete(key);
+                        }
+                      } catch (err) {
+                        console.error("Cache reset error:", err);
+                      }
+                    }
+                    window.location.reload();
+                  }}
+                  className="w-full h-12 bg-surface-variant text-on-surface-variant rounded-xl font-bold text-sm hover:bg-surface-variant/80 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">update</span>
+                  <span>최신 버전으로 업데이트</span>
+                </button>
+                <button 
+                  onClick={() => setIsHelpOpen(false)}
+                  className="w-full h-12 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  확인
+                </button>
+              </div>
             </div>
           </div>
         </>

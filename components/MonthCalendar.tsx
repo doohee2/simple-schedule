@@ -25,6 +25,7 @@ interface MonthCalendarProps {
   isLoading: boolean;
   selectedCategory: string;
   habitSummary?: HabitSummaryMap;
+  isOffline?: boolean;
 }
 
 const getCategoryStyle = (color: string) => {
@@ -63,6 +64,7 @@ export default function MonthCalendar({
   isLoading,
   selectedCategory,
   habitSummary,
+  isOffline = false,
 }: MonthCalendarProps) {
   const nextMonth = addMonths(currentDate, 1);
   const isSameYr = currentDate.getFullYear() === nextMonth.getFullYear();
@@ -98,10 +100,20 @@ export default function MonthCalendar({
           {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
         </h2>
         <div className="flex items-center space-x-2">
-          <button onClick={onPrevMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors">
+          <button 
+            onClick={onPrevMonth} 
+            disabled={isOffline}
+            title={isOffline ? "오프라인 모드에서는 달력을 이동할 수 없습니다." : "이전 달"}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${isOffline ? "text-outline/30 cursor-not-allowed" : "text-outline hover:bg-surface-variant"}`}
+          >
             <span className="material-symbols-outlined text-[20px]">chevron_left</span>
           </button>
-          <button onClick={onNextMonth} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full transition-colors">
+          <button 
+            onClick={onNextMonth} 
+            disabled={isOffline}
+            title={isOffline ? "오프라인 모드에서는 달력을 이동할 수 없습니다." : "다음 달"}
+            className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${isOffline ? "text-outline/30 cursor-not-allowed" : "text-outline hover:bg-surface-variant"}`}
+          >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
         </div>
