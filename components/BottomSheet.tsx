@@ -64,6 +64,11 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       
       if (selectedCategory === "전체 조회" || selectedCategory === "기타") {
         initialMode = "view";
+        if (selectedCategory === "전체 조회" && selectedDate && isSameDay(selectedDate, new Date())) {
+          if (typeof window !== "undefined" && localStorage.getItem("notion_prioritize_today") === "true") {
+            initialMode = "habit";
+          }
+        }
       } else if (selectedCategory) {
         const dayEvents = events.filter(e => isEventOnDayLocal(e, selectedDate));
         const hasMatchingEvent = dayEvents.some(e => {

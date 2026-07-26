@@ -202,12 +202,12 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-4">
+    <div className="flex flex-col gap-2.5 pb-4">
       {/* Action Header & Notice */}
-      <div className="flex items-center justify-between bg-surface-container-low p-3.5 border border-outline-variant">
+      <div className="flex items-center justify-between bg-surface-container-low py-2 px-3.5 border border-outline-variant">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-xl">task_alt</span>
-          <span className="text-sm font-bold text-on-surface">오늘의 습관 & 체크리스트</span>
+          <span className="material-symbols-outlined text-primary text-lg">task_alt</span>
+          <span className="text-xs font-bold text-on-surface">오늘의 습관 & 체크리스트</span>
         </div>
         {pageUrl && (
           <a
@@ -223,21 +223,21 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       </div>
 
       {errorMsg && (
-        <div className="bg-error-container/40 text-error p-3 text-xs font-medium flex items-center gap-2 border border-error/20">
-          <span className="material-symbols-outlined text-[18px]">error</span>
+        <div className="bg-error-container/40 text-error py-2 px-3 text-xs font-medium flex items-center gap-2 border border-error/20">
+          <span className="material-symbols-outlined text-[16px]">error</span>
           <span>{errorMsg}</span>
         </div>
       )}
 
       {saveSuccess && (
-        <div className="bg-[#c6f6d5] dark:bg-[#137333]/30 text-[#137333] dark:text-[#c6f6d5] p-3 text-xs font-bold flex items-center gap-2 transition-all">
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+        <div className="bg-[#c6f6d5] dark:bg-[#137333]/30 text-[#137333] dark:text-[#c6f6d5] py-2 px-3 text-xs font-bold flex items-center gap-2 transition-all">
+          <span className="material-symbols-outlined text-[16px]">check_circle</span>
           <span>변경사항이 노션에 성공적으로 저장되었습니다!</span>
         </div>
       )}
 
       {/* Properties List */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-1.5">
         {properties.map((prop, idx) => {
           if (prop.type === "checkbox") {
             const isChecked = Boolean(prop.value);
@@ -245,21 +245,21 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
               <div
                 key={prop.id}
                 onClick={() => handleValueChange(idx, !isChecked)}
-                className={`flex items-center justify-between p-4 border transition-all cursor-pointer select-none ${
+                className={`flex items-center justify-between py-2 px-3.5 border transition-all cursor-pointer select-none ${
                   isChecked
                     ? "bg-primary/10 border-primary/40 text-on-surface"
                     : "bg-surface-container-lowest border-outline-variant text-on-surface hover:bg-surface-container-low"
                 }`}
               >
-                <span className={`text-sm font-semibold ${isChecked ? "line-through text-on-surface/70" : ""}`}>
+                <span className={`text-xs md:text-sm font-semibold ${isChecked ? "line-through text-on-surface/70" : ""}`}>
                   {prop.name}
                 </span>
                 <div
-                  className={`w-6 h-6 flex items-center justify-center transition-colors ${
+                  className={`w-5 h-5 flex items-center justify-center transition-colors ${
                     isChecked ? "bg-primary text-on-primary" : "border-2 border-outline bg-transparent"
                   }`}
                 >
-                  {isChecked && <span className="material-symbols-outlined text-[18px] font-bold">check</span>}
+                  {isChecked && <span className="material-symbols-outlined text-[16px] font-bold">check</span>}
                 </div>
               </div>
             );
@@ -267,7 +267,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
           if (prop.type === "status" || prop.type === "select") {
             return (
-              <div key={prop.id} className="flex flex-col gap-1.5 p-3.5 bg-surface-container-lowest border border-outline-variant">
+              <div key={prop.id} className="flex flex-col gap-1 py-2 px-3 bg-surface-container-lowest border border-outline-variant">
                 <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
                   <span>{prop.name}</span>
                   <span className="text-[10px] uppercase tracking-wider text-outline px-1.5 py-0.5 bg-surface-variant rounded">
@@ -277,7 +277,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                 <select
                   value={String(prop.value || "")}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
-                  className="w-full h-10 px-3 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer"
+                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-[16px] md:text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer"
                 >
                   <option value="">선택 없음</option>
                   {(prop.options || []).map((opt) => (
@@ -292,7 +292,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
           if (prop.type === "rich_text" || prop.type === "title" || prop.type === "number") {
             return (
-              <div key={prop.id} className="flex flex-col gap-1.5 p-3.5 bg-surface-container-lowest border border-outline-variant">
+              <div key={prop.id} className="flex flex-col gap-1 py-2 px-3 bg-surface-container-lowest border border-outline-variant">
                 <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
                   <span>{prop.name}</span>
                   <span className="text-[10px] text-outline px-1.5 py-0.5 bg-surface-variant rounded">
@@ -304,7 +304,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                   value={String(prop.value ?? "")}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
                   placeholder={`${prop.name} 입력...`}
-                  className="w-full h-10 px-3 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all"
+                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-[16px] md:text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all"
                 />
               </div>
             );
@@ -315,11 +315,11 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       </div>
 
       {/* Save Button */}
-      <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-3">
+      <div className="mt-1 pt-1.5 border-t border-outline-variant flex items-center gap-2.5">
         <button
           onClick={() => fetchHabits(true)}
           disabled={loading || saving}
-          className="h-12 px-4 bg-surface-variant text-on-surface-variant font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+          className="h-[42px] px-3.5 bg-surface-variant text-on-surface-variant font-bold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
           title="새로고침"
         >
           <span className="material-symbols-outlined text-[18px]">refresh</span>
@@ -327,16 +327,16 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
         <button
           onClick={handleSave}
           disabled={saving || !hasChanges}
-          className="flex-1 h-12 bg-primary text-on-primary font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-1 h-[42px] bg-primary text-on-primary font-bold text-xs md:text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {saving ? (
             <>
-              <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
+              <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
               노션에 저장 중...
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[20px]">save</span>
+              <span className="material-symbols-outlined text-[18px]">save</span>
               {hasChanges ? "변경사항 노션에 저장" : "저장됨 (변경사항 없음)"}
             </>
           )}

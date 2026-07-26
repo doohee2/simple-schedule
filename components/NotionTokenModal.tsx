@@ -10,12 +10,16 @@ interface NotionTokenModalProps {
 export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalProps) {
   const [token, setToken] = useState<string>("");
   const [databaseId, setDatabaseId] = useState<string>("");
+  const [prioritizeToday, setPrioritizeToday] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [statusMsg, setStatusMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      if (typeof window !== "undefined") {
+        setPrioritizeToday(localStorage.getItem("notion_prioritize_today") === "true");
+      }
       const timer = setTimeout(() => {
         setStatusMsg(null);
         setLoading(true);
@@ -38,9 +42,19 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
     }
   }, [isOpen]);
 
+  const handlePrioritizeChange = (checked: boolean) => {
+    setPrioritizeToday(checked);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("notion_prioritize_today", String(checked));
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setStatusMsg(null);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("notion_prioritize_today", String(prioritizeToday));
+    }
 
     try {
       const res = await fetch("/api/notion/token", {
@@ -130,6 +144,21 @@ export default function NotionTokenModal({ isOpen, onClose }: NotionTokenModalPr
                 disabled={loading || saving}
                 className="w-full px-3.5 py-2.5 bg-surface-container-lowest border border-outline-variant text-on-surface rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all disabled:opacity-50"
               />
+            </div>
+
+            <div 
+              className="flex items-center gap-3 mt-2.5 p-3.5 bg-surface-container-low border border-outline-variant rounded-xl cursor-pointer select-none hover:bg-surface-variant/50 transition-colors" 
+              onClick={() => handlePrioritizeChange(!prioritizeToday)}
+            >
+              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors shrink-0 ${prioritizeToday ? "bg-primary text-on-primary" : "border-2 border-outline bg-transparent"}`}>
+                {prioritizeToday && <span className="material-symbols-outlined text-[16px] font-bold">check</span>}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-bold text-on-surface">오늘 일정 조회 시 노션 우선</span>
+                <span className="text-[11px] text-on-surface-variant leading-tight">
+                  '전체 조회' 선택 시 캘린더의 오늘 날짜를 클릭하면 노션 체크리스트 화면이 기본으로 뜹니다.
+                </span>
+              </div>
             </div>
           </div>
 
