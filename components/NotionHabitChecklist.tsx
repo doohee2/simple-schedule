@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { HabitSummaryMap } from "@/hooks/useCalendar";
 
 export type HabitPropertyValue = boolean | string | number | null | undefined;
 
@@ -36,11 +37,42 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
 
-  const fetchHabits = async () => {
+  const fetchHabits = async (forceRefresh = false) => {
     setLoading(true);
     setErrorMsg(null);
     setSaveSuccess(false);
     setHasChanges(false);
+
+    if (!forceRefresh) {
+      const cachedQueries = queryClient.getQueriesData<HabitSummaryMap>({ queryKey: ["notion-habits-summary"] });
+      for (const [key, summaryData] of cachedQueries) {
+        if (!summaryData) continue;
+        const start = key[1] as string;
+        const end = key[2] as string;
+        if (typeof start === "string" && typeof end === "string" && dateStr >= start && dateStr <= end) {
+          const daySummary = summaryData[dateStr];
+          if (daySummary?.data) {
+            setConfigured(daySummary.data.configured ?? true);
+            setFound(daySummary.data.found ?? true);
+            setMessage("");
+            setPageId(daySummary.data.pageId || null);
+            setPageUrl(daySummary.data.url || null);
+            setProperties((daySummary.data.properties as HabitProperty[]) || []);
+            setLoading(false);
+            return;
+          } else {
+            setConfigured(true);
+            setFound(false);
+            setMessage(`해당 날짜(${dateStr})의 노션 습관 체크리스트 레코드가 없습니다. 노션 데이터베이스에 '${dateStr}' 날짜 레코드를 생성해 주세요.`);
+            setPageId(null);
+            setPageUrl(null);
+            setProperties([]);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+    }
 
     try {
       const res = await fetch(`/api/notion/habits?date=${encodeURIComponent(dateStr)}`);
@@ -58,6 +90,10 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       setPageId(data.pageId || null);
       setPageUrl(data.url || null);
       setProperties(data.properties || []);
+
+      if (forceRefresh) {
+        queryClient.invalidateQueries({ queryKey: ["notion-habits-summary"] });
+      }
     } catch (err) {
       console.error("Failed to fetch habits:", err);
       setErrorMsg("네트워크 통신 중 오류가 발생했습니다.");
@@ -68,7 +104,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchHabits();
+      fetchHabits(false);
     }, 0);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,10 +168,10 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
   if (!configured) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest my-2">
+      <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest w-full my-1">
         <span className="material-symbols-outlined text-4xl text-outline mb-2">settings_ethernet</span>
-        <h4 className="font-bold text-on-surface mb-1">노션 연동이 설정되지 않았습니다</h4>
-        <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm mb-4">
+        <h4 className="font-bold text-on-surface text-sm mb-1">노션 연동이 설정되지 않았습니다</h4>
+        <p className="text-xs text-on-surface-variant leading-relaxed w-full max-w-lg mb-4">
           {message || "상단 헤더의 노션 아이콘을 눌러 액세스 토큰과 데이터베이스 ID를 등록해 주세요."}
         </p>
       </div>
@@ -144,14 +180,14 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
 
   if (!found) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest my-2">
+      <div className="flex flex-col items-center justify-center py-6 px-4 text-center border border-dashed border-outline-variant bg-surface-container-lowest w-full my-1">
         <span className="material-symbols-outlined text-4xl text-outline mb-2">event_busy</span>
-        <h4 className="font-bold text-on-surface mb-1">체크리스트가 없습니다</h4>
-        <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm mb-4">
+        <h4 className="font-bold text-on-surface text-sm mb-1">체크리스트가 없습니다</h4>
+        <p className="text-xs text-on-surface-variant leading-relaxed w-full max-w-lg mb-4">
           {message || `${dateStr} 날짜에 매핑되는 노션 데이터베이스 레코드를 찾지 못했습니다.`}
         </p>
         <button
-          onClick={fetchHabits}
+          onClick={() => fetchHabits(true)}
           className="px-4 py-2 bg-surface-variant text-on-surface-variant rounded-xl text-xs font-bold hover:opacity-80 transition-opacity flex items-center gap-1.5"
         >
           <span className="material-symbols-outlined text-[16px]">refresh</span>
@@ -277,7 +313,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
       {/* Save Button */}
       <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-3">
         <button
-          onClick={fetchHabits}
+          onClick={() => fetchHabits(true)}
           disabled={loading || saving}
           className="h-12 px-4 bg-surface-variant text-on-surface-variant font-bold text-sm hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
           title="새로고침"

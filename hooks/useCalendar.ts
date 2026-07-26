@@ -194,6 +194,13 @@ export interface HabitSummary {
   total: number;
   checked: number;
   completed: boolean;
+  data?: {
+    found: boolean;
+    configured: boolean;
+    pageId?: string | null;
+    url?: string | null;
+    properties?: any[];
+  };
 }
 
 export type HabitSummaryMap = Record<string, HabitSummary>;

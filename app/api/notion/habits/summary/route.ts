@@ -28,15 +28,22 @@ const cleanDatabaseId = (id?: string) => {
   return clean.replace(/[^a-zA-Z0-9-]/g, "");
 };
 
-interface NotionProperty {
+interface NotionPropertySchema {
   type: string;
+  id?: string;
+  status?: { options?: { id: string; name: string; color?: string }[] };
+  select?: { options?: { id: string; name: string; color?: string }[] };
   checkbox?: boolean;
+  number?: number | null;
+  rich_text?: { plain_text: string }[];
+  title?: { plain_text: string }[];
   date?: { start?: string };
 }
 
 interface NotionPage {
   id: string;
-  properties: Record<string, NotionProperty>;
+  url?: string;
+  properties: Record<string, NotionPropertySchema>;
 }
 
 export async function GET(req: NextRequest) {
@@ -84,7 +91,7 @@ export async function GET(req: NextRequest) {
     }
 
     const dbJson = await dbRes.json();
-    const schemaProps: Record<string, { type: string }> = dbJson.properties || {};
+    const schemaProps: Record<string, NotionPropertySchema> = dbJson.properties || {};
 
     let datePropName: string | null = null;
     if (schemaProps["날짜"] && schemaProps["날짜"].type === "date") {
@@ -131,7 +138,7 @@ export async function GET(req: NextRequest) {
     const queryJson = await queryRes.json();
     const pages: NotionPage[] = queryJson.results || [];
 
-    const summary: Record<string, { total: number; checked: number; completed: boolean }> = {};
+    const summary: Record<string, unknown> = {};
 
     for (const page of pages) {
       const dateProp = page.properties[datePropName];
@@ -140,26 +147,85 @@ export async function GET(req: NextRequest) {
 
       let total = 0;
       let checked = 0;
+      const parsedProperties: Array<{
+        id?: string;
+        name: string;
+        type: string;
+        value: unknown;
+        options?: { id: string; name: string; color?: string }[];
+      }> = [];
 
       for (const [name, prop] of Object.entries(page.properties)) {
         if (name === datePropName || name === "날짜" || name === "제목" || prop.type === "date" || prop.type === "title") {
           continue;
         }
+
+        const schema = schemaProps[name] || {};
+
         if (prop.type === "checkbox") {
           total += 1;
           if (prop.checkbox === true) {
             checked += 1;
           }
+          parsedProperties.push({
+            id: prop.id,
+            name,
+            type: "checkbox",
+            value: prop.checkbox,
+          });
+        } else if (prop.type === "status") {
+          parsedProperties.push({
+            id: prop.id,
+            name,
+            type: "status",
+            value: (prop as unknown as { status?: { name?: string } }).status?.name || "",
+            options: schema.status?.options || [],
+          });
+        } else if (prop.type === "select") {
+          parsedProperties.push({
+            id: prop.id,
+            name,
+            type: "select",
+            value: (prop as unknown as { select?: { name?: string } }).select?.name || "",
+            options: schema.select?.options || [],
+          });
+        } else if (prop.type === "rich_text") {
+          parsedProperties.push({
+            id: prop.id,
+            name,
+            type: "rich_text",
+            value: prop.rich_text?.map((t) => t.plain_text).join("") || "",
+          });
+        } else if (prop.type === "number") {
+          parsedProperties.push({
+            id: prop.id,
+            name,
+            type: "number",
+            value: prop.number !== null && prop.number !== undefined ? String(prop.number) : "",
+          });
         }
       }
 
-      if (total > 0) {
-        summary[dateStr] = {
-          total,
-          checked,
-          completed: checked === total,
-        };
-      }
+      parsedProperties.sort((a, b) => {
+        const isStatusA = a.type === "status" || a.name === "상태";
+        const isStatusB = b.type === "status" || b.name === "상태";
+        if (isStatusA && !isStatusB) return -1;
+        if (!isStatusA && isStatusB) return 1;
+        return a.name.localeCompare(b.name, "ko");
+      });
+
+      summary[dateStr] = {
+        total,
+        checked,
+        completed: total > 0 && checked === total,
+        data: {
+          found: true,
+          configured: true,
+          pageId: page.id,
+          url: page.url || null,
+          properties: parsedProperties,
+        },
+      };
     }
 
     return NextResponse.json({ summary, configured: true });
