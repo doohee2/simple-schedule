@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -14,6 +14,13 @@ const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin"],
   variable: "--font-be-vietnam-pro",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "약속 잡기 - Appointment Booking",

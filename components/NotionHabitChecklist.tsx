@@ -245,13 +245,13 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
               <div
                 key={prop.id}
                 onClick={() => handleValueChange(idx, !isChecked)}
-                className={`flex items-center justify-between py-2 px-3.5 border transition-all cursor-pointer select-none ${
+                className={`flex items-center justify-between py-3.5 px-3.5 border transition-all cursor-pointer select-none ${
                   isChecked
                     ? "bg-primary/10 border-primary/40 text-on-surface"
                     : "bg-surface-container-lowest border-outline-variant text-on-surface hover:bg-surface-container-low"
                 }`}
               >
-                <span className={`text-xs md:text-sm font-semibold ${isChecked ? "line-through text-on-surface/70" : ""}`}>
+                <span className={`text-sm font-semibold ${isChecked ? "line-through text-on-surface/70" : ""}`}>
                   {prop.name}
                 </span>
                 <div
@@ -277,7 +277,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                 <select
                   value={String(prop.value || "")}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
-                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-[16px] md:text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer"
+                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all cursor-pointer"
                 >
                   <option value="">선택 없음</option>
                   {(prop.options || []).map((opt) => (
@@ -304,7 +304,7 @@ export default function NotionHabitChecklist({ selectedDate }: NotionHabitCheckl
                   value={String(prop.value ?? "")}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
                   placeholder={`${prop.name} 입력...`}
-                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-[16px] md:text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all"
+                  className="w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all"
                 />
               </div>
             );

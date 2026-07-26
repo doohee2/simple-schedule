@@ -354,13 +354,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             </div>
           </div>
           
-          <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">
-            {mode === "habit"
-              ? "노션과 동기화되는 오늘의 습관 및 체크리스트입니다."
-              : mode === "view" 
-              ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
-              : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
-          </p>
+          {mode !== "habit" && (
+            <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">
+              {mode === "view"
+                ? sortedEvents.length > 0 ? "등록된 일정 목록입니다." : "이 날짜에 등록된 일정이 없습니다."
+                : mode === "edit" ? "일정의 내용을 수정하거나 삭제하세요" : "새로운 일정을 추가하세요"}
+            </p>
+          )}
 
           {mode === "habit" ? (
             <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} />
