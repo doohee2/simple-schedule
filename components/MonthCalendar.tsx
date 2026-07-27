@@ -45,7 +45,7 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
       <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/75 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 진행 중 (${checked}/${total})`}</title>
         <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
-        <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 6.2 9.4 L 7.4 10.6 L 9.7 8.0" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
@@ -55,7 +55,7 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
       <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/85 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 과반 달성 (${checked}/${total})`}</title>
         <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
-        <path d="M 4.6 9.3 L 7.2 11.8 L 11.7 6.5" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
