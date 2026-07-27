@@ -33,39 +33,39 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
 
   if (ratio === 0) {
     return (
-      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/65 shrink-0 select-none" fill="none" stroke="currentColor">
+      <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/65 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 미완료 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
       </svg>
     );
   }
 
   if (ratio < 0.5) {
     return (
-      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/75 shrink-0 select-none" fill="none" stroke="currentColor">
+      <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/75 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 진행 중 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
-        <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
+        <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
 
   if (ratio < 1) {
     return (
-      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/85 shrink-0 select-none" fill="none" stroke="currentColor">
+      <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/85 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 과반 달성 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
-        <path d="M 4.6 9.3 L 7.2 11.8 L 11.7 6.5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
+        <path d="M 4.6 9.3 L 7.2 11.8 L 11.7 6.5" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
 
   // 100% (ratio >= 1) - 상자를 살짝 넘어서는 체크
   return (
-    <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/95 shrink-0 select-none" fill="none" stroke="currentColor">
+    <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/95 shrink-0 select-none" fill="none" stroke="currentColor">
       <title>{`노션 습관 완료 (${checked}/${total})`}</title>
-      <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" className="opacity-80" />
-      <path d="M 4.0 9.5 L 7.2 12.5 L 15.2 3.2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" className="opacity-80" />
+      <path d="M 4.0 9.5 L 7.2 12.5 L 15.2 3.2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -265,8 +265,12 @@ export default function MonthCalendar({
 
                   if (!isCurrentMonth) {
                     return (
-                      <div key={idx} className={`${borderClasses} flex flex-col justify-start pt-1 pr-1.5 pl-1 pb-1 text-outline-variant opacity-30 overflow-hidden`}>
-                        <span className={`self-end font-time-display text-[12px] leading-none ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
+                      <div key={idx} className={`${borderClasses} flex flex-col justify-start pt-1 pr-1 pl-1 pb-1 text-outline-variant opacity-30 overflow-hidden`}>
+                        <div className="w-full flex items-center justify-end h-5">
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <span className={`font-time-display text-[12px] leading-none ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
+                          </div>
+                        </div>
                       </div>
                     );
                   }
@@ -291,21 +295,17 @@ export default function MonthCalendar({
                     <div
                       key={idx}
                       onClick={() => onDateSelect(day)}
-                      className={`flex flex-col justify-start pt-1 pr-1.5 pl-1 pb-1 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                      className={`flex flex-col justify-start pt-1 pr-1 pl-1 pb-1 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
-                      <div className="w-full flex items-center justify-end gap-1">
+                      <div className="w-full flex items-center justify-end gap-1 h-5">
                         {habitStat && habitStat.total > 0 && (
                           <HabitProgressIcon checked={habitStat.checked} total={habitStat.total} />
                         )}
-                        {isTodayDay ? (
-                          <div className="w-5 h-5 bg-primary flex items-center justify-center -mr-0.5 -mt-0.5 rounded-sm shrink-0">
-                            <span className={`font-time-display text-[11px] leading-none text-on-primary ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
-                          </div>
-                        ) : (
-                          <span className={`font-time-display text-[12px] leading-none shrink-0 ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')} ${isWeekend ? 'font-bold' : ''} ${isPast ? 'line-through' : ''}`}>
+                        <div className={`w-5 h-5 flex items-center justify-center rounded-sm shrink-0 ${isTodayDay ? 'bg-primary' : 'bg-transparent'}`}>
+                          <span className={`font-time-display leading-none ${isTodayDay ? 'text-[11px] text-on-primary' : `text-[12px] ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')}`} ${isWeekend ? 'font-bold' : ''} ${isPast && !isTodayDay ? 'line-through' : ''}`}>
                             {format(day, displayDayFormat)}
                           </span>
-                        )}
+                        </div>
                       </div>
 
                       {isHoliday && (
