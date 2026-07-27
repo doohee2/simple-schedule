@@ -40,7 +40,6 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   // Reset mode and form when sheet opens
   useEffect(() => {
     if (isOpen && selectedDate) {
-      setHabitPageUrl(null);
       const isEventOnDayLocal = (e: CalendarEvent, targetDay: Date) => {
         if (e.start.date && e.end?.date) {
           const start = parseISO(e.start.date);
@@ -338,7 +337,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                     className="h-8 px-2.5 bg-surface-variant text-primary rounded-md text-xs font-bold flex items-center gap-1 hover:opacity-85 active:scale-95 transition-all border border-outline-variant/60"
                     title="노션 원본 페이지 바로가기"
                   >
-                    <span>바로가기</span>
+                    <span>노션</span>
                     <span className="material-symbols-outlined text-[14px]">open_in_new</span>
                   </a>
                 )
