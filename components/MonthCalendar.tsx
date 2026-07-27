@@ -28,6 +28,48 @@ interface MonthCalendarProps {
   isOffline?: boolean;
 }
 
+function HabitProgressIcon({ checked, total }: { checked: number; total: number }) {
+  const ratio = total > 0 ? checked / total : 0;
+
+  if (ratio === 0) {
+    return (
+      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/65 shrink-0 select-none" fill="none" stroke="currentColor">
+        <title>{`노션 습관 미완료 (${checked}/${total})`}</title>
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
+      </svg>
+    );
+  }
+
+  if (ratio < 0.5) {
+    return (
+      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/75 shrink-0 select-none" fill="none" stroke="currentColor">
+        <title>{`노션 습관 진행 중 (${checked}/${total})`}</title>
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
+        <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (ratio < 1) {
+    return (
+      <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/85 shrink-0 select-none" fill="none" stroke="currentColor">
+        <title>{`노션 습관 과반 달성 (${checked}/${total})`}</title>
+        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" />
+        <path d="M 4.6 9.3 L 7.2 11.8 L 11.7 6.5" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  // 100% (ratio >= 1) - 상자를 살짝 넘어서는 체크
+  return (
+    <svg viewBox="0 0 16 16" className="w-[13px] h-[13px] text-on-surface-variant/95 shrink-0 select-none" fill="none" stroke="currentColor">
+      <title>{`노션 습관 완료 (${checked}/${total})`}</title>
+      <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.4" className="opacity-80" />
+      <path d="M 4.0 9.5 L 7.2 12.5 L 15.2 3.2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 const getCategoryStyle = (color: string) => {
   switch (color) {
     case "pastel-lunch":
@@ -253,15 +295,7 @@ export default function MonthCalendar({
                     >
                       <div className="w-full flex items-center justify-end gap-1">
                         {habitStat && habitStat.total > 0 && (
-                          habitStat.completed ? (
-                            <span className="material-symbols-outlined text-[13px] text-primary select-none" title={`노션 습관 완료 (${habitStat.checked}/${habitStat.total})`}>
-                              check_box
-                            </span>
-                          ) : (
-                            <span className="material-symbols-outlined text-[13px] text-on-surface-variant/60 select-none" title={`노션 습관 진행 중 (${habitStat.checked}/${habitStat.total})`}>
-                              check_box_outline_blank
-                            </span>
-                          )
+                          <HabitProgressIcon checked={habitStat.checked} total={habitStat.total} />
                         )}
                         {isTodayDay ? (
                           <div className="w-5 h-5 bg-primary flex items-center justify-center -mr-0.5 -mt-0.5 rounded-sm shrink-0">
