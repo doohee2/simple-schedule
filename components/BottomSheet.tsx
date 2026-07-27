@@ -31,6 +31,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   const [isMultiDay, setIsMultiDay] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [editingCalendarId, setEditingCalendarId] = useState("primary");
+  const [habitPageUrl, setHabitPageUrl] = useState<string | null>(null);
 
   const addEventMutation = useAddCalendarEvent();
   const updateEventMutation = useUpdateCalendarEvent();
@@ -39,6 +40,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   // Reset mode and form when sheet opens
   useEffect(() => {
     if (isOpen && selectedDate) {
+      setHabitPageUrl(null);
       const isEventOnDayLocal = (e: CalendarEvent, targetDay: Date) => {
         if (e.start.date && e.end?.date) {
           const start = parseISO(e.start.date);
@@ -299,8 +301,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </button>
               )}
               <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
-                <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "습관 체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
-                {selectedDate && (
+                <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
+                {selectedDate && mode !== "habit" && (
                   <span className="text-sm font-normal text-outline-variant tracking-tight">
                     (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
                   </span>
@@ -327,7 +329,20 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                     </button>
                   )}
                 </div>
-              ) : mode === "habit" ? null : (
+              ) : mode === "habit" ? (
+                habitPageUrl && (
+                  <a
+                    href={habitPageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-8 px-2.5 bg-surface-variant text-primary rounded-md text-xs font-bold flex items-center gap-1 hover:opacity-85 active:scale-95 transition-all border border-outline-variant/60"
+                    title="노션 원본 페이지 바로가기"
+                  >
+                    <span>바로가기</span>
+                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                  </a>
+                )
+              ) : (
                 <div className="flex gap-2">
                   {mode === "edit" && (
                     <button 
@@ -377,7 +392,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           )}
 
           {mode === "habit" ? (
-            <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} isOffline={isOffline} />
+            <NotionHabitChecklist selectedDate={selectedDate} onBack={() => setMode("view")} isOffline={isOffline} onPageUrlChange={setHabitPageUrl} />
           ) : mode === "view" ? (
             <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {

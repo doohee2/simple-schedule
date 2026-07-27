@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import { HabitSummaryMap } from "@/hooks/useCalendar";
@@ -19,9 +19,55 @@ interface NotionHabitChecklistProps {
   selectedDate: Date | null;
   onBack?: () => void;
   isOffline?: boolean;
+  onPageUrlChange?: (url: string | null) => void;
 }
 
-export default function NotionHabitChecklist({ selectedDate, isOffline = false }: NotionHabitChecklistProps) {
+function AutoResizeTextarea({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const adjustHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "42px";
+    const nextHeight = Math.min(el.scrollHeight, 84);
+    el.style.height = `${Math.max(nextHeight, 42)}px`;
+    el.style.overflowY = el.scrollHeight > 84 ? "auto" : "hidden";
+  };
+
+  useEffect(() => {
+    adjustHeight();
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      disabled={disabled}
+      rows={1}
+      onChange={(e) => {
+        onChange(e.target.value);
+        adjustHeight();
+      }}
+      placeholder={placeholder}
+      style={{ minHeight: "42px", maxHeight: "84px" }}
+      className={`w-full py-2.5 px-3 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all resize-none leading-5 ${
+        disabled ? "opacity-70 cursor-not-allowed" : ""
+      }`}
+    />
+  );
+}
+
+export default function NotionHabitChecklist({ selectedDate, isOffline = false, onPageUrlChange }: NotionHabitChecklistProps) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -35,6 +81,10 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
   const [pageUrl, setPageUrl] = useState<string | null>(null);
   const [properties, setProperties] = useState<HabitProperty[]>([]);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
+
+  useEffect(() => {
+    onPageUrlChange?.(pageUrl);
+  }, [pageUrl, onPageUrlChange]);
 
   const dateStr = selectedDate ? format(selectedDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd");
 
@@ -205,25 +255,6 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
 
   return (
     <div className="flex flex-col gap-2.5 pb-4">
-      {/* Action Header & Notice */}
-      <div className="flex items-center justify-between bg-surface-container-low py-2 px-3.5 border border-outline-variant">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-lg">task_alt</span>
-          <span className="text-xs font-bold text-on-surface">오늘의 습관 & 체크리스트</span>
-        </div>
-        {pageUrl && (
-          <a
-            href={pageUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
-          >
-            <span>노션에서 열기</span>
-            <span className="material-symbols-outlined text-[14px]">open_in_new</span>
-          </a>
-        )}
-      </div>
-
       {isOffline && (
         <div className="bg-error/10 text-error py-2 px-3 text-xs font-semibold flex items-center gap-2 border border-error/20 rounded-lg">
           <span className="material-symbols-outlined text-[16px]">cloud_off</span>
@@ -246,7 +277,7 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
       )}
 
       {/* Properties List */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
         {properties.map((prop, idx) => {
           if (prop.type === "checkbox") {
             const isChecked = Boolean(prop.value);
@@ -254,7 +285,7 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
               <div
                 key={prop.id}
                 onClick={() => handleValueChange(idx, !isChecked)}
-                className={`flex items-center justify-between py-3.5 px-3.5 border transition-all select-none ${
+                className={`flex items-center justify-between p-4 border transition-all select-none ${
                   isOffline ? "opacity-70 cursor-not-allowed pointer-events-none" : "cursor-pointer"
                 } ${
                   isChecked
@@ -278,7 +309,7 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
 
           if (prop.type === "status" || prop.type === "select") {
             return (
-              <div key={prop.id} className="flex flex-col gap-1 py-2 px-3 bg-surface-container-lowest border border-outline-variant">
+              <div key={prop.id} className="flex flex-col gap-1.5 p-3.5 bg-surface-container-lowest border border-outline-variant">
                 <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
                   <span>{prop.name}</span>
                   <span className="text-[10px] uppercase tracking-wider text-outline px-1.5 py-0.5 bg-surface-variant rounded">
@@ -289,7 +320,7 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
                   value={String(prop.value || "")}
                   disabled={isOffline}
                   onChange={(e) => handleValueChange(idx, e.target.value)}
-                  className={`w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
+                  className={`w-full h-[42px] px-3 bg-surface border border-outline-variant text-sm font-medium text-on-surface focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <option value="">선택 없음</option>
                   {(prop.options || []).map((opt) => (
@@ -304,21 +335,30 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
 
           if (prop.type === "rich_text" || prop.type === "title" || prop.type === "number") {
             return (
-              <div key={prop.id} className="flex flex-col gap-1 py-2 px-3 bg-surface-container-lowest border border-outline-variant">
+              <div key={prop.id} className="flex flex-col gap-1.5 p-3.5 bg-surface-container-lowest border border-outline-variant">
                 <label className="text-xs font-bold text-on-surface-variant flex items-center justify-between">
                   <span>{prop.name}</span>
                   <span className="text-[10px] text-outline px-1.5 py-0.5 bg-surface-variant rounded">
                     {prop.type === "rich_text" ? "코멘트 / 메모" : prop.type === "number" ? "숫자" : "제목"}
                   </span>
                 </label>
-                <input
-                  type={prop.type === "number" ? "number" : "text"}
-                  disabled={isOffline}
-                  value={String(prop.value ?? "")}
-                  onChange={(e) => handleValueChange(idx, e.target.value)}
-                  placeholder={`${prop.name} 입력...`}
-                  className={`w-full h-[34px] px-2.5 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : ""}`}
-                />
+                {prop.type === "number" ? (
+                  <input
+                    type="number"
+                    disabled={isOffline}
+                    value={String(prop.value ?? "")}
+                    onChange={(e) => handleValueChange(idx, e.target.value)}
+                    placeholder={`${prop.name} 입력...`}
+                    className={`w-full h-[42px] px-3 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all ${isOffline ? "opacity-70 cursor-not-allowed" : ""}`}
+                  />
+                ) : (
+                  <AutoResizeTextarea
+                    value={String(prop.value ?? "")}
+                    onChange={(val) => handleValueChange(idx, val)}
+                    placeholder={`${prop.name} 입력...`}
+                    disabled={isOffline}
+                  />
+                )}
               </div>
             );
           }
@@ -328,28 +368,28 @@ export default function NotionHabitChecklist({ selectedDate, isOffline = false }
       </div>
 
       {/* Save Button */}
-      <div className="mt-1 pt-1.5 border-t border-outline-variant flex items-center gap-2.5">
+      <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-3">
         <button
           onClick={() => fetchHabits(true)}
           disabled={loading || saving || isOffline}
-          className="h-[42px] px-3.5 bg-surface-variant text-on-surface-variant font-bold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+          className="h-[48px] px-4 bg-surface-variant text-on-surface-variant font-bold text-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
           title={isOffline ? "오프라인 상태에서는 갱신할 수 없습니다." : "새로고침"}
         >
-          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          <span className="material-symbols-outlined text-[20px]">refresh</span>
         </button>
         <button
           onClick={handleSave}
           disabled={saving || !hasChanges || isOffline}
-          className="flex-1 h-[42px] bg-primary text-on-primary font-bold text-xs md:text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="flex-1 h-[48px] bg-primary text-on-primary font-bold text-xs md:text-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {saving ? (
             <>
-              <span className="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+              <span className="material-symbols-outlined animate-spin text-[20px]">refresh</span>
               노션에 저장 중...
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[18px]">save</span>
+              <span className="material-symbols-outlined text-[20px]">save</span>
               {isOffline ? "오프라인 (조회 전용 모드)" : hasChanges ? "변경사항 노션에 저장" : "저장됨 (변경사항 없음)"}
             </>
           )}
