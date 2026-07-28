@@ -141,6 +141,17 @@
      4. **100% (진행 완료)**: 우상단 상자 윤곽선을 역동적으로 살짝 넘어서 뻗어나가는 대형 완료 체크표시
    - **아이콘 크기 확대 및 날짜 헤더 행 세로 정렬 규격화**: 시각적 가독성과 균형을 위해 기존 13px 아이콘을 **19px(약 50% 증대)** 로 대폭 확대했습니다. 또한 "오늘 날짜"의 음영 Box 탓에 음수 마진이 적용되어 세로 수평이 어긋나던 문제를 근본적으로 해소하고자, 모든 날짜(오늘, 일반 날짜, 이전/다음 달 날짜 포함)가 **동일한 20x20px (`w-5 h-5`) 박스 래퍼 및 `h-5` 컨테이너 내에서 수평 정렬(`items-center`)** 되도록 구조를 규격화하여 전 날짜에 걸쳐 1픽셀의 내려앉음 없이 일정한 높이를 유지합니다.
    - 캘린더 날짜 번호보다 시각적으로 튀어보이지 않도록 쨍한 색상을 배제하고 모노톤(`text-on-surface-variant` 계열)으로 자연스럽게 어우러지도록 최적화했습니다.
+17. **Vercel Next.js (App Router) PWA 서버리스 종합 보안 검증 및 하드닝(Security Hardening) 적용**:
+   - **[Phase 1] Zod 기반 엄격한 입력 스키마 검증 및 에러 위생화(Sanitize)**: `zod` 라이브러리를 도입하여 `/api/calendar`, `/api/calendars`, `/api/notion/token`, `/api/notion/habits` 등 전체 서버 엔드포인트의 쿼리 및 Body 입력 파라미터를 스키마로 엄격히 통제(Type/Value Validation)합니다. 또한 API 또는 DB 통신 실패 시 스택 트레이스나 쿼리가 노출되지 않도록, 에러 내용은 터미널 로깅(`console.error`)으로만 남기고 클라이언트 응답에는 일반화된 에러 메시지("요청을 처리할 수 없습니다.")만 반환하도록 개편했습니다.
+   - **[Phase 2] 환경 변수 접두사 린팅 및 백엔드 비밀자격 격리**: 서버단에서만 쓰이는 Supabase 접속 자격정보(`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)에서 치명적인 `NEXT_PUBLIC_` 접두사 로직을 코드 및 `.env.local`에서 원천 제거하여 클라이언트 JS 번들에 API 키가 노출되지 않도록 하드닝했습니다.
+   - **[Phase 3] 로그아웃 시 오프라인 PII 약속 캐시 즉시 청기(Purging)**: 서비스 워커(Serwist Runtime Caching)가 오프라인 조회를 위해 브라우저 `Cache Storage`에 보관한 사용자의 최근 2달치 구글 일정 및 노션 체크리스트 데이터를, 사용자가 로그아웃하거나 세션 만료 발생 시 `window.caches.delete`를 호출해 브라우저에서 강제 영구 클리어하는 방어막(`handleSignOut`)을 구축했습니다.
+   - **[Phase 4] Vercel 배포용 6대 HTTP 보안 헤더 장착**: `next.config.ts`에 강력한 HTTP 응답 보안 헤더(`headers()`)를 장착했습니다:
+     1) `Content-Security-Policy (CSP)`: PWA 서비스 워커 및 구글 OAuth/Supabase/Notion 등 정당한 통신만 허용.
+     2) `Strict-Transport-Security (HSTS)`: 1년(`63072000`초) 간 무조건 HTTPS 암호화 접속 강제 및 프리로드 적용.
+     3) `X-Frame-Options: DENY`: 타 도메인 iframes 차단을 통한 클릭재킹 완벽 불허.
+     4) `X-Content-Type-Options: nosniff`: MIME 타입 스푸핑 차단.
+     5) `Referrer-Policy: strict-origin-when-cross-origin`: 외부 이동 시 민감 경로 및 파라미터 유출 막음.
+     6) `Permissions-Policy`: `camera=(), microphone=(), geolocation=()` 설정으로 불필요한 장치 접근 차단.
 
 ---
 

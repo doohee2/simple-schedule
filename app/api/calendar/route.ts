@@ -1,9 +1,24 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import dns from "dns";
 
 // Fix Node.js 18+ Windows IPv6 resolution issue which causes 5+ seconds delay
 dns.setDefaultResultOrder('ipv4first');
+
+const querySchema = z.object({
+  timeMin: z.string().nullable(),
+  timeMax: z.string().nullable(),
+  calendarIds: z.string().nullable(),
+});
+
+const postEventSchema = z.object({
+  calendarId: z.string().optional().default("primary"),
+  summary: z.string().min(1, "제목은 필수 항목입니다."),
+  description: z.string().optional(),
+  start: z.record(z.string(), z.any()),
+  end: z.record(z.string(), z.any()).optional(),
+}).passthrough();
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,10 +30,17 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const timeMin = searchParams.get("timeMin");
-    const timeMax = searchParams.get("timeMax");
-    const calendarIdsParam = searchParams.get("calendarIds");
-    
+    const parseResult = querySchema.safeParse({
+      timeMin: searchParams.get("timeMin"),
+      timeMax: searchParams.get("timeMax"),
+      calendarIds: searchParams.get("calendarIds"),
+    });
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "잘못된 요청 파리미터입니다." }, { status: 400 });
+    }
+
+    const { timeMin, timeMax, calendarIds: calendarIdsParam } = parseResult.data;
     const calendarIds = calendarIdsParam ? calendarIdsParam.split(",") : ["primary"];
     const holidayId = "ko.south_korea#holiday@group.v.calendar.google.com";
 
@@ -70,8 +92,8 @@ export async function GET(req: NextRequest) {
     // Return the items combined under a single structure
     return NextResponse.json({ items: combinedItems });
   } catch (error: any) {
-    console.error("[Sync] Internal Server Error:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[Sync] Internal Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }
 
@@ -83,8 +105,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const calendarId = body.calendarId || "primary";
+    const bodyRaw = await req.json().catch(() => ({}));
+    const parseResult = postEventSchema.safeParse(bodyRaw);
+
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "입력 데이터 형식이 올바르지 않습니다." }, { status: 400 });
+    }
+
+    const body = parseResult.data;
+    const calendarId = body.calendarId;
 
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
       method: "POST",
@@ -98,12 +127,14 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const errorText = await res.text();
-      return NextResponse.json({ error: "Google API error", details: errorText }, { status: res.status });
+      console.error("[Calendar POST] Google API error:", errorText);
+      return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: res.status });
     }
 
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[Calendar POST] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }

@@ -18,12 +18,14 @@ export async function GET() {
 
     if (!res.ok) {
       const errorText = await res.text();
-      return NextResponse.json({ error: "Google API error", details: errorText }, { status: res.status });
+      console.error("[Calendars GET] Google API error:", errorText);
+      return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: res.status });
     }
 
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[Calendars GET] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }

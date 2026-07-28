@@ -1,13 +1,14 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
 
 const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase 환경 변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가 설정되지 않았습니다.");
+    throw new Error("Supabase 서버 전용 환경 변수(SUPABASE_URL, SUPABASE_ANON_KEY 등)가 설정되지 않았습니다.");
   }
 
   return createClient(supabaseUrl, supabaseKey);
@@ -26,6 +27,11 @@ const cleanDatabaseId = (id?: string) => {
   return clean.replace(/[^a-zA-Z0-9-]/g, "");
 };
 
+const tokenPostSchema = z.object({
+  token: z.string().min(1, "토큰은 필수입니다."),
+  databaseId: z.string().optional(),
+});
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -43,7 +49,7 @@ export async function GET(req: NextRequest) {
     if (error && error.code !== "PGRST116") {
       // PGRST116: no rows found is expected when no token has been saved yet
       console.error("[Notion Token GET] Supabase Error:", error);
-      return NextResponse.json({ error: "Failed to fetch token from DB", details: error.message }, { status: 500 });
+      return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
     }
 
     return NextResponse.json({ 
@@ -51,9 +57,8 @@ export async function GET(req: NextRequest) {
       databaseId: data?.database_id || "" 
     });
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[Notion Token GET] Server Error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Notion Token GET] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }
 
@@ -64,10 +69,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { token, databaseId } = await req.json();
-    if (typeof token !== "string" || (databaseId !== undefined && typeof databaseId !== "string")) {
-      return NextResponse.json({ error: "Invalid data format" }, { status: 400 });
+    const bodyRaw = await req.json().catch(() => ({}));
+    const parseResult = tokenPostSchema.safeParse(bodyRaw);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "입력 데이터 형식이 올바르지 않습니다." }, { status: 400 });
     }
+
+    const { token, databaseId } = parseResult.data;
 
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
@@ -85,13 +93,12 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("[Notion Token POST] Supabase Error:", error);
-      return NextResponse.json({ error: "Failed to save token to DB", details: error.message }, { status: 500 });
+      return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[Notion Token POST] Server Error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Notion Token POST] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }

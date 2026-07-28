@@ -1,19 +1,25 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
 
 const NOTION_API_VERSION = "2022-06-28";
 
 const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase 환경 변수가 설정되지 않았습니다.");
+    throw new Error("Supabase 서버 전용 환경 변수가 설정되지 않았습니다.");
   }
 
   return createClient(supabaseUrl, supabaseKey);
 };
+
+const querySchema = z.object({
+  start: z.string().min(10, "시작일 형식이 올바르지 않습니다."),
+  end: z.string().min(10, "종료일 형식이 올바르지 않습니다."),
+});
 
 const cleanDatabaseId = (id?: string) => {
   if (!id) return "";
@@ -54,12 +60,16 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const start = searchParams.get("start");
-    const end = searchParams.get("end");
+    const parseResult = querySchema.safeParse({
+      start: searchParams.get("start") || "",
+      end: searchParams.get("end") || "",
+    });
 
-    if (!start || !end) {
-      return NextResponse.json({ error: "Start and end dates are required" }, { status: 400 });
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "시작일과 종료일은 필수 항목입니다." }, { status: 400 });
     }
+
+    const { start, end } = parseResult.data;
 
     const supabase = getSupabaseClient();
     const { data: dbData, error: dbError } = await supabase
@@ -229,10 +239,8 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ summary, configured: true });
-
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[Notion Summary GET] Server Error:", err.message);
-    return NextResponse.json({ error: err.message, summary: {} }, { status: 500 });
+    console.error("[Notion Summary GET] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다.", summary: {} }, { status: 500 });
   }
 }

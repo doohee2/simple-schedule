@@ -1,19 +1,33 @@
 import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
 
 const NOTION_API_VERSION = "2022-06-28";
 
 const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  const supabaseUrl = process.env.SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || "";
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase 환경 변수(NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)가 설정되지 않았습니다.");
+    throw new Error("Supabase 서버 전용 환경 변수(SUPABASE_URL, SUPABASE_ANON_KEY 등)가 설정되지 않았습니다.");
   }
 
   return createClient(supabaseUrl, supabaseKey);
 };
+
+const dateSchema = z.string().min(1, "날짜 형식은 필수입니다.");
+
+const updateItemSchema = z.object({
+  name: z.string().optional(),
+  type: z.string().optional(),
+  value: z.any().optional(),
+});
+
+const postHabitsSchema = z.object({
+  pageId: z.string().min(1, "유효한 페이지 ID가 필요합니다."),
+  updates: z.array(updateItemSchema),
+});
 
 const cleanDatabaseId = (id?: string) => {
   if (!id) return "";
@@ -74,7 +88,12 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const date = searchParams.get("date") || new Date().toISOString().split("T")[0];
+    const dateParam = searchParams.get("date") || new Date().toISOString().split("T")[0];
+    const parseResult = dateSchema.safeParse(dateParam);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "잘못된 날짜 파라미터입니다." }, { status: 400 });
+    }
+    const date = parseResult.data;
 
     const supabase = getSupabaseClient();
     const { data: dbData, error: dbError } = await supabase
@@ -270,11 +289,9 @@ export async function GET(req: NextRequest) {
       url: page.url,
       properties: parsedProperties,
     });
-
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[Notion Habits GET] Server Error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Notion Habits GET] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }
 
@@ -285,12 +302,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { pageId, updates } = body;
-
-    if (!pageId || !Array.isArray(updates)) {
-      return NextResponse.json({ error: "Invalid updates format" }, { status: 400 });
+    const bodyRaw = await req.json().catch(() => ({}));
+    const parseResult = postHabitsSchema.safeParse(bodyRaw);
+    if (!parseResult.success) {
+      return NextResponse.json({ error: "입력 데이터 형식이 올바르지 않습니다." }, { status: 400 });
     }
+
+    const { pageId, updates } = parseResult.data;
 
     const supabase = getSupabaseClient();
     const { data: dbData, error: dbError } = await supabase
@@ -341,15 +359,13 @@ export async function POST(req: NextRequest) {
     if (!updateRes.ok) {
       const errText = await updateRes.text();
       console.error("[Notion Page Update] Error:", errText);
-      return NextResponse.json({ error: "Failed to update Notion page", details: errText }, { status: updateRes.status });
+      return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: updateRes.status });
     }
 
     const updateJson = await updateRes.json();
     return NextResponse.json({ success: true, data: updateJson });
-
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error("[Notion Habits POST] Server Error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[Notion Habits POST] Server Error:", error);
+    return NextResponse.json({ error: "요청을 처리할 수 없습니다." }, { status: 500 });
   }
 }

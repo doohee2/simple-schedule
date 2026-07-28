@@ -19,10 +19,23 @@ export default function Header() {
     setMounted(true);
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      if (typeof window !== "undefined" && "caches" in window) {
+        const cacheNames = await window.caches.keys();
+        await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
+        console.log("[PWA Security] Offline runtime caches purged successfully.");
+      }
+    } catch (e) {
+      console.error("[PWA Security] Error purging offline caches:", e);
+    }
+    signOut();
+  };
+
   useEffect(() => {
     // @ts-ignore
     if (session?.error === "RefreshAccessTokenError") {
-      signOut();
+      handleSignOut();
     }
   }, [session]);
 
@@ -89,7 +102,7 @@ export default function Header() {
               </svg>
             </button>
             <button 
-              onClick={() => signOut()} 
+              onClick={() => handleSignOut()} 
               title="로그아웃"
               className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 relative group ml-0.5"
             >
