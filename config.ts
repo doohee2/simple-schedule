@@ -1,2 +1,2 @@
-export const APP_VERSION = "2026.7.26 by doohee2";
+export const APP_VERSION = "2026.7.30 by doohee2";
 export const HELP_MESSAGE = "Simple Schedule 은 구글 캘린더를 간편하게 조회, 사용하기 위한 앱입니다. 따라서 구글 계정에 연동하기 위해 로그인 및 캘린더 권한을 부여받아야 합니다. 다만, 현재는 테스트 중으로 지정된 사용자 외에는 서비스가 불가합니다. 노션과 연동한 습관 체크리스트 기능도 구글 로그인과 액세스 토근 설정이 필요합니다. 안정적인 사용을 위해서는 브라우저 상에서 '홈 화면에 추가'하여 PWA 앱으로 사용하길 권장합니다.";
