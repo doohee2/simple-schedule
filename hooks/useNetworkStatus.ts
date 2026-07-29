@@ -3,21 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState<boolean>(true);
+  // 0단계 동기적 판단: 마운트되는 즉시 0초 만에 브라우저 오프라인 여부를 동기적으로 판단 (불필요한 타임아웃 지연 원천 차단)
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof window !== "undefined" ? navigator.onLine : true
+  );
 
   const checkConnection = useCallback(async () => {
-    // 1차 검증: 브라우저 물리 네트워크 자체가 끊겨 있으면 즉시 오프라인 확정
+    // 1차 검증: 물리 네트워크가 꺼져 있으면 즉시 오프라인 처리
     if (typeof window !== "undefined" && !navigator.onLine) {
       setIsOnline(false);
       return;
     }
 
-    // 2차 검증: 실제 인터넷/백엔드 생존 여부 능동 핑 테스트 (SW 캐시 및 HEAD 요청 우회)
+    // 2차 검증: 초고속 1.2초 컷 능동 생존 테스트 (가상 접속/오프라인 대기 스피너 차단 및 회복 감지)
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500); // 3.5초 타임아웃
+      const timeoutId = setTimeout(() => controller.abort(), 1200); // 1.2초 타임아웃 (초고속 판별)
 
-      // HEAD 메서드 + timestamp 쿼리와 no-store로 서비스 워커 캐시를 우회하고 실제 망 상태만 진단
       const response = await fetch(`/manifest.json?_t=${Date.now()}`, {
         method: "HEAD",
         cache: "no-store",
@@ -30,22 +32,23 @@ export function useNetworkStatus() {
 
       clearTimeout(timeoutId);
 
+      // 네트워크 응답 도달 시 (온라인 회복 완료!)
       if (response.ok || (response.status >= 200 && response.status < 400)) {
         setIsOnline(true);
       } else {
         setIsOnline(false);
       }
     } catch {
-      // 네트워크 차단, 와이파이 단절, DNS 에러, 타임아웃 감지 시 즉시 오프라인 전환
       setIsOnline(false);
     }
   }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsOnline(navigator.onLine);
+      // 초기 진입 시 즉석 검증
       checkConnection();
 
+      // 온라인 회복 시 즉각 실망 회전율 검증 후 회복 처리
       const handleOnline = () => checkConnection();
       const handleOffline = () => setIsOnline(false);
 
@@ -53,7 +56,7 @@ export function useNetworkStatus() {
       window.addEventListener("offline", handleOffline);
       window.addEventListener("focus", checkConnection);
 
-      // 탭이 활성화되어 있는 동안 15초 주기 능동 생존 체크
+      // 온라인 복구 여부 및 생존 상태를 15초마다 주기적으로 검증하여 회신 회복 보장
       const intervalId = setInterval(() => {
         if (document.visibilityState === "visible") {
           checkConnection();
