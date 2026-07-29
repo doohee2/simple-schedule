@@ -152,6 +152,9 @@
      4) `X-Content-Type-Options: nosniff`: MIME 타입 스푸핑 차단.
      5) `Referrer-Policy: strict-origin-when-cross-origin`: 외부 이동 시 민감 경로 및 파라미터 유출 막음.
      6) `Permissions-Policy`: `camera=(), microphone=(), geolocation=()` 설정으로 불필요한 장치 접근 차단.
+18. **PWA 이미지 캐시 전략 이원화 및 프로필 아바타 예외(Fallback UX) 방어벽 적용**:
+   - **서비스 워커 캐싱 룰 분리 (`app/sw.ts`)**: 구글 OAuth 프로필 아바타(`*.googleusercontent.com`) 등 외부(Cross-Origin) 도메인 이미지와 내부 고정 자산이 함께 1년짜리 `CacheFirst`에 묶여 깨진 캐시(Opaque 0 상태 또는 403 차단 응답)가 영구 굳어지던 문제를 수술했습니다. 외부 도메인 이미지는 상위 매처에서 **`StaleWhileRevalidate` (TTL 30일)** 및 **`CacheableResponsePlugin({ statuses: [0, 200] })`**으로 분리하여 실시간으로 쾌적하게 갱신되게 하고, Next.js 내부 정적 불변 자산(`/_next/static/*`, 로고 등)만 1년짜리 `CacheFirst`를 적용해 극강의 제로 레이턴시를 양립시켰습니다.
+   - **프로필 이미지 로딩 실패 시 자동 예외 복구 (`Header.tsx`)**: 구글 서버 통신 지연이나 일시적 차단으로 인해 `session.user.image` 로딩이 실패(`onError`)하더라도 브라우저의 기본 깨진 아이콘("?" 엑박)이 절대 나타나지 않도록 `imgError` 상태 핸들러를 도입했습니다. 오류 발생 즉시 앱 디자인을 정교하게 따르는 **기본 프로필 아이콘(`account_circle`)으로 우아하게 전환**되도록 UI 안전마진을 탑재했습니다.
 
 ---
 

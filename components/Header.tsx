@@ -13,11 +13,16 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const isOnline = useNetworkStatus();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [session?.user?.image]);
 
   const handleSignOut = async () => {
     try {
@@ -106,7 +111,7 @@ export default function Header() {
               title="로그아웃"
               className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 relative group ml-0.5"
             >
-              {session.user?.image ? (
+              {session.user?.image && !imgError ? (
                 <div className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden border border-primary/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
@@ -114,6 +119,7 @@ export default function Header() {
                     alt="Profile" 
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover" 
+                    onError={() => setImgError(true)}
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
                     <span className="material-symbols-outlined text-white text-[13px]">logout</span>
