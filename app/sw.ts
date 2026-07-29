@@ -51,7 +51,23 @@ const runtimeCaching: RuntimeCaching[] = [
       ],
     }),
   },
-  // 4. 외부(Cross-Origin) 도메인 이미지 (구글 OAuth 프로필, CDN 등): StaleWhileRevalidate (30일, Opaque 응답 허용)
+  // 4. 구글 폰트 및 아이콘 스타일시트 (Google Fonts & Material Symbols): StaleWhileRevalidate (Opaque 응답 허용)
+  {
+    matcher: ({ url }) => url.origin.includes("fonts.googleapis.com") || url.origin.includes("fonts.gstatic.com"),
+    handler: new StaleWhileRevalidate({
+      cacheName: "google-fonts-stylesheets",
+      plugins: [
+        new ExpirationPlugin({
+          maxEntries: 32,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30일
+        }),
+        new CacheableResponsePlugin({
+          statuses: [0, 200],
+        }),
+      ],
+    }),
+  },
+  // 5. 외부(Cross-Origin) 도메인 이미지 (구글 OAuth 프로필, CDN 등): StaleWhileRevalidate (30일, Opaque 응답 허용)
   {
     matcher: ({ request, url }) => request.destination === "image" && url.origin !== self.location.origin,
     handler: new StaleWhileRevalidate({
@@ -67,7 +83,7 @@ const runtimeCaching: RuntimeCaching[] = [
       ],
     }),
   },
-  // 5. 내부(Self Origin) 불변 고정 정적 자산 (JS/CSS/폰트/앱 내부 로컬 정적 이미지)
+  // 6. 내부(Self Origin) 불변 고정 정적 자산 (JS/CSS/폰트/앱 내부 로컬 정적 이미지)
   {
     matcher: ({ request, url }) =>
       request.destination === "style" ||
@@ -81,6 +97,9 @@ const runtimeCaching: RuntimeCaching[] = [
         new ExpirationPlugin({
           maxEntries: 128,
           maxAgeSeconds: 365 * 24 * 60 * 60, // 1년
+        }),
+        new CacheableResponsePlugin({
+          statuses: [0, 200],
         }),
       ],
     }),

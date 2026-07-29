@@ -9,7 +9,7 @@ const withSerwist = withSerwistInit({
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.vercel-scripts.com https://*.vercel-insights.com; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://api.notion.com https://*.vercel-insights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; frame-src https://accounts.google.com; worker-src 'self' blob:;",
+    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://*.vercel-scripts.com https://*.vercel-insights.com; connect-src 'self' https://*.supabase.co https://*.googleapis.com https://*.gstatic.com https://*.googleusercontent.com https://*.ggpht.com https://accounts.google.com https://oauth2.googleapis.com https://api.notion.com https://*.vercel-insights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://*.gstatic.com; img-src 'self' data: blob: https:; frame-src https://accounts.google.com; worker-src 'self' blob:;",
   },
   {
     key: "Strict-Transport-Security",
