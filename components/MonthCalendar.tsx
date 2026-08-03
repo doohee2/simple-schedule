@@ -131,6 +131,7 @@ export default function MonthCalendar({
   }, []);
 
   const eventFontSizeClass = fontSize === "sm" ? "text-[9px]" : fontSize === "lg" ? "text-[12px]" : "text-[11px]";
+  const maxEventsCount = fontSize === "sm" ? 5 : 4;
 
   const nextMonth = addMonths(currentDate, 1);
   const isSameYr = currentDate.getFullYear() === nextMonth.getFullYear();
@@ -272,6 +273,8 @@ export default function MonthCalendar({
                     displayItems.push({ id: "other-group", text: stars, isOther: true, firstColor: "transparent" });
                   }
 
+                  const displayLimit = displayItems[displayItems.length - 1]?.isOther ? maxEventsCount + 1 : maxEventsCount;
+
                   // Check boundaries for Month 1 vs Month 2
                   const isM1 = isSameMonth(day, month1Start);
                   const isNextDayM2 = idx + 1 < days.length && isSameMonth(days[idx + 1], nextMonth);
@@ -339,7 +342,7 @@ export default function MonthCalendar({
                       )}
 
                       <div className="mt-auto w-full px-0 flex flex-col justify-end gap-px flex-1 min-h-0 overflow-hidden">
-                        {displayItems.slice(0, 3).map((item, i) => {
+                        {displayItems.slice(0, displayLimit).map((item, i) => {
                           let content;
                           if (item.isOther) {
                             content = (
@@ -366,9 +369,9 @@ export default function MonthCalendar({
                             </div>
                           );
                         })}
-                        {displayItems.length > 3 && (
+                        {displayItems.length > displayLimit && (
                           <div className="flex space-x-1 pl-1 mt-0.5 shrink-0">
-                            {displayItems.slice(3, 6).map((item, i) => {
+                            {displayItems.slice(displayLimit, displayLimit + 3).map((item, i) => {
                               const style = getCategoryStyle(item.firstColor);
                               return (
                                 <div key={i} className={`w-1.5 h-1.5 ${style.dot} rounded-full`} />

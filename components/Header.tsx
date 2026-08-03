@@ -191,7 +191,7 @@ export default function Header() {
               </p>
               <div className="mb-6 bg-surface-container-low p-3.5 rounded-xl border border-outline-variant/60">
                 <span className="block text-xs font-bold text-on-surface-variant mb-2.5 font-label">
-                  캘린더 글자
+                  캘린더 글자 크기
                 </span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
