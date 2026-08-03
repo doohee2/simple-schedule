@@ -246,7 +246,7 @@ export default function MonthCalendar({
                   const dayEvents = filteredEvents.filter(e => isEventOnDay(e, day));
 
                   // 카테고리 분류 및 제목 추출
-                  const displayItems: Array<{ id: string; text: string; isOther: boolean; firstColor: string }> = [];
+                  const displayItems: Array<{ id: string; text: string; isOther: boolean; firstColor: string; event?: typeof dayEvents[number] }> = [];
 
                   const otherEvents: typeof dayEvents = [];
 
@@ -262,10 +262,41 @@ export default function MonthCalendar({
                     else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
 
                     if (hasKeyword) {
-                      displayItems.push({ id: e.id, text, isOther: false, firstColor });
+                      displayItems.push({ id: e.id, text, isOther: false, firstColor, event: e });
                     } else {
                       otherEvents.push(e);
                     }
+                  });
+
+                  displayItems.sort((a, b) => {
+                    const eventA = a.event;
+                    const eventB = b.event;
+                    if (!eventA || !eventB) return 0;
+
+                    const isAllDayA = !!eventA.start.date && !eventA.start.dateTime;
+                    const isAllDayB = !!eventB.start.date && !eventB.start.dateTime;
+
+                    if (isAllDayA && !isAllDayB) return -1;
+                    if (!isAllDayA && isAllDayB) return 1;
+
+                    if (isAllDayA && isAllDayB) {
+                      const getPriority = (color: string) => {
+                        if (color === "pastel-lunch") return 1;
+                        if (color === "pastel-dinner") return 2;
+                        if (color === "pastel-vacation") return 3;
+                        return 4;
+                      };
+                      const prioA = getPriority(a.firstColor);
+                      const prioB = getPriority(b.firstColor);
+                      if (prioA !== prioB) return prioA - prioB;
+                      return a.text.localeCompare(b.text, "ko");
+                    }
+
+                    // Both are timed events: chronological order by start time
+                    const timeA = new Date(eventA.start.dateTime as string).getTime();
+                    const timeB = new Date(eventB.start.dateTime as string).getTime();
+                    if (timeA !== timeB) return timeA - timeB;
+                    return a.text.localeCompare(b.text, "ko");
                   });
 
                   if (otherEvents.length > 0) {

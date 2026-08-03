@@ -260,7 +260,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   // Compute events for the selected date
   const dayEvents = events.filter(e => isEventOnDay(e, selectedDate));
 
-  // Sort events: all-day events first (alphabetical), then timed events (chronological)
+  // Sort events: all-day events first (by category priority: 점심 -> 저녁 -> 휴가 -> 기타, then 가나다순), then timed events (chronological, then 가나다순)
+  const getEventPriority = (e: CalendarEvent) => {
+    const textToSearch = ((e.summary || "") + " " + (e.description || "")).toLowerCase();
+    if (textToSearch.includes("점심")) return 1;
+    if (textToSearch.includes("저녁")) return 2;
+    if (textToSearch.includes("휴가")) return 3;
+    return 4; // 기타
+  };
+
   const sortedEvents = [...dayEvents].sort((a, b) => {
     const isAllDayA = !!a.start.date && !a.start.dateTime;
     const isAllDayB = !!b.start.date && !b.start.dateTime;
@@ -269,13 +277,17 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     if (!isAllDayA && isAllDayB) return 1;
 
     if (isAllDayA && isAllDayB) {
-      return a.summary.localeCompare(b.summary);
+      const prioA = getEventPriority(a);
+      const prioB = getEventPriority(b);
+      if (prioA !== prioB) return prioA - prioB;
+      return (a.summary || "").localeCompare(b.summary || "", "ko");
     }
 
-    // Both are timed events
+    // Both are timed events: chronological order by start time
     const timeA = new Date(a.start.dateTime as string).getTime();
     const timeB = new Date(b.start.dateTime as string).getTime();
-    return timeA - timeB;
+    if (timeA !== timeB) return timeA - timeB;
+    return (a.summary || "").localeCompare(b.summary || "", "ko");
   });
 
   return (
