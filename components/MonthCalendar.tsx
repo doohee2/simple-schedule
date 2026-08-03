@@ -338,7 +338,7 @@ export default function MonthCalendar({
                         </span>
                       )}
 
-                      <div className="mt-auto w-full px-0 flex flex-col justify-end gap-0.5 flex-1 min-h-0 overflow-hidden">
+                      <div className="mt-auto w-full px-0 flex flex-col justify-end gap-px flex-1 min-h-0 overflow-hidden">
                         {displayItems.slice(0, 3).map((item, i) => {
                           let content;
                           if (item.isOther) {
@@ -361,7 +361,7 @@ export default function MonthCalendar({
                           }
 
                           return (
-                            <div key={i} className={`${eventFontSizeClass} leading-tight text-on-surface truncate py-[1.5px]`}>
+                            <div key={i} className={`${eventFontSizeClass} leading-tight text-on-surface truncate py-[0.5px]`}>
                               {content}
                             </div>
                           );
