@@ -14,7 +14,27 @@ export default function Header() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
   const isOnline = useNetworkStatus();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("calendar_font_size") as "sm" | "md" | "lg";
+      if (saved && ["sm", "md", "lg"].includes(saved)) {
+        setFontSize(saved);
+      } else {
+        setFontSize("md");
+      }
+    }
+  }, [isHelpOpen]);
+
+  const handleFontSizeChange = (size: "sm" | "md" | "lg") => {
+    setFontSize(size);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("calendar_font_size", size);
+      window.dispatchEvent(new Event("calendar_font_size_change"));
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -166,9 +186,47 @@ export default function Header() {
                   <span className="material-symbols-outlined text-[20px]">close</span>
                 </button>
               </div>
-              <p className="text-on-surface-variant text-sm leading-relaxed mb-6 font-body-sm">
+              <p className="text-on-surface-variant text-sm leading-relaxed mb-4 font-body-sm">
                 {HELP_MESSAGE}
               </p>
+              <div className="mb-6 bg-surface-container-low p-3.5 rounded-xl border border-outline-variant/60">
+                <span className="block text-xs font-bold text-on-surface-variant mb-2.5 font-label">
+                  캘린더 글자
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "sm", label: "작게", desc: "9px" },
+                    { id: "md", label: "중간", desc: "11px" },
+                    { id: "lg", label: "크게", desc: "12px" },
+                  ].map((item) => {
+                    const isSelected = fontSize === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleFontSizeChange(item.id as "sm" | "md" | "lg")}
+                        className={`flex flex-col items-center justify-center py-2 px-2 rounded-lg border text-xs transition-all ${
+                          isSelected
+                            ? "bg-primary/10 border-primary text-primary font-bold shadow-xs ring-1 ring-primary/30"
+                            : "bg-surface border-outline-variant text-on-surface hover:bg-surface-variant/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <div
+                            className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${
+                              isSelected ? "border-primary bg-primary" : "border-outline text-transparent"
+                            }`}
+                          >
+                            {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-on-primary" />}
+                          </div>
+                          <span>{item.label}</span>
+                        </div>
+                        <span className="text-[10px] opacity-70 font-normal">{item.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="flex flex-col gap-2">
                 <button 
                   onClick={async () => {

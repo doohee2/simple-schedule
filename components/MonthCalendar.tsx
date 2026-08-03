@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   format,
   startOfWeek,
@@ -108,6 +109,29 @@ export default function MonthCalendar({
   habitSummary,
   isOffline = false,
 }: MonthCalendarProps) {
+  const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
+
+  useEffect(() => {
+    const updateFontSize = () => {
+      const saved = localStorage.getItem("calendar_font_size") as "sm" | "md" | "lg";
+      if (saved && ["sm", "md", "lg"].includes(saved)) {
+        setFontSize(saved);
+      } else {
+        setFontSize("md");
+      }
+    };
+
+    updateFontSize();
+    window.addEventListener("calendar_font_size_change", updateFontSize);
+    window.addEventListener("storage", updateFontSize);
+    return () => {
+      window.removeEventListener("calendar_font_size_change", updateFontSize);
+      window.removeEventListener("storage", updateFontSize);
+    };
+  }, []);
+
+  const eventFontSizeClass = fontSize === "sm" ? "text-[9px]" : fontSize === "lg" ? "text-[12px]" : "text-[11px]";
+
   const nextMonth = addMonths(currentDate, 1);
   const isSameYr = currentDate.getFullYear() === nextMonth.getFullYear();
   const titleText = isSameYr
@@ -265,7 +289,7 @@ export default function MonthCalendar({
 
                   if (!isCurrentMonth) {
                     return (
-                      <div key={idx} className={`${borderClasses} flex flex-col justify-start pt-1 pr-1 pl-1 pb-1 text-outline-variant opacity-30 overflow-hidden`}>
+                      <div key={idx} className={`${borderClasses} flex flex-col justify-start px-[1px] py-[2px] text-outline-variant opacity-30 overflow-hidden`}>
                         <div className="w-full flex items-center justify-end h-5">
                           <div className="w-5 h-5 flex items-center justify-center">
                             <span className={`font-time-display text-[12px] leading-none ${isWeekend ? 'font-bold' : ''}`}>{format(day, displayDayFormat)}</span>
@@ -295,7 +319,7 @@ export default function MonthCalendar({
                     <div
                       key={idx}
                       onClick={() => onDateSelect(day)}
-                      className={`flex flex-col justify-start pt-1 pr-1 pl-1 pb-1 cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                      className={`flex flex-col justify-start px-[1px] py-[2px] cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
                       <div className="w-full flex items-center justify-end gap-1 h-5">
                         {habitStat && habitStat.total > 0 && (
@@ -337,7 +361,7 @@ export default function MonthCalendar({
                           }
 
                           return (
-                            <div key={i} className="text-[11px] leading-tight text-on-surface truncate py-[1.5px]">
+                            <div key={i} className={`${eventFontSizeClass} leading-tight text-on-surface truncate py-[1.5px]`}>
                               {content}
                             </div>
                           );
