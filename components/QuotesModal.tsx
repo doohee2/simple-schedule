@@ -151,7 +151,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[420px] bg-surface border border-outline-variant rounded-3xl shadow-[0_12px_48px_rgba(0,0,0,0.15)] z-[90] overflow-hidden bottom-sheet-enter-active flex flex-col cursor-pointer"
         onClick={() => setShowTranslation(true)}
       >
-        <div className="p-7 relative min-h-[240px] flex flex-col justify-center">
+        <div className="px-7 pt-7 pb-2.5 relative min-h-[220px] flex flex-col justify-center">
           
           <div className="absolute top-4 right-4 flex items-center space-x-1 z-10">
             <button 
@@ -244,7 +244,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
                       className="w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer accent-primary"
                     />
                     <span className="text-[11px] font-medium text-on-surface-variant">
-                      앱 시작 시 사용
+                      시작 시 확인
                     </span>
                   </label>
                 </div>

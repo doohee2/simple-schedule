@@ -180,7 +180,7 @@ export default function MonthCalendar({
 
   return (
     <section className="flex-1 flex flex-col min-h-0">
-      <div className="flex justify-between items-center mb-3 px-margin-mobile shrink-0">
+      <div className="flex justify-between items-center mb-1.5 px-margin-mobile shrink-0">
         <div className="flex items-center space-x-1.5">
           <h2 className="text-base font-bold text-on-surface flex items-center leading-none tracking-tight mt-[2px]">
             {titleText}
