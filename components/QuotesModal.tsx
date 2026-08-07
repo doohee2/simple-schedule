@@ -130,7 +130,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
 
           <div className="absolute top-5 left-5 text-outline/30 select-none">
             <span className="material-symbols-outlined text-[48px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              format_quote
+              lightbulb
             </span>
           </div>
 
@@ -161,16 +161,16 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
                   </p>
                   <button
                     onClick={handleTTS}
-                    className={`flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-bold transition-colors border ${
+                    title="발음 듣기"
+                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors border ${
                       isPlaying 
                         ? "bg-primary/10 text-primary border-primary/30" 
                         : "bg-surface-variant/50 text-on-surface-variant border-outline-variant hover:bg-surface-variant"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[16px] mr-1.5" style={{ fontVariationSettings: isPlaying ? "'FILL' 1" : "'FILL' 0" }}>
-                      {isPlaying ? "volume_up" : "volume_up"}
+                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isPlaying ? "'FILL' 1" : "'FILL' 0" }}>
+                      volume_up
                     </span>
-                    {isPlaying ? "듣는 중" : "발음 듣기"}
                   </button>
                 </div>
               </div>

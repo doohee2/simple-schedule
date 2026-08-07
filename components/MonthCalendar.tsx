@@ -182,7 +182,7 @@ export default function MonthCalendar({
             className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors"
             title="오늘의 명언 보기"
           >
-            <span className="material-symbols-outlined text-[18px]">format_quote</span>
+            <span className="material-symbols-outlined text-[18px]">lightbulb</span>
           </button>
         </div>
         <div className="flex items-center space-x-2">
