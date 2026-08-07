@@ -45,6 +45,8 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
       <div className="flex items-center">
         {/* 전체 조회 버튼 - 점선 윤곽선 적용 및 mr-lg로 간격 분리 */}
         <button
+          key="전체 조회"
+          title="전체"
           onClick={() => {
             if (isAllSelected && onRefetch) {
               onRefetch();
@@ -55,10 +57,9 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
           className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-lg rounded-md flex items-center justify-center ${
             isAllSelected ? `px-4 ${allStyle.selectedClass} font-bold gap-2` : `w-[48px] ${allStyle.unselectedClass}`
           }`}
-          title="전체 조회"
         >
           <span className="material-symbols-outlined text-[20px]">{allStyle.icon}</span>
-          {isAllSelected && <span>전체 조회</span>}
+          {isAllSelected && <span>전체</span>}
         </button>
 
         {/* 나머지 카테고리 버튼들 */}

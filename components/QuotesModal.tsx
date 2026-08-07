@@ -190,9 +190,9 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
 
               {/* Tap to reveal hint */}
               {!showTranslation && (
-                <div className="absolute -bottom-8 left-0 right-0 text-center animate-bounce opacity-70">
+                <div className="absolute -bottom-8 left-0 right-0 text-center opacity-70">
                   <p className="text-[11px] font-bold text-primary tracking-wide">
-                    TAP TO TRANSLATE
+                    TAP
                   </p>
                 </div>
               )}
