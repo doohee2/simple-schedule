@@ -114,9 +114,12 @@ export default function MonthCalendar({
   const [isQuotesOpen, setIsQuotesOpen] = useState(false);
 
   useEffect(() => {
-    // Open QuotesModal on initial load (once per session)
+    // Open QuotesModal on initial load if user hasn't opted out (once per session)
     if (!sessionStorage.getItem("has_seen_quotes")) {
-      setIsQuotesOpen(true);
+      const showOnStartup = localStorage.getItem("show_quotes_on_startup") !== "false";
+      if (showOnStartup) {
+        setIsQuotesOpen(true);
+      }
       sessionStorage.setItem("has_seen_quotes", "true");
     }
   }, []);

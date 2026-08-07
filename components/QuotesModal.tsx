@@ -18,8 +18,23 @@ interface QuotesModalProps {
 export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showOnStartup, setShowOnStartup] = useState(true);
   const isOnline = useNetworkStatus();
   const isOffline = !isOnline;
+
+  useEffect(() => {
+    const saved = localStorage.getItem("show_quotes_on_startup");
+    if (saved === "false") {
+      setShowOnStartup(false);
+    }
+  }, []);
+
+  const handleToggleStartup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    const newValue = e.target.checked;
+    setShowOnStartup(newValue);
+    localStorage.setItem("show_quotes_on_startup", newValue ? "true" : "false");
+  };
 
   const fetchQuote = async (): Promise<QuoteData> => {
     if (isOffline) {
@@ -208,13 +223,30 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
 
               <div 
                 className={`transition-all duration-500 ease-out overflow-hidden ${
-                  showTranslation ? "max-h-[200px] opacity-100 mt-6" : "max-h-0 opacity-0 mt-0"
+                  showTranslation ? "max-h-[250px] opacity-100 mt-6" : "max-h-0 opacity-0 mt-0"
                 }`}
               >
                 <div className="pt-5 border-t border-outline-variant/50">
                   <p className="text-[15px] font-medium text-on-surface leading-relaxed break-keep">
                     {koreanTranslation}
                   </p>
+                </div>
+                
+                <div className="flex justify-end mt-4 pt-2">
+                  <label 
+                    className="flex items-center space-x-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input 
+                      type="checkbox" 
+                      checked={showOnStartup}
+                      onChange={handleToggleStartup}
+                      className="w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer accent-primary"
+                    />
+                    <span className="text-[11px] font-medium text-on-surface-variant">
+                      앱 시작 시 사용
+                    </span>
+                  </label>
                 </div>
               </div>
 
