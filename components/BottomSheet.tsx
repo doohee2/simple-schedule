@@ -312,7 +312,18 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 </button>
               )}
               <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
-                <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
+                <div className="flex items-center">
+                  <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
+                  {mode === "habit" && (
+                    <button 
+                      onClick={() => window.dispatchEvent(new Event("open-quotes-modal"))}
+                      className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors ml-1 -mt-0.5"
+                      title="오늘의 명언 보기"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">lightbulb</span>
+                    </button>
+                  )}
+                </div>
                 {selectedDate && mode !== "habit" && (
                   <span className="text-sm font-normal text-outline-variant tracking-tight">
                     (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
