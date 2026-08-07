@@ -153,24 +153,24 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
       >
         <div className="px-7 pt-7 pb-2.5 relative min-h-[220px] flex flex-col justify-center">
           
-          <div className="absolute top-4 right-4 flex items-center space-x-1 z-10">
+          <div className="absolute top-3 right-3 flex items-center space-x-0.5 z-10">
             <button 
               onClick={handleRefresh}
               disabled={isFetching || isOffline}
-              className={`w-9 h-9 flex items-center justify-center rounded-full transition-colors ${
+              className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors ${
                 isOffline || isFetching ? "text-outline/40 cursor-not-allowed" : "text-outline hover:bg-surface-variant hover:text-on-surface"
               }`}
               title={isOffline ? "오프라인 상태에서는 새 명언을 불러올 수 없습니다." : "새 명언 가져오기"}
             >
-              <span className={`material-symbols-outlined text-[20px] ${isFetching ? "animate-spin" : ""}`}>
+              <span className={`material-symbols-outlined text-[22px] ${isFetching ? "animate-spin" : ""}`}>
                 refresh
               </span>
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onClose(); }}
-              className="w-9 h-9 flex items-center justify-center text-outline hover:bg-surface-variant hover:text-on-surface rounded-full transition-colors"
+              className="w-11 h-11 flex items-center justify-center text-outline hover:bg-surface-variant hover:text-on-surface rounded-full transition-colors"
             >
-              <span className="material-symbols-outlined text-[22px]">close</span>
+              <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
           </div>
 
