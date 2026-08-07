@@ -112,7 +112,7 @@ export default function CalendarContainer() {
           className="w-full md:flex-1 flex flex-col relative min-h-[400px] shrink-0 overflow-hidden border-b border-outline-variant/50 bg-background"
           style={{ height: `calc(85dvh + ${dragOffset}px)` }}
         >
-          <div className="px-margin-mobile pt-2 pb-1.5 flex flex-col gap-3 border-b border-outline-variant/50 mb-1">
+          <div className="px-margin-mobile pt-2 pb-1 border-b border-outline-variant/50">
             <FilterCategories 
               selected={selectedCategory} 
               onSelect={(cat) => {

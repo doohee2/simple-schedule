@@ -41,7 +41,7 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
   const allStyle = categoryStyles["전체 조회"];
 
   return (
-    <section className="overflow-x-auto hide-scrollbar flex-shrink-0 pb-2">
+    <section className="overflow-x-auto hide-scrollbar flex-shrink-0">
       <div className="flex items-center">
         {/* 전체 조회 버튼 - 점선 윤곽선 적용 및 mr-lg로 간격 분리 */}
         <button
