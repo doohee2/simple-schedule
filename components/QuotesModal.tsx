@@ -6,7 +6,7 @@ import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface QuoteData {
   en: string;
-  ko: string;
+  ko?: string;
   author: string;
 }
 
@@ -22,7 +22,6 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
   const isOffline = !isOnline;
 
   const fetchQuote = async (): Promise<QuoteData> => {
-    // If offline, try to get from localStorage
     if (isOffline) {
       const cached = localStorage.getItem("last_quote_data");
       if (cached) return JSON.parse(cached);
@@ -31,29 +30,60 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
 
     const res = await fetch("/api/quotes");
     if (!res.ok) throw new Error("Failed to fetch quote");
-    const data = await res.json();
-    
-    // Save to localStorage for offline access
-    localStorage.setItem("last_quote_data", JSON.stringify(data));
-    return data;
+    return res.json();
   };
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery<QuoteData, Error>({
+  const { data: quoteData, isLoading, error, refetch, isFetching } = useQuery<QuoteData, Error>({
     queryKey: ["daily-quote"],
     queryFn: fetchQuote,
-    staleTime: Infinity, // Don't refetch automatically
+    staleTime: Infinity,
     retry: 0,
     enabled: isOpen,
   });
 
-  // Reset translation visibility when data changes
+  const fetchTranslation = async (text: string) => {
+    if (isOffline) {
+      const cached = localStorage.getItem("last_quote_data");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.en === text) return { ko: parsed.ko };
+      }
+      return { ko: "오프라인 상태에서는 번역을 가져올 수 없습니다." };
+    }
+
+    const res = await fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+    
+    if (!res.ok) throw new Error("Failed to translate");
+    const data = await res.json();
+    
+    if (quoteData) {
+      localStorage.setItem("last_quote_data", JSON.stringify({
+        en: quoteData.en,
+        author: quoteData.author,
+        ko: data.ko
+      }));
+    }
+    
+    return data;
+  };
+
+  const { data: translateData, isLoading: isTranslating } = useQuery({
+    queryKey: ["daily-translate", quoteData?.en],
+    queryFn: () => fetchTranslation(quoteData!.en),
+    staleTime: Infinity,
+    enabled: !!quoteData?.en,
+  });
+
   useEffect(() => {
-    if (data) {
+    if (quoteData) {
       setShowTranslation(false);
     }
-  }, [data]);
+  }, [quoteData]);
 
-  // Cleanup speech synthesis when modal closes
   useEffect(() => {
     if (!isOpen) {
       window.speechSynthesis.cancel();
@@ -64,7 +94,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
   if (!isOpen) return null;
 
   const handleTTS = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the translation reveal
+    e.stopPropagation();
     
     if (isPlaying) {
       window.speechSynthesis.cancel();
@@ -72,10 +102,10 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
       return;
     }
 
-    if (data?.en) {
-      const utterance = new SpeechSynthesisUtterance(data.en);
+    if (quoteData?.en) {
+      const utterance = new SpeechSynthesisUtterance(quoteData.en);
       utterance.lang = "en-US";
-      utterance.rate = 0.9; // Slightly slower for clarity
+      utterance.rate = 0.9;
       
       utterance.onend = () => setIsPlaying(false);
       utterance.onerror = () => setIsPlaying(false);
@@ -94,6 +124,8 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
     }
   };
 
+  const koreanTranslation = translateData?.ko || quoteData?.ko || (isTranslating ? "번역 중..." : "");
+
   return (
     <>
       <div 
@@ -106,7 +138,6 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
       >
         <div className="p-7 relative min-h-[240px] flex flex-col justify-center">
           
-          {/* Header Controls */}
           <div className="absolute top-4 right-4 flex items-center space-x-1 z-10">
             <button 
               onClick={handleRefresh}
@@ -134,7 +165,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
             </span>
           </div>
 
-          {isLoading && !data ? (
+          {isLoading && !quoteData ? (
             <div className="flex flex-col items-center justify-center py-10 space-y-4">
               <span className="material-symbols-outlined animate-spin text-[32px] text-primary">
                 progress_activity
@@ -143,21 +174,21 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
                 영감을 가져오는 중...
               </p>
             </div>
-          ) : error && !data ? (
+          ) : error && !quoteData ? (
             <div className="text-center py-6">
               <p className="text-error font-medium mb-2">명언을 불러오지 못했습니다.</p>
               <p className="text-sm text-on-surface-variant">{error.message}</p>
             </div>
-          ) : data ? (
+          ) : quoteData ? (
             <div className="relative z-10 pt-6 pb-2">
               <div className="mb-6">
                 <p className="text-xl md:text-2xl font-bold text-on-surface leading-snug tracking-tight font-plus-jakarta">
-                  "{data.en}"
+                  "{quoteData.en}"
                 </p>
                 
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm font-medium text-on-surface-variant/80 font-plus-jakarta">
-                    — {data.author}
+                    — {quoteData.author}
                   </p>
                   <button
                     onClick={handleTTS}
@@ -175,7 +206,6 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
                 </div>
               </div>
 
-              {/* Translation Area */}
               <div 
                 className={`transition-all duration-500 ease-out overflow-hidden ${
                   showTranslation ? "max-h-[200px] opacity-100 mt-6" : "max-h-0 opacity-0 mt-0"
@@ -183,14 +213,14 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
               >
                 <div className="pt-5 border-t border-outline-variant/50">
                   <p className="text-[15px] font-medium text-on-surface leading-relaxed break-keep">
-                    {data.ko}
+                    {koreanTranslation}
                   </p>
                 </div>
               </div>
 
-              {/* Tap to reveal hint */}
               {!showTranslation && (
-                <div className="absolute -bottom-8 left-0 right-0 text-center opacity-70">
+                <div className="mt-8 text-center opacity-70">
+                  <hr className="border-t border-outline-variant/30 w-1/4 mx-auto mb-3" />
                   <p className="text-[11px] font-bold text-primary tracking-wide">
                     TAP
                   </p>
