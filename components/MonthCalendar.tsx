@@ -15,6 +15,7 @@ import {
 } from "date-fns";
 import { ko } from "date-fns/locale";
 import { CalendarEvent, HabitSummaryMap } from "@/hooks/useCalendar";
+import QuotesModal from "./QuotesModal";
 
 interface MonthCalendarProps {
   currentDate: Date;
@@ -110,6 +111,15 @@ export default function MonthCalendar({
   isOffline = false,
 }: MonthCalendarProps) {
   const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
+  const [isQuotesOpen, setIsQuotesOpen] = useState(false);
+
+  useEffect(() => {
+    // Open QuotesModal on initial load (once per session)
+    if (!sessionStorage.getItem("has_seen_quotes")) {
+      setIsQuotesOpen(true);
+      sessionStorage.setItem("has_seen_quotes", "true");
+    }
+  }, []);
 
   useEffect(() => {
     const updateFontSize = () => {
@@ -161,11 +171,20 @@ export default function MonthCalendar({
 
   return (
     <section className="flex-1 flex flex-col min-h-0">
-      <div className="flex justify-between items-end mb-3 px-margin-mobile shrink-0">
-        <h2 className="text-base font-bold text-on-surface flex items-center leading-none tracking-tight">
-          {titleText}
-          {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
-        </h2>
+      <div className="flex justify-between items-center mb-3 px-margin-mobile shrink-0">
+        <div className="flex items-center space-x-1.5">
+          <h2 className="text-base font-bold text-on-surface flex items-center leading-none tracking-tight mt-[2px]">
+            {titleText}
+            {isLoading && <span className="material-symbols-outlined animate-spin text-sm text-outline ml-2">refresh</span>}
+          </h2>
+          <button 
+            onClick={() => setIsQuotesOpen(true)}
+            className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors"
+            title="오늘의 명언 보기"
+          >
+            <span className="material-symbols-outlined text-[18px]">format_quote</span>
+          </button>
+        </div>
         <div className="flex items-center space-x-2">
           <button 
             onClick={onPrevMonth} 
@@ -419,6 +438,7 @@ export default function MonthCalendar({
           </div>
         </div>
       </div>
+      <QuotesModal isOpen={isQuotesOpen} onClose={() => setIsQuotesOpen(false)} />
     </section>
   );
 }

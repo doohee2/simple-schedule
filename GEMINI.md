@@ -38,6 +38,7 @@
 - **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰 및 데이터베이스 ID(`database_id`)를 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
 - **`api/notion/habits/route.ts`**: Supabase DB에 저장된 계정별 노션 자격증명으로 Notion Database Query API를 대행 호출하여, 선택한 날짜("날짜" 속성 기준 기본 매칭)의 습관 체크리스트(체크박스, 상태, 코멘트)를 조회(`GET`) 및 실시간 반영(`POST`)하는 Proxy 백엔드 API 라우트입니다.
 - **`api/notion/habits/summary/route.ts`**: 캘린더에 로드된 2달간(`start`~`end`)의 노션 습관 레코드를 단 1번의 Batch Query로 일괄 조회하고, 날짜별 체크박스 총합과 완료 여부 스냅샷(`{ total, checked, completed }`)을 반환하는 백그라운드 실시간 렌더링 API입니다.
+- **`api/quotes/route.ts`**: 매일의 명언(Quotes)을 불러오기 위해 `zenquotes.io` API와 Google Translate 무료 번역 API를 조합하여 영문 명언과 한국어 번역문을 동시에 제공하는 백엔드 Proxy 라우트입니다.
 
 ### 📂 `components/` (클라이언트 UI 컴포넌트)
 - **`Providers.tsx`**: NextAuth의 `SessionProvider`와 React Query의 `QueryClientProvider`를 묶어 하위 컴포넌트들에 제공합니다.
@@ -48,6 +49,7 @@
 - **`BottomSheet.tsx`**: 달력에서 특정 날짜를 클릭 시 하단(모바일) 또는 우측 패널(데스크톱)에서 표시되는 일정 관리 UI 컴포넌트입니다. 일정 조회(`"view"`), 추가(`"add"`), 수정(`"edit"`), 노션 습관(`"habit"`) 모드 간 원활한 전환과 백 버튼(`←`)을 제공합니다.
 - **`NotionTokenModal.tsx`**: 상단 헤더의 노션 연동 아이콘을 클릭하면 호출되는 토큰 및 DB ID 관리 모달입니다. 마스킹 없이(`type="text"`) 직관적으로 구글 계정에 연동할 노션 API 액세스 토큰과 데이터베이스 ID를 확인하고 Supabase DB에 안전하게 보존합니다.
 - **`NotionHabitChecklist.tsx`**: 노션의 일일 습관 및 체크리스트 레코드를 화면에 직관적으로 렌더링하는 실시간 컨트롤러 컴포넌트입니다. 체크박스 토글, 상태 드롭다운 수정, 메모·코멘트 입력을 지원하며 변경 즉시 노션 페이지와 동기화합니다.
+- **`QuotesModal.tsx`**: 앱 진입 시 최초 1회 나타나는 매일의 명언 모달입니다. 영문 텍스트 감상, 터치 시 번역 표시, Web Speech API 기반 TTS 음성 듣기, 그리고 오프라인 캐시 기능을 독립적으로 수행합니다.
 
 ### 📂 `hooks/` & 기타
 - **`hooks/useCalendar.ts`**: React Query를 래핑한 커스텀 훅입니다.
@@ -155,6 +157,12 @@
 18. **PWA 이미지 캐시 전략 이원화 및 프로필 아바타 예외(Fallback UX) 방어벽 적용**:
    - **서비스 워커 캐싱 룰 분리 (`app/sw.ts`)**: 구글 OAuth 프로필 아바타(`*.googleusercontent.com`) 등 외부(Cross-Origin) 도메인 이미지와 내부 고정 자산이 함께 1년짜리 `CacheFirst`에 묶여 깨진 캐시(Opaque 0 상태 또는 403 차단 응답)가 영구 굳어지던 문제를 수술했습니다. 외부 도메인 이미지는 상위 매처에서 **`StaleWhileRevalidate` (TTL 30일)** 및 **`CacheableResponsePlugin({ statuses: [0, 200] })`**으로 분리하여 실시간으로 쾌적하게 갱신되게 하고, Next.js 내부 정적 불변 자산(`/_next/static/*`, 로고 등)만 1년짜리 `CacheFirst`를 적용해 극강의 제로 레이턴시를 양립시켰습니다.
    - **프로필 이미지 로딩 실패 시 자동 예외 복구 (`Header.tsx`)**: 구글 서버 통신 지연이나 일시적 차단으로 인해 `session.user.image` 로딩이 실패(`onError`)하더라도 브라우저의 기본 깨진 아이콘("?" 엑박)이 절대 나타나지 않도록 `imgError` 상태 핸들러를 도입했습니다. 오류 발생 즉시 앱 디자인을 정교하게 따르는 **기본 프로필 아이콘(`account_circle`)으로 우아하게 전환**되도록 UI 안전마진을 탑재했습니다.
+19. **매일의 명언(Quotes) 모달 및 무료 자동 번역/TTS 연동**:
+   - 앱 최초 실행 시(세션당 1회) 캘린더 화면 위에 부드럽게 나타나는 **매일의 명언(Quotes) 모달(`QuotesModal.tsx`)**을 구현했습니다.
+   - `GET /api/quotes` 백엔드 라우트에서 `zenquotes.io`의 랜덤 영어 명언을 호출한 뒤, **Google Translate 비공식 무료 엔드포인트**를 경유하여 별도의 API 키 발급이나 결제 없이 즉각적인 한국어 번역문을 함께 반환하도록 설계했습니다.
+   - 모달은 처음엔 영어 원문만 표시하다가, 화면을 터치(클릭)하면 부드러운 애니메이션과 함께 한국어 번역이 등장("Touch & Reveal")하여 감상 경험을 높입니다.
+   - 브라우저 내장 **Web Speech API (`speechSynthesis`)**를 활용한 발음 듣기(TTS) 버튼을 장착했으며, 캘린더 연/월 헤더 텍스트 우측에 전용 아이콘(`format_quote`)을 배치하여 언제든 다시 열어볼 수 있도록 캘린더 헤더 UI 밸런스를 개선(`items-center`)했습니다.
+   - React Query 기반 오프라인 대응 정책을 적용하여, 로컬 스토리지(`last_quote_data`)에 캐싱된 명언을 통해 오프라인 환경에서도 무한 로딩 없이 유려하게 마지막 명언을 보여줍니다.
 
 ---
 
