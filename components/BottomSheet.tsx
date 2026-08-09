@@ -89,8 +89,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
       setMode(initialMode);
 
-      if (initialMode === "add" && (selectedCategory === "점심" || selectedCategory === "저녁" || selectedCategory === "휴가")) {
-        setSummary(selectedCategory);
+      if (initialMode === "add" && ["점심", "저녁", "휴가", "메모"].includes(selectedCategory)) {
+        setSummary(selectedCategory + " ");
       } else {
         setSummary("");
       }
@@ -471,10 +471,34 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   value={summary}
                   disabled={isReadOnly}
                   onChange={(e) => setSummary(e.target.value)}
-                  className="w-full h-14 pl-12 pr-4 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
+                  className="w-full h-14 pl-12 pr-28 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
                   placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
                   type="text"
                 />
+                <div className="absolute inset-y-0 right-1 flex items-center">
+                  <select
+                    disabled={isReadOnly}
+                    className="h-10 px-2 bg-surface-variant/50 border border-transparent rounded text-sm text-on-surface focus:outline-none focus:border-primary disabled:opacity-50"
+                    onChange={(e) => {
+                      const prefix = e.target.value;
+                      if (!prefix) return;
+                      const prefixes = ["점심", "저녁", "휴가", "메모"];
+                      let newSummary = summary.trim();
+                      const firstWord = newSummary.split(" ")[0];
+                      if (prefixes.includes(firstWord)) {
+                        newSummary = newSummary.substring(firstWord.length).trim();
+                      }
+                      setSummary(newSummary ? `${prefix} ${newSummary}` : `${prefix} `);
+                      e.target.value = ""; // Reset select after applying
+                    }}
+                  >
+                    <option value="">프리픽스</option>
+                    <option value="점심">점심</option>
+                    <option value="저녁">저녁</option>
+                    <option value="휴가">휴가</option>
+                    <option value="메모">메모</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">

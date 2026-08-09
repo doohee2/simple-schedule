@@ -6,7 +6,7 @@ interface FilterCategoriesProps {
   onRefetch?: () => void;
 }
 
-const otherCategories = ["점심", "저녁", "휴가", "기타"];
+const otherCategories = ["점심", "저녁", "휴가", "메모", "기타"];
 
 const categoryStyles: Record<string, { icon: string; selectedClass: string; unselectedClass: string }> = {
   "전체 조회": {
@@ -27,6 +27,11 @@ const categoryStyles: Record<string, { icon: string; selectedClass: string; unse
   "휴가": {
     icon: "flight_takeoff",
     selectedClass: "bg-pastel-vacation text-pastel-vacation-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
+    unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
+  },
+  "메모": {
+    icon: "edit_note",
+    selectedClass: "bg-pastel-memo text-pastel-memo-on border border-transparent shadow-[0_4px_20px_rgba(0,0,0,0.04)]",
     unselectedClass: "bg-transparent text-on-surface border border-outline-variant hover:bg-surface-variant"
   },
   "기타": {

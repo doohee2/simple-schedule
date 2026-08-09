@@ -171,7 +171,7 @@ export default function MonthCalendar({
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
 
     if (selectedCategory === "기타") {
-      const predefined = ["점심", "저녁", "휴가"];
+      const predefined = ["점심", "저녁", "휴가", "메모"];
       return !predefined.some(cat => textToSearch.includes(cat.toLowerCase()));
     }
 
@@ -288,6 +288,7 @@ export default function MonthCalendar({
                     if (searchStr.includes("점심")) { hasKeyword = true; firstColor = "pastel-lunch"; }
                     else if (searchStr.includes("저녁")) { hasKeyword = true; firstColor = "pastel-dinner"; }
                     else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
+                    else if (searchStr.includes("메모")) { hasKeyword = true; firstColor = "pastel-memo"; }
 
                     if (hasKeyword) {
                       displayItems.push({ id: e.id, text, isOther: false, firstColor, event: e });
@@ -368,6 +369,7 @@ export default function MonthCalendar({
                     if (selectedCategory === "점심") { cellBgClass = "bg-pastel-lunch hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
                     else if (selectedCategory === "저녁") { cellBgClass = "bg-pastel-dinner hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
                     else if (selectedCategory === "휴가") { cellBgClass = "bg-pastel-vacation hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
+                    else if (selectedCategory === "메모") { cellBgClass = "bg-pastel-memo hover:brightness-95 transition-all"; isCategoryHighlighted = true; }
                   }
 
                   const todayBorderR = thickRight ? 'border-r-2' : (!isRightEdge ? 'border-r' : '');
@@ -410,7 +412,7 @@ export default function MonthCalendar({
                               </span>
                             );
                           } else {
-                            const keywords = ["점심", "저녁", "휴가"];
+                            const keywords = ["점심", "저녁", "휴가", "메모"];
                             const regex = new RegExp(`(${keywords.join("|")})`, "g");
                             const parts = item.text.split(regex);
 
@@ -418,6 +420,7 @@ export default function MonthCalendar({
                               if (part === "점심") return <span key={index} className="bg-pastel-lunch text-pastel-lunch-on px-0.5 rounded-sm">{part}</span>;
                               if (part === "저녁") return <span key={index} className="bg-pastel-dinner text-pastel-dinner-on px-0.5 rounded-sm">{part}</span>;
                               if (part === "휴가") return <span key={index} className="bg-pastel-vacation text-pastel-vacation-on px-0.5 rounded-sm">{part}</span>;
+                              if (part === "메모") return <span key={index} className="bg-pastel-memo text-pastel-memo-on px-0.5 rounded-sm">{part}</span>;
                               return <span key={index}>{part}</span>;
                             });
                           }
