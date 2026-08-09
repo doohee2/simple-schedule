@@ -63,7 +63,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       };
 
       let initialMode: "view" | "add" | "edit" | "habit" = "add";
-      
+
       if (selectedCategory === "전체 조회" || selectedCategory === "기타") {
         initialMode = "view";
         if (selectedCategory === "전체 조회" && selectedDate && isSameDay(selectedDate, new Date())) {
@@ -94,7 +94,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       } else {
         setSummary("");
       }
-      
+
       setDescription("");
       setStartTime("12:00");
       setEndTime("13:30");
@@ -175,11 +175,11 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     setEditingEventId(event.id);
     setSummary(event.summary || "");
     setDescription(event.description || "");
-    
+
     // Check if the calendar is read-only
     const calId = event.calendarId || "primary";
     setEditingCalendarId(calId);
-    
+
     const calInfo = calendars.find(c => c.id === calId);
     if (isOffline || (calInfo && (calInfo.accessRole === "reader" || calInfo.accessRole === "freeBusyReader"))) {
       setIsReadOnly(true);
@@ -189,7 +189,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
     // @ts-ignore
     setIsRecurring(!!event.recurrence || !!event.recurringEventId);
-    
+
     let multiDay = false;
     if (event.start.date && event.end?.date) {
       const start = parseISO(event.start.date);
@@ -203,7 +203,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       }
     }
     setIsMultiDay(multiDay);
-    
+
     if (event.start.dateTime) {
       setIsAllDay(false);
       const parsedDate = parseISO(event.start.dateTime);
@@ -303,7 +303,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
         <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[80vh] md:max-h-none md:h-full overflow-y-auto">
           {/* Grabber Handle */}
           <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer md:hidden" onClick={onClose}></div>
-          
+
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               {(mode === "add" || mode === "edit" || mode === "habit") && (
@@ -315,7 +315,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                 <div className="flex items-center">
                   <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
                   {mode === "habit" && (
-                    <button 
+                    <button
                       onClick={() => window.dispatchEvent(new Event("open-quotes-modal"))}
                       className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors ml-1 -mt-0.5"
                       title="오늘의 명언 보기"
@@ -334,7 +334,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             <div className="flex items-center gap-2">
               {mode === "view" ? (
                 <div className="flex items-center gap-1.5">
-                  <button 
+                  <button
                     onClick={() => setMode("habit")}
                     title="노션 습관 체크리스트"
                     className="w-10 h-10 bg-surface-variant text-primary border border-outline-variant/60 flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
@@ -342,7 +342,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                     <span className="material-symbols-outlined text-[22px]">check_box</span>
                   </button>
                   {!isOffline && (
-                    <button 
+                    <button
                       onClick={() => setMode("add")}
                       title="일정 추가"
                       className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
@@ -367,7 +367,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               ) : (
                 <div className="flex gap-2">
                   {mode === "edit" && (
-                    <button 
+                    <button
                       onClick={handleDelete}
                       disabled={deleteEventMutation.isPending || isReadOnly}
                       className="w-10 h-10 bg-error text-on-error flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
@@ -379,7 +379,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                       )}
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={handleSave}
                     disabled={addEventMutation.isPending || updateEventMutation.isPending || !summary.trim() || isReadOnly}
                     className="w-10 h-10 bg-primary text-on-primary flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 disabled:opacity-50"
@@ -397,7 +397,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </button>
             </div>
           </div>
-          
+
           {isOffline && mode === "view" && (
             <div className="bg-error/10 text-error p-2.5 mb-3 flex items-center gap-2 text-xs font-semibold border border-error/20 rounded-lg">
               <span className="material-symbols-outlined text-[18px]">cloud_off</span>
@@ -419,8 +419,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {
                 const isAllDay = !!event.start.date && !event.start.dateTime;
-                const timeStr = isAllDay 
-                  ? "종일" 
+                const timeStr = isAllDay
+                  ? "종일"
                   : format(parseISO(event.start.dateTime as string), "a h:mm", { locale: ko });
 
                 return (
@@ -472,7 +472,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   disabled={isReadOnly}
                   onChange={(e) => setSummary(e.target.value)}
                   className="w-full h-14 pl-12 pr-16 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
-                  placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
+                  placeholder="약속 대상 및 내용 (예: 점심 가족)"
                   type="text"
                 />
                 <div className="absolute inset-y-0 right-1 flex items-center">
@@ -502,11 +502,10 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </div>
 
               <div className="flex items-center gap-2">
-                <div className={`flex-1 p-3 flex items-center gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isRecurring || isReadOnly || isMultiDay)
-                    ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
-                    : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
-                }`}>
+                <div className={`flex-1 p-3 flex items-center gap-2 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${(isRecurring || isReadOnly || isMultiDay)
+                  ? "bg-surface-container-low opacity-50 cursor-not-allowed"
+                  : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+                  }`}>
                   <span className="material-symbols-outlined text-outline-variant">calendar_today</span>
                   <input
                     type="date"
@@ -517,9 +516,8 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                         setEventDate(new Date(e.target.value + 'T00:00:00'));
                       }
                     }}
-                    className={`w-full font-body-md text-body-md tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 ${
-                      (isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface"
-                    }`}
+                    className={`w-full font-body-md text-body-md tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 ${(isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface"
+                      }`}
                   />
                 </div>
               </div>
@@ -538,36 +536,32 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </div>
 
               <div className="grid grid-cols-2 gap-sm">
-                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring || isReadOnly || isMultiDay)
-                    ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
-                    : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
-                }`}>
+                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${(isAllDay || isRecurring || isReadOnly || isMultiDay)
+                  ? "bg-surface-container-low opacity-50 cursor-not-allowed"
+                  : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+                  }`}>
                   <label className="text-[10px] font-label-caps text-label-caps text-outline">시작 시간</label>
-                  <input 
-                    type="time" 
+                  <input
+                    type="time"
                     value={startTime}
                     disabled={isAllDay || isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-primary"
-                    }`}
+                    className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${(isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-primary"
+                      }`}
                   />
                 </div>
-                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${
-                  (isAllDay || isRecurring || isReadOnly || isMultiDay)
-                    ? "bg-surface-container-low opacity-50 cursor-not-allowed" 
-                    : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
-                }`}>
+                <div className={`px-4 py-2 flex flex-col items-start gap-1 border border-outline-variant relative overflow-hidden transition-colors rounded-none ${(isAllDay || isRecurring || isReadOnly || isMultiDay)
+                  ? "bg-surface-container-low opacity-50 cursor-not-allowed"
+                  : "bg-surface dark:bg-[#25262B] group hover:border-primary cursor-pointer focus-within:border-primary focus-within:ring-1 focus-within:ring-primary"
+                  }`}>
                   <label className="text-[10px] font-label-caps text-label-caps text-outline">예상 종료</label>
-                  <input 
-                    type="time" 
+                  <input
+                    type="time"
                     value={endTime}
                     disabled={isAllDay || isRecurring || isReadOnly || isMultiDay}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${
-                      (isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
-                    }`}
+                    className={`font-time-display text-time-display mt-1 tracking-tight bg-transparent border-none focus:outline-none focus:ring-0 p-0 w-full ${(isAllDay || isRecurring || isReadOnly || isMultiDay) ? "text-outline cursor-not-allowed" : "text-on-surface-variant"
+                      }`}
                   />
                 </div>
               </div>
