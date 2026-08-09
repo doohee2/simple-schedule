@@ -59,7 +59,7 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
               onSelect("전체 조회");
             }
           }}
-          className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-lg rounded-md flex items-center justify-center ${
+          className={`h-[42px] shrink-0 font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 mr-1.5 rounded-md flex items-center justify-center ${
             isAllSelected ? `px-4 ${allStyle.selectedClass} font-bold gap-2` : `w-[48px] ${allStyle.unselectedClass}`
           }`}
         >
@@ -68,7 +68,7 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
         </button>
 
         {/* 나머지 카테고리 버튼들 */}
-        <div className="flex space-x-sm">
+        <div className="flex space-x-1">
           {otherCategories.map((category) => {
             const isSelected = selected === category;
             const style = categoryStyles[category] || categoryStyles["기타"];
@@ -76,7 +76,7 @@ export default function FilterCategories({ selected, onSelect, onRefetch }: Filt
               <button
                 key={category}
                 onClick={() => onSelect(category)}
-                className={`h-[42px] font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 rounded-md flex items-center justify-center ${
+                className={`h-[42px] shrink-0 font-label-caps text-label-caps whitespace-nowrap transition-all active:scale-95 rounded-md flex items-center justify-center ${
                   isSelected ? `px-4 ${style.selectedClass} font-bold gap-2` : `w-[48px] ${style.unselectedClass}`
                 }`}
                 title={category}
