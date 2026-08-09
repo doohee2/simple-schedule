@@ -492,7 +492,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                       e.target.value = ""; // Reset select after applying
                     }}
                   >
-                    <option value="">프리픽스</option>
+                    <option value="">...</option>
                     <option value="점심">점심</option>
                     <option value="저녁">저녁</option>
                     <option value="휴가">휴가</option>
