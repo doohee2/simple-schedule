@@ -471,7 +471,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   value={summary}
                   disabled={isReadOnly}
                   onChange={(e) => setSummary(e.target.value)}
-                  className="w-full h-14 pl-12 pr-28 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
+                  className="w-full h-14 pl-12 pr-16 bg-surface dark:bg-[#25262B] border border-outline-variant font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all rounded-none disabled:opacity-50"
                   placeholder="약속 대상 및 내용 입력 (예: 점심 약속)"
                   type="text"
                 />
