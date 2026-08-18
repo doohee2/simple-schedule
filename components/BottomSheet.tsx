@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { format, parseISO, isSameDay, addDays, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
 // @ts-ignore
@@ -32,6 +32,94 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [editingCalendarId, setEditingCalendarId] = useState("primary");
   const [habitPageUrl, setHabitPageUrl] = useState<string | null>(null);
+
+  // Swipe/Drag state
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [translateY, setTranslateY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const startYRef = useRef(0);
+  const wasDragged = useRef(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Reset drag state when opening
+  useEffect(() => {
+    if (isOpen) {
+      setIsMinimized(false);
+      setTranslateY(0);
+      setIsDragging(false);
+    }
+  }, [isOpen, selectedDate]);
+
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isMobile) return;
+    setIsDragging(true);
+    wasDragged.current = false;
+    const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    const currentOffset = isMinimized ? (sheetRef.current?.offsetHeight || 400) - 90 : 0;
+    startYRef.current = clientY - currentOffset;
+  };
+
+  const handleTouchMove = useCallback((e: TouchEvent | MouseEvent) => {
+    if (!isDragging || !isMobile) return;
+    const clientY = 'touches' in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
+    let newOffset = clientY - startYRef.current;
+    if (newOffset < 0) newOffset = 0; // Prevent dragging above expanded state
+    
+    if (Math.abs(newOffset - (isMinimized ? (sheetRef.current?.offsetHeight || 400) - 90 : 0)) > 10) {
+      wasDragged.current = true;
+    }
+    
+    setTranslateY(newOffset);
+    if (isMinimized) setIsMinimized(false);
+  }, [isDragging, isMobile, isMinimized]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging || !isMobile) return;
+    setIsDragging(false);
+    
+    const height = sheetRef.current?.offsetHeight || 400;
+    const threshold = height * 0.25;
+    
+    if (translateY > threshold && translateY < height - 100) {
+      setIsMinimized(true);
+    } else if (translateY >= height - 100) {
+      onClose();
+    } else {
+      setIsMinimized(false);
+    }
+    setTranslateY(0);
+    
+    setTimeout(() => { wasDragged.current = false; }, 50);
+  }, [isDragging, isMobile, translateY, onClose]);
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('mousemove', handleTouchMove);
+      window.addEventListener('touchend', handleTouchEnd);
+      window.addEventListener('mouseup', handleTouchEnd);
+    }
+    return () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('mousemove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mouseup', handleTouchEnd);
+    };
+  }, [isDragging, handleTouchMove, handleTouchEnd]);
+
+  const handleHandlebarClick = () => {
+    if (wasDragged.current) return;
+    setIsMinimized(!isMinimized);
+  };
+
 
   const addEventMutation = useAddCalendarEvent();
   const updateEventMutation = useUpdateCalendarEvent();
@@ -292,19 +380,34 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   return (
     <>
-      {isOpen && (
-        <div className="md:hidden fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
-      )}
+      {/* Backdrop removed so calendar is interactive */}
 
       <div className={`
         ${isOpen ? 'fixed bottom-0 bottom-sheet-enter bottom-sheet-enter-active' : 'hidden'} left-1/2 -translate-x-1/2 w-full z-50 
-        md:flex md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0
+        md:flex md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0 pointer-events-none
       `}>
-        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[80vh] md:max-h-none md:h-full overflow-y-auto">
+        <div 
+          ref={sheetRef}
+          className={`bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[85vh] md:max-h-none md:h-full pointer-events-auto ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          style={isMobile ? {
+            transform: isDragging 
+              ? `translateY(${translateY}px)` 
+              : (isMinimized ? `translateY(calc(100% - 90px))` : `translateY(0)`),
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+          } : {}}
+        >
           {/* Grabber Handle */}
-          <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer md:hidden" onClick={onClose}></div>
+          <div 
+            className="w-full pt-3 pb-5 cursor-pointer md:hidden touch-none flex justify-center sticky top-0 bg-surface z-20 shrink-0" 
+            onMouseDown={handleTouchStart}
+            onTouchStart={handleTouchStart}
+            onClick={handleHandlebarClick}
+          >
+            <div className="w-12 h-1.5 bg-outline-variant rounded-full pointer-events-none"></div>
+          </div>
 
-          <div className="flex items-center justify-between mb-2">
+          <div className="px-lg pb-lg flex flex-col flex-1">
+            <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               {(mode === "add" || mode === "edit" || mode === "habit") && (
                 <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface" title="뒤로가기">
@@ -580,6 +683,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
     </>
