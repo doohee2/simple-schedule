@@ -172,7 +172,7 @@ export default function MonthCalendar({
 
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
 
-    if (selectedCategory === "선택") {
+    if (selectedCategory === "관심") {
       return event.calendarId === starredCalendarId;
     }
 
@@ -291,7 +291,7 @@ export default function MonthCalendar({
                     else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
                     else if (searchStr.includes("메모")) { hasKeyword = true; firstColor = "pastel-memo"; }
 
-                    if (selectedCategory === "선택") {
+                    if (selectedCategory === "관심") {
                       displayItems.push({ id: e.id, text, isOther: false, firstColor: "transparent", event: e });
                     } else {
                       if (hasKeyword) {

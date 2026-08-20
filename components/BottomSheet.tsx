@@ -158,7 +158,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
       let initialMode: "view" | "add" | "edit" | "habit" = "add";
 
-      if (selectedCategory === "전체 조회" || selectedCategory === "기타") {
+      if (selectedCategory === "전체 조회" || selectedCategory === "관심") {
         initialMode = "view";
         if (selectedCategory === "전체 조회" && selectedDate && isSameDay(selectedDate, new Date())) {
           if (typeof window !== "undefined" && localStorage.getItem("notion_prioritize_today") === "true") {
