@@ -28,6 +28,7 @@ interface MonthCalendarProps {
   selectedCategory: string;
   habitSummary?: HabitSummaryMap;
   isOffline?: boolean;
+  starredCalendarId?: string | null;
 }
 
 function HabitProgressIcon({ checked, total }: { checked: number; total: number }) {
@@ -109,6 +110,7 @@ export default function MonthCalendar({
   selectedCategory,
   habitSummary,
   isOffline = false,
+  starredCalendarId,
 }: MonthCalendarProps) {
   const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
   const [isQuotesOpen, setIsQuotesOpen] = useState(false);
@@ -170,9 +172,8 @@ export default function MonthCalendar({
 
     const textToSearch = (event.summary + " " + (event.description || "")).toLowerCase();
 
-    if (selectedCategory === "기타") {
-      const predefined = ["점심", "저녁", "휴가", "메모"];
-      return !predefined.some(cat => textToSearch.includes(cat.toLowerCase()));
+    if (selectedCategory === "선택") {
+      return event.calendarId === starredCalendarId;
     }
 
     return textToSearch.includes(selectedCategory.toLowerCase());
@@ -290,10 +291,14 @@ export default function MonthCalendar({
                     else if (searchStr.includes("휴가")) { hasKeyword = true; firstColor = "pastel-vacation"; }
                     else if (searchStr.includes("메모")) { hasKeyword = true; firstColor = "pastel-memo"; }
 
-                    if (hasKeyword) {
-                      displayItems.push({ id: e.id, text, isOther: false, firstColor, event: e });
+                    if (selectedCategory === "선택") {
+                      displayItems.push({ id: e.id, text, isOther: false, firstColor: "transparent", event: e });
                     } else {
-                      otherEvents.push(e);
+                      if (hasKeyword) {
+                        displayItems.push({ id: e.id, text, isOther: false, firstColor, event: e });
+                      } else {
+                        otherEvents.push(e);
+                      }
                     }
                   });
 

@@ -7,9 +7,11 @@ interface CalendarSelectorSheetProps {
   onClose: () => void;
   selectedCalendars: string[];
   onToggleCalendar: (calendarId: string) => void;
+  starredCalendarId: string | null;
+  onToggleStar: (calendarId: string) => void;
 }
 
-export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalendars, onToggleCalendar }: CalendarSelectorSheetProps) {
+export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalendars, onToggleCalendar, starredCalendarId, onToggleStar }: CalendarSelectorSheetProps) {
   const { data: calendars, isLoading } = useCalendarList();
 
   if (!isOpen) return null;
@@ -19,19 +21,23 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
       <div className="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-enter bottom-sheet-enter-active">
-        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] border-t border-outline-variant p-lg flex flex-col max-w-[768px] mx-auto w-full max-h-[60vh] overflow-y-auto">
-          <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer" onClick={onClose}></div>
-          
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
-              표시할 캘린더 선택
-            </h3>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full">
-              <span className="material-symbols-outlined">close</span>
-            </button>
+        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] border-t border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[60vh]">
+          {/* Header (Sticky) */}
+          <div className="px-lg pt-lg pb-4 shrink-0 bg-surface z-10">
+            <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer" onClick={onClose}></div>
+            
+            <div className="flex items-center justify-between">
+              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
+                조회할 캘린더 선택
+              </h3>
+              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-outline hover:bg-surface-variant rounded-full">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 pb-8">
+          {/* Scrollable Content */}
+          <div className="flex flex-col gap-2 px-lg pb-8 overflow-y-auto">
             {isLoading ? (
               <div className="flex justify-center p-4">
                 <span className="material-symbols-outlined animate-spin text-primary">refresh</span>

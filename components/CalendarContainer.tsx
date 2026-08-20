@@ -20,6 +20,7 @@ export default function CalendarContainer() {
   
   // State for selected calendars
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>(["primary"]);
+  const [starredCalendarId, setStarredCalendarId] = useState<string | null>(null);
   const [isCalendarSelectorOpen, setIsCalendarSelectorOpen] = useState(false);
   
   // Custom resize state
@@ -39,6 +40,10 @@ export default function CalendarContainer() {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setTimeout(() => setSelectedCalendars(parsed), 0);
+          }
+          const savedStarred = localStorage.getItem(`starredCalendar_${session.user.email}`);
+          if (savedStarred) {
+            setTimeout(() => setStarredCalendarId(savedStarred), 0);
           }
         } catch {}
       }
@@ -83,6 +88,17 @@ export default function CalendarContainer() {
         localStorage.setItem(`selectedCalendars_${session.user.email}`, JSON.stringify(next));
       }
       
+      return next;
+    });
+  };
+
+  const handleToggleStarredCalendar = (calendarId: string) => {
+    setStarredCalendarId(prev => {
+      const next = prev === calendarId ? null : calendarId;
+      if (session?.user?.email) {
+        if (next) localStorage.setItem(`starredCalendar_${session.user.email}`, next);
+        else localStorage.removeItem(`starredCalendar_${session.user.email}`);
+      }
       return next;
     });
   };
@@ -174,6 +190,8 @@ export default function CalendarContainer() {
         onClose={() => setIsCalendarSelectorOpen(false)}
         selectedCalendars={selectedCalendars}
         onToggleCalendar={handleToggleCalendar}
+        starredCalendarId={starredCalendarId}
+        onToggleStar={handleToggleStarredCalendar}
       />
     </>
   );
