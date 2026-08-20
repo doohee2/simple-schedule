@@ -49,8 +49,21 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
                 <p className="text-label-sm text-on-surface-variant mt-1">권한이 부족할 수 있습니다. 다시 로그인해주세요.</p>
               </div>
             ) : (
-              calendars.filter(cal => !cal.primary).map((cal: CalendarListEntry) => {
-                const isSelected = selectedCalendars.includes(cal.id);
+              calendars.map((cal: CalendarListEntry) => {
+                const isSelected = selectedCalendars.includes(cal.id) || (!!cal.primary && selectedCalendars.includes("primary"));
+                
+                // If it's primary, we want to handle toggle by its actual ID
+                const handleCheck = () => {
+                  if (cal.primary && selectedCalendars.includes("primary")) {
+                    // special handling in container, but for now it's easier to just pass the ID
+                    onToggleCalendar(cal.id);
+                    // Also we should tell the container to remove "primary" if it exists, but actually onToggleCalendar just toggles.
+                    // Let's rely on container to clean up "primary" string if we want, or just let them coexist.
+                  } else {
+                    onToggleCalendar(cal.id);
+                  }
+                };
+                
                 return (
                   <label 
                     key={cal.id} 
@@ -59,7 +72,7 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
                     <input 
                       type="checkbox"
                       checked={isSelected}
-                      onChange={() => onToggleCalendar(cal.id)}
+                      onChange={() => onToggleCalendar(cal.primary ? "primary" : cal.id)}
                       className="w-5 h-5 accent-primary rounded-none border-outline-variant text-primary focus:ring-primary"
                     />
                     <div className="flex flex-col flex-1 truncate">
@@ -68,11 +81,21 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
                         <span className="text-[11px] text-on-surface-variant truncate">{cal.description}</span>
                       )}
                     </div>
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleStar(cal.primary ? "primary" : cal.id); }} 
+                      disabled={!isSelected}
+                      className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors shrink-0 ${
+                        (starredCalendarId === cal.id || (cal.primary && starredCalendarId === "primary")) ? 'text-yellow-500' : 'text-outline-variant hover:text-on-surface hover:bg-surface-variant'
+                      } ${!isSelected ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    >
+                      <span className={(starredCalendarId === cal.id || (cal.primary && starredCalendarId === "primary")) ? "material-symbols-rounded font-fill" : "material-symbols-outlined"}>star</span>
+                    </button>
                   </label>
                 );
               })
             )}
-            {!isLoading && calendars?.filter(cal => !cal.primary).length === 0 && (
+            {!isLoading && calendars?.length === 0 && (
               <p className="text-body-sm text-on-surface-variant text-center py-4">표시할 추가 캘린더가 없습니다.</p>
             )}
           </div>
