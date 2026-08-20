@@ -63,7 +63,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     setIsDragging(true);
     wasDragged.current = false;
     const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    const currentOffset = isMinimized ? (sheetRef.current?.offsetHeight || 400) - 90 : 0;
+    const currentOffset = isMinimized ? (sheetRef.current?.offsetHeight || 400) - 90 : translateY;
     startYRef.current = clientY - currentOffset;
   };
 
@@ -86,16 +86,17 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
     setIsDragging(false);
     
     const height = sheetRef.current?.offsetHeight || 400;
-    const threshold = height * 0.25;
     
-    if (translateY > threshold && translateY < height - 100) {
-      setIsMinimized(true);
-    } else if (translateY >= height - 100) {
+    if (translateY >= height - 90) {
       onClose();
+      setTranslateY(0);
+    } else if (translateY >= height - 160) {
+      setIsMinimized(true);
+      setTranslateY(0);
     } else {
       setIsMinimized(false);
+      // Keep translateY to maintain intermediate height
     }
-    setTranslateY(0);
     
     setTimeout(() => { wasDragged.current = false; }, 50);
   }, [isDragging, isMobile, translateY, onClose]);
@@ -117,7 +118,12 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
 
   const handleHandlebarClick = () => {
     if (wasDragged.current) return;
-    setIsMinimized(!isMinimized);
+    if (isMinimized) {
+      setTranslateY(0);
+      setIsMinimized(false);
+    } else {
+      setIsMinimized(true);
+    }
   };
 
 
@@ -392,7 +398,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           style={isMobile ? {
             transform: isDragging 
               ? `translateY(${translateY}px)` 
-              : (isMinimized ? `translateY(calc(100% - 90px))` : `translateY(0)`),
+              : (isMinimized ? `translateY(calc(100% - 90px))` : `translateY(${translateY}px)`),
             transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
           } : {}}
         >
@@ -526,10 +532,21 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                   ? "종일"
                   : format(parseISO(event.start.dateTime as string), "a h:mm", { locale: ko });
 
+                let calendarName = "";
+                if (event.isHoliday) {
+                  calendarName = "대한민국 휴일";
+                } else if (event.calendarId && calendars) {
+                  const cal = calendars.find(c => c.id === event.calendarId);
+                  if (cal) calendarName = cal.summary;
+                }
+
                 return (
                   <div key={event.id} onClick={() => handleEventClick(event)} className={`flex items-center justify-between p-4 border border-outline-variant bg-surface-container-lowest ${!event.isHoliday ? 'cursor-pointer hover:bg-surface-container-low transition-colors' : ''}`}>
                     <div className="flex flex-col">
                       <span className={`font-body-md font-semibold ${event.isHoliday ? 'text-error' : 'text-on-surface'}`}>{event.summary}</span>
+                      {calendarName && (
+                        <span className="text-xs text-on-surface-variant opacity-70 mt-0.5 tracking-tight">{calendarName}</span>
+                      )}
                     </div>
                     <div className="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-2 py-1">
                       {timeStr}
