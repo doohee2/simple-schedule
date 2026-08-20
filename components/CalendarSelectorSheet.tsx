@@ -86,10 +86,15 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleStar(cal.primary ? "primary" : cal.id); }} 
                       disabled={!isSelected}
                       className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors shrink-0 ${
-                        (starredCalendarId === cal.id || (cal.primary && starredCalendarId === "primary")) ? 'text-yellow-500' : 'text-outline-variant hover:text-on-surface hover:bg-surface-variant'
+                        (starredCalendarId === (cal.primary ? "primary" : cal.id)) ? 'text-yellow-500' : 'text-outline-variant hover:text-on-surface hover:bg-surface-variant'
                       } ${!isSelected ? 'opacity-30 cursor-not-allowed' : ''}`}
                     >
-                      <span className={(starredCalendarId === cal.id || (cal.primary && starredCalendarId === "primary")) ? "material-symbols-rounded font-fill" : "material-symbols-outlined"}>star</span>
+                      <span 
+                        className="material-symbols-outlined text-[24px]" 
+                        style={(starredCalendarId === (cal.primary ? "primary" : cal.id)) ? { fontVariationSettings: "'FILL' 1" } : { fontVariationSettings: "'FILL' 0" }}
+                      >
+                        star
+                      </span>
                     </button>
                   </label>
                 );

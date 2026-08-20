@@ -159,6 +159,7 @@ export default function CalendarContainer() {
             selectedCategory={selectedCategory}
             habitSummary={habitSummary}
             isOffline={!isOnline}
+            starredCalendarId={starredCalendarId}
           />
           <div 
             className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
