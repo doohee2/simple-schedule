@@ -160,6 +160,7 @@ export default function CalendarContainer() {
             habitSummary={habitSummary}
             isOffline={!isOnline}
             starredCalendarId={starredCalendarId}
+            isMobileSheetOpen={isMobileSheetOpen}
           />
           <div 
             className="w-full h-10 flex items-center justify-center cursor-row-resize touch-none group relative shrink-0"
@@ -184,16 +185,16 @@ export default function CalendarContainer() {
           calendars={calendars || []}
           isOffline={!isOnline}
         />
-      </div>
 
-      <CalendarSelectorSheet
-        isOpen={isCalendarSelectorOpen}
-        onClose={() => setIsCalendarSelectorOpen(false)}
-        selectedCalendars={selectedCalendars}
-        onToggleCalendar={handleToggleCalendar}
-        starredCalendarId={starredCalendarId}
-        onToggleStar={handleToggleStarredCalendar}
-      />
+        <CalendarSelectorSheet
+          isOpen={isCalendarSelectorOpen}
+          onClose={() => setIsCalendarSelectorOpen(false)}
+          selectedCalendars={selectedCalendars}
+          onToggleCalendar={handleToggleCalendar}
+          starredCalendarId={starredCalendarId}
+          onToggleStar={handleToggleStarredCalendar}
+        />
+      </div>
     </>
   );
 }

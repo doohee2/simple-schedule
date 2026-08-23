@@ -394,7 +394,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
       `}>
         <div 
           ref={sheetRef}
-          className={`bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[85vh] md:max-h-none md:h-full pointer-events-auto ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          className={`bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[85vh] md:max-h-none md:h-full pointer-events-auto overflow-hidden`}
           style={isMobile ? {
             transform: isDragging 
               ? `translateY(${translateY}px)` 
@@ -402,52 +402,53 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
           } : {}}
         >
-          {/* Grabber Handle */}
-          <div 
-            className="w-full pt-3 pb-5 cursor-pointer md:hidden touch-none flex justify-center sticky top-0 bg-surface z-20 shrink-0" 
-            onMouseDown={handleTouchStart}
-            onTouchStart={handleTouchStart}
-            onClick={handleHandlebarClick}
-          >
-            <div className="w-12 h-1.5 bg-outline-variant rounded-full pointer-events-none"></div>
-          </div>
-
-          <div className="px-lg pb-lg flex flex-col flex-1">
-            <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              {(mode === "add" || mode === "edit" || mode === "habit") && (
-                <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface" title="뒤로가기">
-                  <span className="material-symbols-outlined">arrow_back</span>
-                </button>
-              )}
-              <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
-                <div className="flex items-center">
-                  <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
-                  {mode === "habit" && (
-                    <button
-                      onClick={() => window.dispatchEvent(new Event("open-quotes-modal"))}
-                      className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors ml-1 -mt-0.5"
-                      title="오늘의 명언 보기"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">lightbulb</span>
-                    </button>
-                  )}
-                </div>
-                {selectedDate && mode !== "habit" && (
-                  <span className="text-sm font-normal text-outline-variant tracking-tight">
-                    (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
-                  </span>
-                )}
-              </h3>
+          {/* Fixed Header Section */}
+          <div className="shrink-0 bg-surface z-20 px-lg pt-3 pb-2 flex flex-col border-b border-outline-variant/20">
+            {/* Grabber Handle */}
+            <div 
+              className="w-full pb-4 cursor-pointer md:hidden touch-none flex justify-center" 
+              onMouseDown={handleTouchStart}
+              onTouchStart={handleTouchStart}
+              onClick={handleHandlebarClick}
+            >
+              <div className="w-12 h-1.5 bg-outline-variant rounded-full pointer-events-none"></div>
             </div>
-            <div className="flex items-center gap-2">
-              {mode === "view" ? (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => setMode("habit")}
-                    title="노션 습관 체크리스트"
-                    className="w-10 h-10 bg-surface-variant text-primary border border-outline-variant/60 flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
-                  >
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {(mode === "add" || mode === "edit" || mode === "habit") && (
+                  <button onClick={() => setMode("view")} className="text-on-surface-variant hover:text-on-surface" title="뒤로가기">
+                    <span className="material-symbols-outlined">arrow_back</span>
+                  </button>
+                )}
+                <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface flex items-baseline gap-2">
+                  <div className="flex items-center">
+                    <span>{format(selectedDate, "M월 d일", { locale: ko })} {mode === "habit" ? "체크리스트" : `일정 ${mode === "add" ? "추가" : mode === "edit" ? "수정" : ""}`}</span>
+                    {mode === "habit" && (
+                      <button
+                        onClick={() => window.dispatchEvent(new Event("open-quotes-modal"))}
+                        className="flex items-center justify-center w-7 h-7 text-outline hover:text-on-surface hover:bg-surface-variant rounded-full transition-colors ml-1 -mt-0.5"
+                        title="오늘의 명언 보기"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">lightbulb</span>
+                      </button>
+                    )}
+                  </div>
+                  {selectedDate && mode !== "habit" && (
+                    <span className="text-sm font-normal text-outline-variant tracking-tight">
+                      (음력 {Lunar.fromDate(selectedDate).getMonth()}.{Lunar.fromDate(selectedDate).getDay()})
+                    </span>
+                  )}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {mode === "view" ? (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setMode("habit")}
+                      title="노션 습관 체크리스트"
+                      className="w-10 h-10 bg-surface-variant text-primary border border-outline-variant/60 flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95"
+                    >
                     <span className="material-symbols-outlined text-[22px]">check_box</span>
                   </button>
                   {!isOffline && (
@@ -506,13 +507,15 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
               </button>
             </div>
           </div>
+        </div>
 
-          {isOffline && mode === "view" && (
-            <div className="bg-error/10 text-error p-2.5 mb-3 flex items-center gap-2 text-xs font-semibold border border-error/20 rounded-lg">
-              <span className="material-symbols-outlined text-[18px]">cloud_off</span>
-              <span>오프라인 모드입니다. 로컬에 캐시된 일정 조회만 가능합니다.</span>
-            </div>
-          )}
+          <div className={`px-lg pb-lg flex flex-col flex-1 pt-2 ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+            {isOffline && mode === "view" && (
+              <div className="bg-error/10 text-error p-2.5 mb-3 flex items-center gap-2 text-xs font-semibold border border-error/20 rounded-lg">
+                <span className="material-symbols-outlined text-[18px]">cloud_off</span>
+                <span>오프라인 모드입니다. 로컬에 캐시된 일정 조회만 가능합니다.</span>
+              </div>
+            )}
 
           {mode !== "habit" && (
             <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">

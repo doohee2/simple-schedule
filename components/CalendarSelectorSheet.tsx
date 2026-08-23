@@ -18,13 +18,14 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
 
   return (
     <>
-      <div className="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-30 transition-opacity duration-300" onClick={onClose}></div>
-
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-50 bottom-sheet-enter bottom-sheet-enter-active">
-        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] border-t border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[60vh]">
+      <div className={`
+        ${isOpen ? 'fixed bottom-0 bottom-sheet-enter bottom-sheet-enter-active' : 'hidden'} left-1/2 -translate-x-1/2 w-full z-50 
+        md:flex md:static md:translate-x-0 md:w-[360px] lg:w-[400px] md:h-auto md:z-10 md:shrink-0 pointer-events-none
+      `}>
+        <div className="bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[60vh] md:max-h-none md:h-full pointer-events-auto">
           {/* Header (Sticky) */}
-          <div className="px-lg pt-lg pb-4 shrink-0 bg-surface z-10">
-            <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer" onClick={onClose}></div>
+          <div className="px-lg pt-lg pb-4 shrink-0 bg-surface z-10 border-b border-outline-variant/20">
+            <div className="w-12 h-1.5 bg-outline-variant mx-auto mb-6 cursor-pointer md:hidden touch-none" onClick={onClose}></div>
             
             <div className="flex items-center justify-between">
               <h3 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">
