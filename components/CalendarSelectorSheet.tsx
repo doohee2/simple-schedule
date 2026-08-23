@@ -119,7 +119,7 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
       `}>
         <div 
           ref={sheetRef}
-          className={`bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[60vh] md:max-h-none md:h-full pointer-events-auto overflow-hidden`}
+          className={`bg-surface shadow-[0_-8px_24px_rgba(0,0,0,0.2)] md:shadow-none border-t md:border-t-0 md:border-l border-outline-variant flex flex-col max-w-[768px] mx-auto w-full max-h-[85vh] md:max-h-none md:h-full pointer-events-auto overflow-hidden`}
           style={isMobile ? {
             transform: isDragging 
               ? `translateY(${translateY}px)` 
@@ -152,7 +152,6 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
           {/* Scrollable Content */}
           <div 
             className={`flex flex-col gap-2 px-lg pb-8 flex-1 min-h-0 pt-2 ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}
-            style={isMobile && translateY > 0 && !isMinimized ? { paddingBottom: `${translateY + 32}px` } : {}}
           >
             {isLoading ? (
               <div className="flex justify-center p-4">
@@ -218,6 +217,10 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
             )}
             {!isLoading && calendars?.length === 0 && (
               <p className="text-body-sm text-on-surface-variant text-center py-4">표시할 추가 캘린더가 없습니다.</p>
+            )}
+            {/* Scroll spacer to offset translateY in flex containers safely */}
+            {isMobile && translateY > 0 && !isMinimized && (
+              <div style={{ height: `${translateY}px`, flexShrink: 0 }} />
             )}
           </div>
         </div>
