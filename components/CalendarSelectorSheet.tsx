@@ -38,7 +38,7 @@ export default function CalendarSelectorSheet({ isOpen, onClose, selectedCalenda
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex flex-col gap-2 px-lg pb-8 overflow-y-auto">
+          <div className="flex flex-col gap-2 px-lg pb-8 overflow-y-auto flex-1 min-h-0">
             {isLoading ? (
               <div className="flex justify-center p-4">
                 <span className="material-symbols-outlined animate-spin text-primary">refresh</span>

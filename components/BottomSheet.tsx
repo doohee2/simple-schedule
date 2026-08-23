@@ -509,7 +509,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
           </div>
         </div>
 
-          <div className={`px-lg pb-lg flex flex-col flex-1 pt-2 ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className={`px-lg pb-lg flex flex-col flex-1 min-h-0 pt-2 ${isMinimized || isDragging ? 'overflow-hidden' : 'overflow-y-auto'}`}>
             {isOffline && mode === "view" && (
               <div className="bg-error/10 text-error p-2.5 mb-3 flex items-center gap-2 text-xs font-semibold border border-error/20 rounded-lg">
                 <span className="material-symbols-outlined text-[18px]">cloud_off</span>

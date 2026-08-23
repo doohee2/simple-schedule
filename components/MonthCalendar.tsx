@@ -390,7 +390,7 @@ export default function MonthCalendar({
                     <div
                       key={idx}
                       onClick={() => onDateSelect(day)}
-                      className={`flex flex-col justify-start px-[1px] py-[2px] cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isMobileSheetOpen ? (isCategoryHighlighted ? 'ring-2 ring-inset ring-on-surface/20' : 'bg-secondary-container/30') : (isCategoryHighlighted ? 'md:ring-2 md:ring-inset md:ring-on-surface/20' : 'md:bg-secondary-container/30')) : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
+                      className={`flex flex-col justify-start px-[1px] py-[2px] cursor-pointer relative overflow-hidden ${borderStyle} ${cellBgClass} ${isSelected ? (isMobileSheetOpen ? 'ring-2 ring-primary ring-inset z-10 bg-primary/10' : 'md:ring-2 md:ring-primary md:ring-inset md:z-10 md:bg-primary/10') : ''} ${isPast && !isTodayDay ? 'opacity-50 grayscale' : ''}`}
                     >
                       <div className="w-full flex items-center justify-end gap-1 h-5">
                         {habitStat && habitStat.total > 0 && (
