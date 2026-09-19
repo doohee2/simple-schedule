@@ -556,7 +556,7 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                         <span className="text-xs text-on-surface-variant opacity-70 mt-0.5 tracking-tight">{calendarName}</span>
                       )}
                     </div>
-                    <div className="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-2 py-1 text-right shrink-0">
+                    <div className={`text-on-surface-variant bg-surface-container-low px-2 py-1 text-right shrink-0 ${isAllDay ? 'font-label-caps text-label-caps' : 'text-[10px] font-semibold tracking-wide uppercase'}`}>
                       {isAllDay ? startTimeStr : (
                         <div className="flex flex-col items-end leading-tight">
                           <span>{startTimeStr}</span>
