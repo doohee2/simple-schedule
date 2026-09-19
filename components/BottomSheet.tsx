@@ -533,9 +533,12 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
             <div className="flex flex-col gap-1 pb-4">
               {sortedEvents.map(event => {
                 const isAllDay = !!event.start.date && !event.start.dateTime;
-                const timeStr = isAllDay
+                const startTimeStr = isAllDay
                   ? "종일"
                   : format(parseISO(event.start.dateTime as string), "a h:mm", { locale: ko });
+                const endTimeStr = !isAllDay && event.end?.dateTime
+                  ? format(parseISO(event.end.dateTime as string), "a h:mm", { locale: ko })
+                  : "";
 
                 let calendarName = "";
                 if (event.isHoliday) {
@@ -553,8 +556,13 @@ export default function BottomSheet({ selectedDate, isOpen, onClose, events = []
                         <span className="text-xs text-on-surface-variant opacity-70 mt-0.5 tracking-tight">{calendarName}</span>
                       )}
                     </div>
-                    <div className="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-2 py-1">
-                      {timeStr}
+                    <div className="font-label-caps text-label-caps text-on-surface-variant bg-surface-container-low px-2 py-1 text-right shrink-0">
+                      {isAllDay ? startTimeStr : (
+                        <div className="flex flex-col items-end leading-tight">
+                          <span>{startTimeStr}</span>
+                          <span className="text-outline-variant">~ {endTimeStr}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
