@@ -10,6 +10,13 @@ interface QuoteData {
   author: string;
 }
 
+interface IdiomData {
+  hanja: string;
+  hangul: string;
+  meaning: string;
+  pronunciation: string;
+}
+
 interface QuotesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,15 +26,35 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
   const [showTranslation, setShowTranslation] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showOnStartup, setShowOnStartup] = useState(true);
+  const [quoteSource, setQuoteSource] = useState<'zen' | 'idiom'>('zen');
+  const [useZenQuotes, setUseZenQuotes] = useState(true);
+  const [useIdioms, setUseIdioms] = useState(false);
   const isOnline = useNetworkStatus();
   const isOffline = !isOnline;
 
   useEffect(() => {
-    const saved = localStorage.getItem("show_quotes_on_startup");
-    if (saved === "false") {
-      setShowOnStartup(false);
+    const savedStartup = localStorage.getItem("show_quotes_on_startup");
+    if (savedStartup === "false") setShowOnStartup(false);
+
+    const savedZen = localStorage.getItem("use_zen_quotes");
+    const savedIdiom = localStorage.getItem("use_idioms");
+    
+    const zen = savedZen !== "false";
+    const idiom = savedIdiom === "true";
+    
+    setUseZenQuotes(zen);
+    setUseIdioms(idiom);
+    
+    if (isOpen) {
+      if (zen && idiom) {
+        setQuoteSource(Math.random() < 0.5 ? 'zen' : 'idiom');
+      } else if (idiom) {
+        setQuoteSource('idiom');
+      } else {
+        setQuoteSource('zen');
+      }
     }
-  }, []);
+  }, [isOpen]);
 
   const handleToggleStartup = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -53,7 +80,28 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
     queryFn: fetchQuote,
     staleTime: Infinity,
     retry: 0,
-    enabled: isOpen,
+    enabled: isOpen && quoteSource === 'zen',
+  });
+
+  const fetchIdiom = async (): Promise<IdiomData> => {
+    if (isOffline) {
+      const cached = localStorage.getItem("last_idiom_data");
+      if (cached) return JSON.parse(cached);
+      throw new Error("오프라인 상태이며 저장된 사자성어가 없습니다.");
+    }
+    const res = await fetch("/api/idioms");
+    if (!res.ok) throw new Error("Failed to fetch idiom");
+    const data = await res.json();
+    localStorage.setItem("last_idiom_data", JSON.stringify(data));
+    return data;
+  };
+
+  const { data: idiomData, isLoading: isIdiomLoading, error: idiomError, refetch: refetchIdiom, isFetching: isIdiomFetching } = useQuery<IdiomData, Error>({
+    queryKey: ["daily-idiom"],
+    queryFn: fetchIdiom,
+    staleTime: Infinity,
+    retry: 0,
+    enabled: isOpen && quoteSource === 'idiom',
   });
 
   const fetchTranslation = async (text: string) => {
@@ -94,10 +142,10 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
   });
 
   useEffect(() => {
-    if (quoteData) {
+    if (quoteData || idiomData) {
       setShowTranslation(false);
     }
-  }, [quoteData]);
+  }, [quoteData, idiomData]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -117,9 +165,19 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
       return;
     }
 
-    if (quoteData?.en) {
-      const utterance = new SpeechSynthesisUtterance(quoteData.en);
-      utterance.lang = "en-US";
+    let text = "";
+    let lang = "";
+    if (quoteSource === 'zen' && quoteData?.en) {
+      text = quoteData.en;
+      lang = "en-US";
+    } else if (quoteSource === 'idiom' && idiomData?.hangul) {
+      text = idiomData.hangul;
+      lang = "ko-KR";
+    }
+
+    if (text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
       utterance.rate = 0.9;
       
       utterance.onend = () => setIsPlaying(false);
@@ -135,7 +193,15 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
     if (!isOffline) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
-      refetch();
+      
+      let nextSource = quoteSource;
+      if (useZenQuotes && useIdioms) {
+        nextSource = Math.random() < 0.5 ? 'zen' : 'idiom';
+        setQuoteSource(nextSource);
+      }
+      
+      if (nextSource === 'zen') refetch();
+      else refetchIdiom();
     }
   };
 
@@ -156,13 +222,13 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
           <div className="absolute top-3 right-3 flex items-center space-x-0.5 z-10">
             <button 
               onClick={handleRefresh}
-              disabled={isFetching || isOffline}
+              disabled={(quoteSource === 'zen' ? isFetching : isIdiomFetching) || isOffline}
               className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors ${
                 isOffline || isFetching ? "text-outline/40 cursor-not-allowed" : "text-outline hover:bg-surface-variant hover:text-on-surface"
               }`}
               title={isOffline ? "오프라인 상태에서는 새 명언을 불러올 수 없습니다." : "새 명언 가져오기"}
             >
-              <span className={`material-symbols-outlined text-[22px] ${isFetching ? "animate-spin" : ""}`}>
+              <span className={`material-symbols-outlined text-[22px] ${(quoteSource === 'zen' ? isFetching : isIdiomFetching) ? "animate-spin" : ""}`}>
                 refresh
               </span>
             </button>
@@ -180,46 +246,71 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
             </span>
           </div>
 
-          {isLoading && !quoteData ? (
+                    {(isLoading || isIdiomLoading) && !(quoteData || idiomData) ? (
             <div className="flex flex-col items-center justify-center py-10 space-y-4">
               <span className="material-symbols-outlined animate-spin text-[32px] text-primary">
                 progress_activity
               </span>
               <p className="text-sm font-medium text-on-surface-variant animate-pulse">
-                영감을 가져오는 중...
+                가져오는 중...
               </p>
             </div>
-          ) : error && !quoteData ? (
+          ) : (error || idiomError) && !(quoteData || idiomData) ? (
             <div className="text-center py-6">
-              <p className="text-error font-medium mb-2">명언을 불러오지 못했습니다.</p>
-              <p className="text-sm text-on-surface-variant">{error.message}</p>
+              <p className="text-error font-medium mb-2">불러오지 못했습니다.</p>
+              <p className="text-sm text-on-surface-variant">{(error || idiomError)?.message}</p>
             </div>
-          ) : quoteData ? (
+          ) : (quoteData || idiomData) ? (
             <div className="relative z-10 pt-6 pb-2">
-              <div className="mb-6">
-                <p className="text-xl md:text-2xl font-bold text-on-surface leading-snug tracking-tight font-plus-jakarta">
-                  "{quoteData.en}"
-                </p>
-                
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm font-medium text-on-surface-variant/80 font-plus-jakarta">
-                    — {quoteData.author}
+              {quoteSource === 'zen' && quoteData && (
+                <div className="mb-6">
+                  <p className="text-xl md:text-2xl font-bold text-on-surface leading-snug tracking-tight font-plus-jakarta">
+                    "{quoteData.en}"
                   </p>
-                  <button
-                    onClick={handleTTS}
-                    title="발음 듣기"
-                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors border ${
-                      isPlaying 
-                        ? "bg-primary/10 text-primary border-primary/30" 
-                        : "bg-surface-variant/50 text-on-surface-variant border-outline-variant hover:bg-surface-variant"
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isPlaying ? "'FILL' 1" : "'FILL' 0" }}>
-                      volume_up
-                    </span>
-                  </button>
+                  
+                  <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm font-medium text-on-surface-variant/80 font-plus-jakarta">
+                      — {quoteData.author}
+                    </p>
+                    <button
+                      onClick={handleTTS}
+                      title="발음 듣기"
+                      className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors border ${
+                        isPlaying 
+                          ? "bg-primary/10 text-primary border-primary/30" 
+                          : "bg-surface-variant/50 text-on-surface-variant border-outline-variant hover:bg-surface-variant"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isPlaying ? "'FILL' 1" : "'FILL' 0" }}>
+                        volume_up
+                      </span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+              
+              {quoteSource === 'idiom' && idiomData && (
+                <div className="mb-6 mt-4">
+                  <div className="flex items-end justify-between">
+                    <p className="text-4xl md:text-5xl font-bold text-on-surface leading-snug tracking-widest flex-1 text-center pl-8">
+                      {idiomData.hanja}
+                    </p>
+                    <button
+                      onClick={handleTTS}
+                      title="발음 듣기"
+                      className={`flex items-center justify-center shrink-0 w-8 h-8 rounded-full transition-colors border ${
+                        isPlaying 
+                          ? "bg-primary/10 text-primary border-primary/30" 
+                          : "bg-surface-variant/50 text-on-surface-variant border-outline-variant hover:bg-surface-variant"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: isPlaying ? "'FILL' 1" : "'FILL' 0" }}>
+                        volume_up
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div 
                 className={`transition-all duration-500 ease-out overflow-hidden ${
@@ -227,14 +318,65 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
                 }`}
               >
                 <div className="pt-5 border-t border-outline-variant/50">
-                  <p className="text-[15px] font-medium text-on-surface leading-relaxed break-keep">
-                    {koreanTranslation}
-                  </p>
+                  {quoteSource === 'zen' && (
+                    <p className="text-[15px] font-medium text-on-surface leading-relaxed break-keep">
+                      {koreanTranslation}
+                    </p>
+                  )}
+                  {quoteSource === 'idiom' && idiomData && (
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-lg font-bold text-on-surface">
+                        {idiomData.hangul}
+                      </p>
+                      <p className="text-[15px] font-medium text-on-surface leading-relaxed break-keep text-center">
+                        {idiomData.meaning}
+                      </p>
+                      <p className="text-xs text-on-surface-variant/70 mt-1">
+                        {idiomData.pronunciation}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="flex justify-end mt-4 pt-2">
+                <div className="flex flex-wrap justify-between items-center mt-6 pt-2 gap-y-2">
+                  <div className="flex gap-4">
+                    <label 
+                      className="flex items-center space-x-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={useZenQuotes}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          if (!val && !useIdioms) return;
+                          setUseZenQuotes(val);
+                          localStorage.setItem("use_zen_quotes", val ? "true" : "false");
+                        }}
+                        className="w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer accent-primary"
+                      />
+                      <span className="text-[11px] font-medium text-on-surface-variant">ZenQuotes</span>
+                    </label>
+                    <label 
+                      className="flex items-center space-x-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={useIdioms}
+                        onChange={(e) => {
+                          const val = e.target.checked;
+                          if (!val && !useZenQuotes) return;
+                          setUseIdioms(val);
+                          localStorage.setItem("use_idioms", val ? "true" : "false");
+                        }}
+                        className="w-3.5 h-3.5 rounded border-outline-variant text-primary focus:ring-primary/50 cursor-pointer accent-primary"
+                      />
+                      <span className="text-[11px] font-medium text-on-surface-variant">사자성어</span>
+                    </label>
+                  </div>
                   <label 
-                    className="flex items-center space-x-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+                    className="flex items-center space-x-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity ml-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <input 
