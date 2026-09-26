@@ -32,14 +32,33 @@ interface MonthCalendarProps {
   isMobileSheetOpen?: boolean;
 }
 
-function HabitProgressIcon({ checked, total }: { checked: number; total: number }) {
+type BorderStyle = "dashed" | "half-dashed" | "solid";
+
+function HabitBox({ borderStyle, className = "" }: { borderStyle: BorderStyle; className?: string }) {
+  if (borderStyle === "dashed") {
+    return <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" strokeDasharray="2 1.5" className={className} />;
+  }
+  if (borderStyle === "half-dashed") {
+    return (
+      <>
+        {/* Top and Left: Dashed */}
+        <path d="M 2.5 12.5 L 2.5 5.5 A 2 2 0 0 1 4.5 3.5 L 11.5 3.5 A 2 2 0 0 1 13.5 5.5" strokeWidth="1.35" strokeDasharray="2 1.5" fill="none" stroke="currentColor" className={className} />
+        {/* Right and Bottom: Solid */}
+        <path d="M 13.5 5.5 L 13.5 12.5 A 2 2 0 0 1 11.5 14.5 L 4.5 14.5 A 2 2 0 0 1 2.5 12.5" strokeWidth="1.35" fill="none" stroke="currentColor" className={className} />
+      </>
+    );
+  }
+  return <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" className={className} />;
+}
+
+function HabitProgressIcon({ checked, total, borderStyle = "solid" }: { checked: number; total: number; borderStyle?: BorderStyle }) {
   const ratio = total > 0 ? checked / total : 0;
 
   if (ratio === 0) {
     return (
       <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/65 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 미완료 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
+        <HabitBox borderStyle={borderStyle} />
       </svg>
     );
   }
@@ -48,7 +67,7 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
     return (
       <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/75 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 진행 중 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
+        <HabitBox borderStyle={borderStyle} />
         <path d="M 6.2 9.4 L 7.4 10.6 L 9.7 8.0" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
@@ -58,7 +77,7 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
     return (
       <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/85 shrink-0 select-none" fill="none" stroke="currentColor">
         <title>{`노션 습관 과반 달성 (${checked}/${total})`}</title>
-        <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" />
+        <HabitBox borderStyle={borderStyle} />
         <path d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
@@ -68,7 +87,7 @@ function HabitProgressIcon({ checked, total }: { checked: number; total: number 
   return (
     <svg viewBox="0 0 16 16" className="w-[19px] h-[19px] text-on-surface-variant/95 shrink-0 select-none" fill="none" stroke="currentColor">
       <title>{`노션 습관 완료 (${checked}/${total})`}</title>
-      <rect x="2.5" y="3.5" width="11" height="11" rx="2" strokeWidth="1.35" className="opacity-80" />
+      <HabitBox borderStyle={borderStyle} className="opacity-80" />
       <path d="M 4.0 9.5 L 7.2 12.5 L 15.2 3.2" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -385,6 +404,24 @@ export default function MonthCalendar({
 
                   const dateKey = format(day, "yyyy-MM-dd");
                   const habitStat = habitSummary?.[dateKey];
+                  
+                  let iconBorderStyle: BorderStyle = "solid";
+                  if (habitStat && habitStat.total > 0) {
+                    let statusStr = "";
+                    if (habitStat.data?.properties) {
+                      const statusProp = habitStat.data.properties.find((p: any) => p.type === "status" || p.name === "상태");
+                      if (statusProp && statusProp.value) {
+                        statusStr = String(statusProp.value);
+                      }
+                    }
+                    if (!statusStr) {
+                      if (habitStat.checked === 0) statusStr = "시작 전";
+                      else if (habitStat.checked === habitStat.total) statusStr = "완료";
+                      else statusStr = "진행 중";
+                    }
+                    if (statusStr === "시작 전") iconBorderStyle = "dashed";
+                    else if (statusStr === "진행 중") iconBorderStyle = "half-dashed";
+                  }
 
                   return (
                     <div
@@ -394,7 +431,7 @@ export default function MonthCalendar({
                     >
                       <div className="w-full flex items-center justify-end gap-1 h-5">
                         {habitStat && habitStat.total > 0 && (
-                          <HabitProgressIcon checked={habitStat.checked} total={habitStat.total} />
+                          <HabitProgressIcon checked={habitStat.checked} total={habitStat.total} borderStyle={iconBorderStyle} />
                         )}
                         <div className={`w-5 h-5 flex items-center justify-center rounded-sm shrink-0 ${isTodayDay ? 'bg-primary' : 'bg-transparent'}`}>
                           <span className={`font-time-display leading-none ${isTodayDay ? 'text-[11px] text-on-primary' : `text-[12px] ${isRedDay ? 'text-error' : (isPast ? 'text-outline' : 'text-on-surface')}`} ${isWeekend ? 'font-bold' : ''} ${isPast && !isTodayDay ? 'line-through' : ''}`}>
