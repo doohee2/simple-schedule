@@ -219,7 +219,7 @@ export default function QuotesModal({ isOpen, onClose }: QuotesModalProps) {
       >
         <div className="px-7 pt-7 pb-2.5 relative min-h-[220px] flex flex-col justify-center">
           
-          <div className="absolute top-3 right-3 flex items-center space-x-0.5 z-10">
+          <div className="absolute top-3 right-3 flex items-center space-x-0.5 z-50">
             <button 
               onClick={handleRefresh}
               disabled={(quoteSource === 'zen' ? isFetching : isIdiomFetching) || isOffline}
