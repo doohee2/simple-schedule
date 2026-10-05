@@ -65,7 +65,8 @@ export default function Header() {
     if (session?.error === "RefreshAccessTokenError") {
       handleSignOut(true);
     }
-  }, [session?.error]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(session as any)?.error]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
