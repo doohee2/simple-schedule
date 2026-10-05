@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
+import { fetchWithSessionRetry } from "@/lib/fetchWithSessionRetry";
 
 export interface CalendarEvent {
   id: string;
@@ -35,10 +36,9 @@ export const useCalendarList = () => {
   return useQuery({
     queryKey: ["calendar-list"],
     queryFn: async () => {
-      const res = await fetch("/api/calendars");
+      const res = await fetchWithSessionRetry("/api/calendars");
       if (!res.ok) {
         if (res.status === 401) {
-          signOut();
           throw new Error("Unauthorized");
         }
         throw new Error("Failed to fetch calendars");
@@ -68,10 +68,9 @@ export const useCalendarEvents = (timeMin?: string, timeMax?: string, calendarId
         url += `?${params.toString()}`;
       }
 
-      const res = await fetch(url);
+      const res = await fetchWithSessionRetry(url);
       if (!res.ok) {
         if (res.status === 401) {
-          signOut();
           throw new Error("Unauthorized");
         }
         throw new Error("Failed to fetch events");
@@ -89,7 +88,7 @@ export const useAddCalendarEvent = () => {
 
   return useMutation({
     mutationFn: async (event: Partial<CalendarEvent>) => {
-      const res = await fetch("/api/calendar", {
+      const res = await fetchWithSessionRetry("/api/calendar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +112,7 @@ export const useUpdateCalendarEvent = () => {
 
   return useMutation({
     mutationFn: async ({ eventId, event }: { eventId: string; event: Partial<CalendarEvent> }) => {
-      const res = await fetch(`/api/calendar/${eventId}`, {
+      const res = await fetchWithSessionRetry(`/api/calendar/${eventId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -156,7 +155,7 @@ export const useDeleteCalendarEvent = () => {
 
   return useMutation({
     mutationFn: async (eventId: string) => {
-      const res = await fetch(`/api/calendar/${eventId}`, {
+      const res = await fetchWithSessionRetry(`/api/calendar/${eventId}`, {
         method: "DELETE",
       });
 

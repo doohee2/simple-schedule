@@ -173,14 +173,19 @@
 22. **바텀 시트(BottomSheet) 스크롤 및 드래그 동작 버그 수정**:
    - 모바일 환경에서 바텀 시트를 중간 높이로 드래그했을 때 내부 일정 리스트가 끝까지 스크롤되지 않고 가려지던 버그를 고쳤습니다. Webkit의 Flex 컨테이너 패딩 버그를 우회하기 위해, 스크롤 컨테이너 최하단에 시트의 `translateY` 오프셋만큼 동적으로 높이가 변하는 `div` 스페이서를 삽입하여 어떤 높이에서도 완벽한 스크롤이 가능하도록 개선했습니다.
    - 상단 공유 캘린더 선택 바텀 시트(`CalendarSelectorSheet`)에도 동일한 터치 드래그 및 높이 조절 로직을 적용하여 UI/UX 일관성을 확립했습니다.
+23. **Google OAuth 세션 유지 및 토큰 갱신 안정화 (Session Persistence)**:
+   - 클라이언트의 Access Token 갱신 로직(`auth.ts`)을 고도화하여, 토큰 갱신 실패를 **치명적 실패(`invalid_grant`, 권한 철회 등)**와 **일시적 실패(네트워크 오류 등)**로 구분했습니다. 치명적 실패 시에만 강제 로그아웃 처리되며, 일시적 실패는 묵인하고 다음 요청 시 재시도하도록 완화했습니다.
+   - API 통신 시 401 에러를 만났을 때 즉시 로그아웃 하던 낡은 동작을 폐기하고, **`fetchWithSessionRetry`** 공용 헬퍼를 도입했습니다. 401 응답 시 내부적으로 세션을 리프레시(`getSession()`)하여 토큰을 갱신한 뒤, 투명하게 1회 자동 재시도하여 사용자 경험이 단절되지 않도록 방어 로직을 짰습니다.
+   - 갱신이 원활하게 진행될 수 있도록 토큰 만료 60초 전부터 사전 갱신(Early Refresh)을 시도하며, 브라우저 세션 쿠키 수명(`maxAge`)을 **180일**로 대폭 늘려 다시 로그인해야 하는 빈도를 획기적으로 줄였습니다.
 
 ---
 
 ## 5. 향후 유지보수 시 고려사항 (Implications)
 
-### 1) Google OAuth Refresh Token 전략 (구현 완료)
-현재 구현은 세션 유지 기간 동안 Google API Access Token을 활용하며, Access Token이 만료(일반적으로 1시간)될 경우 `auth.ts` 내부의 JWT 콜백을 통해 Refresh Token으로 **새로운 Access Token을 자동 갱신(Token Rotation)** 하도록 처리되어 있습니다.
-만약 토큰 갱신 중 문제가 발생할 경우 세션 객체에 `error: "RefreshAccessTokenError"`를 반환하여 클라이언트 측에서 재로그인을 유도할 수 있는 기반이 마련되어 있습니다.
+### 1) Google OAuth Refresh Token 전략 및 동의 화면 상태 주의
+현재 구현은 세션 유지 기간 동안 Google API Access Token을 활용하며, Access Token이 만료(약 1시간)될 경우 `auth.ts` 내부의 JWT 콜백을 통해 Refresh Token으로 **새로운 Access Token을 자동 갱신(Token Rotation)** 하도록 처리되어 있습니다.
+
+**[주의]** 만약 사용자가 **7일 단위로 계속 로그아웃되는 현상**이 발생한다면, Google Cloud Console의 **'OAuth 동의 화면' 게시 상태가 "테스트(Testing)"이기 때문입니다.** 앱을 "프로덕션"으로 게시해야 Refresh Token이 영구적으로 유지됩니다. (개인/소규모 사용 시 Google 검수 없이 그대로 프로덕션 전환이 가능합니다.)
 
 ### 2) Tailwind v4와 빌드 환경 (Turbopack)
 현재 프로젝트는 Tailwind CSS v4를 도입하여 css 파일 내 `@theme` 지시어로 테마를 관리하고 있습니다. Next.js 15+ 환경에서 Tailwind v4는 아직 기본 번들러인 Turbopack과 일부 호환성 이슈가 발생할 수 있어, `package.json`의 스크립트가 `next dev --webpack` 및 `next build --webpack`으로 강제되어 있습니다. 추후 호환성 이슈가 패치되면 `--webpack` 플래그를 제거하여 빌드 속도를 향상시킬 수 있습니다.

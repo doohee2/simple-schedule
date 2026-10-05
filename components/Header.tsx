@@ -44,7 +44,10 @@ export default function Header() {
     setImgError(false);
   }, [session?.user?.image]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (showAlert: boolean = false) => {
+    if (showAlert) {
+      alert("Google 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+    }
     try {
       if (typeof window !== "undefined" && "caches" in window) {
         const cacheNames = await window.caches.keys();
@@ -60,9 +63,9 @@ export default function Header() {
   useEffect(() => {
     // @ts-ignore
     if (session?.error === "RefreshAccessTokenError") {
-      handleSignOut();
+      handleSignOut(true);
     }
-  }, [session]);
+  }, [session?.error]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
