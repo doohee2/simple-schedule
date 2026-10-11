@@ -3,7 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
-import { HELP_MESSAGE } from "@/config";
+import { HELP_MESSAGE, APP_VERSION } from "@/config";
 import NotionTokenModal from "./NotionTokenModal";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
@@ -231,7 +231,7 @@ export default function Header() {
                   })}
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <button 
                   onClick={async () => {
                     if ("serviceWorker" in navigator && "caches" in window) {
@@ -255,12 +255,18 @@ export default function Header() {
                   <span className="material-symbols-outlined text-[18px]">update</span>
                   <span>최신 버전으로 업데이트</span>
                 </button>
-                <button 
-                  onClick={() => setIsHelpOpen(false)}
-                  className="w-full h-12 bg-primary text-on-primary rounded-xl font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all"
-                >
-                  확인
-                </button>
+
+                <div className="flex items-center justify-between px-1 pt-1 text-xs text-outline">
+                  <a
+                    href="https://landing-doohee2.vercel.app/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline hover:text-on-surface transition-colors"
+                  >
+                    개인정보처리방침
+                  </a>
+                  <span className="text-[11px] opacity-75">{APP_VERSION}</span>
+                </div>
               </div>
             </div>
           </div>
