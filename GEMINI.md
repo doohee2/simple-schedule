@@ -1,200 +1,286 @@
-# Simple Schedule PWA - 개발 문서
+# Simple Schedule PWA - 통합 개발 문서
 
-본 문서는 구글 캘린더 연동 기반의 PWA(Progressive Web App) 'Simple Schedule' 프로젝트의 전체적인 구조와 사용된 기술 스택, 그리고 각 소스 파일의 역할 및 향후 유지보수를 위한 가이드라인을 정리한 문서입니다.
-
-## 1. 사용된 기술 스택 및 프레임워크
-
-- **Next.js (App Router, v15+)**: 애플리케이션의 핵심 뼈대입니다. 서버 사이드 렌더링(SSR), API 라우트, 페이지 라우팅을 담당합니다.
-- **React (v18+)**: UI 컴포넌트를 구성하는 기반 라이브러리입니다.
-- **Tailwind CSS (v4)**: 유틸리티 기반의 CSS 프레임워크입니다. 최신 v4 버전의 `@theme` 지시어를 사용하여 `globals.css`에서 통합적으로 컬러 및 타이포그래피 변수를 제어하고 있습니다.
-- **NextAuth.js (v5, `next-auth`)**: 사용자 인증을 담당합니다. Google OAuth Provider를 사용하여 사용자의 구글 계정으로 로그인하고 구글 캘린더 접근 권한(Access Token)을 획득합니다.
-- **React Query (`@tanstack/react-query`)**: 서버 상태(Server State) 관리 라이브러리입니다. 구글 캘린더 API 호출의 캐싱, 로딩 상태 관리, 낙관적 업데이트 및 데이터 동기화를 처리합니다.
-- **date-fns**: 자바스크립트의 복잡한 날짜 연산을 직관적이고 쉽게 처리하기 위해 사용된 유틸리티 라이브러리입니다. 달력의 그리드 계산 및 날짜 포맷팅에 사용됩니다.
-- **Serwist (next-pwa 대체)**: 애플리케이션이 모바일 기기에서 네이티브 앱처럼 동작(오프라인 캐싱, 홈 화면 추가 등)할 수 있도록 Service Worker와 `manifest.json`을 구성해 줍니다.
-- **Supabase (`@supabase/supabase-js`)**: 구글 계정별 노션 연동 액세스 토큰 및 데이터베이스 ID 등의 설정 정보를 안전하게 관리하기 위한 클라우드 데이터베이스 서비스입니다.
+본 문서는 구글 캘린더 연동 및 노션(Notion) 일일 습관 트래커를 통합한 Progressive Web App(PWA) **'Simple Schedule'** 프로젝트의 전체적인 프로그램 소개, 시스템 아키텍처, 기술 스택, 핵심 기능, 세부 구현 특징, 주요 수정 히스토리 및 향후 유지보수 가이드라인을 종합적으로 정리한 기술 문서입니다.
 
 ---
 
-## 2. 전체적인 프로그램 구조
+## 1. 프로그램 소개 (Overview & Introduction)
 
-프로젝트는 크게 **(1) 인증 및 서버 API 계층**, **(2) 데이터 통신 계층 (Hooks)**, **(3) 클라이언트 UI 컴포넌트 계층**으로 나뉩니다.
+**Simple Schedule**은 복잡하고 무거운 기존 캘린더 앱의 단점을 극복하고, 사용자가 매일의 일정과 습관을 한 화면에서 가장 빠르고 직관적으로 관리할 수 있도록 설계된 **웹 기반 모바일/데스크톱 반응형 PWA(Progressive Web App)**입니다.
 
-사용자가 앱에 접속하여 Google 로그인을 수행하면, NextAuth가 Google로부터 받은 Access Token을 세션에 저장합니다. 이후 클라이언트에서 캘린더 데이터를 요청하면, React Query가 Next.js의 API 엔드포인트(`/api/calendar`)를 호출하고, 이 API 라우트 내부에서 세션에 저장된 토큰을 꺼내어 실제 Google Calendar API와 통신을 중계하는 구조입니다.
-
-이러한 **프록시(Proxy) 구조**를 채택함으로써, 클라이언트 측(브라우저)에 민감한 Access Token이 직접 노출되는 것을 방지하고 CORS 이슈를 해결할 수 있습니다.
-
----
-
-## 3. 주요 소스 파일별 기능과 역할
-
-### 📂 `app/` (Next.js App Router)
-- **`layout.tsx`**: 앱의 최상위 레이아웃입니다. 구글 웹 폰트(`Plus Jakarta Sans`, `Be Vietnam Pro`)를 로드하고, `Providers` 컴포넌트를 감싸 전역 상태 컨텍스트를 주입합니다.
-- **`page.tsx`**: 앱의 메인 페이지입니다. 상단 `Header`와 메인 달력 영역인 `CalendarContainer`를 렌더링합니다.
-- **`globals.css`**: Tailwind v4의 글로벌 스타일이 정의된 곳입니다. `--color-*`, `--spacing-*`, `--radius-*` (모두 0px로 플랫 디자인 적용됨) 등의 테마 변수가 중앙 집중적으로 관리됩니다.
-- **`api/auth/[...nextauth]/route.ts`**: NextAuth의 API 라우트로, 로그인/로그아웃 요청을 처리합니다. 실제 설정은 루트의 `auth.ts`에 위임되어 있습니다.
-- **`api/calendar/route.ts`**: 구글 API와의 통신을 대행하는 백엔드 라우트입니다.
-  - `GET`: 구글 캘린더의 일정 목록을 가져옵니다. (`timeMin`, `timeMax`로 기간 필터링)
-  - `POST`: 새로운 일정을 구글 캘린더에 생성합니다.
-- **`api/notion/token/route.ts`**: 구글 로그인 사용자 계정(`session.user.email`)을 기준으로 Supabase DB에서 노션 액세스 토큰 및 데이터베이스 ID(`database_id`)를 조회(`GET`) 및 저장/갱신(`POST`)하는 백엔드 API 라우트입니다.
-- **`api/notion/habits/route.ts`**: Supabase DB에 저장된 계정별 노션 자격증명으로 Notion Database Query API를 대행 호출하여, 선택한 날짜("날짜" 속성 기준 기본 매칭)의 습관 체크리스트(체크박스, 상태, 코멘트)를 조회(`GET`) 및 실시간 반영(`POST`)하는 Proxy 백엔드 API 라우트입니다.
-- **`api/notion/habits/summary/route.ts`**: 캘린더에 로드된 2달간(`start`~`end`)의 노션 습관 레코드를 단 1번의 Batch Query로 일괄 조회하고, 날짜별 체크박스 총합과 완료 여부 스냅샷(`{ total, checked, completed }`)을 반환하는 백그라운드 실시간 렌더링 API입니다.
-- **`api/quotes/route.ts`**: 매일의 명언(Quotes)을 불러오기 위해 `zenquotes.io` API와 Google Translate 무료 번역 API를 조합하여 영문 명언과 한국어 번역문을 동시에 제공하는 백엔드 Proxy 라우트입니다.
-
-### 📂 `components/` (클라이언트 UI 컴포넌트)
-- **`Providers.tsx`**: NextAuth의 `SessionProvider`와 React Query의 `QueryClientProvider`를 묶어 하위 컴포넌트들에 제공합니다.
-- **`Header.tsx`**: 앱 상단의 네비게이션 바입니다. 로고 및 타이틀, 그리고 사용자의 로그인/로그아웃 버튼을 포함합니다.
-- **`CalendarContainer.tsx`**: 달력 시스템의 **상태 관리 허브**입니다. 사용자가 선택한 날짜(`selectedDate`), 선택한 카테고리(`selectedCategory`), 현재 보고 있는 달(`currentDate`)의 상태를 관리하고, `useCalendarEvents` 훅을 호출해 데이터를 하위 컴포넌트들로 내려줍니다(Props Drilling).
-- **`MonthCalendar.tsx`**: 실제 7열(그리드) 구조의 달력을 그리는 컴포넌트입니다. `date-fns`를 이용해 해당 월의 날짜 배열을 생성하고, 이벤트 데이터와 매핑하여 점심/저녁/휴가 등 파스텔톤 블록으로 일정을 표시합니다. 플랫(Flat)한 풀 위드스 디자인이 적용되어 있습니다.
-- **`FilterCategories.tsx`**: '전체', '점심', '저녁', '기타' 등 카테고리 칩 버튼들을 렌더링하며, 사용자의 클릭에 따라 필터 상태를 변경합니다.
-- **`BottomSheet.tsx`**: 달력에서 특정 날짜를 클릭 시 하단(모바일) 또는 우측 패널(데스크톱)에서 표시되는 일정 관리 UI 컴포넌트입니다. 일정 조회(`"view"`), 추가(`"add"`), 수정(`"edit"`), 노션 습관(`"habit"`) 모드 간 원활한 전환과 백 버튼(`←`)을 제공합니다.
-- **`NotionTokenModal.tsx`**: 상단 헤더의 노션 연동 아이콘을 클릭하면 호출되는 토큰 및 DB ID 관리 모달입니다. 마스킹 없이(`type="text"`) 직관적으로 구글 계정에 연동할 노션 API 액세스 토큰과 데이터베이스 ID를 확인하고 Supabase DB에 안전하게 보존합니다.
-- **`NotionHabitChecklist.tsx`**: 노션의 일일 습관 및 체크리스트 레코드를 화면에 직관적으로 렌더링하는 실시간 컨트롤러 컴포넌트입니다. 체크박스 토글, 상태 드롭다운 수정, 메모·코멘트 입력을 지원하며 변경 즉시 노션 페이지와 동기화합니다.
-- **`QuotesModal.tsx`**: 앱 진입 시 최초 1회 나타나는 매일의 명언 모달입니다. 영문 텍스트 감상, 터치 시 번역 표시, Web Speech API 기반 TTS 음성 듣기, 그리고 오프라인 캐시 기능을 독립적으로 수행합니다.
-
-### 📂 `hooks/` & 기타
-- **`hooks/useCalendar.ts`**: React Query를 래핑한 커스텀 훅입니다.
-  - `useCalendarEvents`: 달력 이벤트를 GET하는 쿼리입니다.
-  - `useAddCalendarEvent`: 일정을 추가하는 POST 뮤테이션입니다. `onSuccess` 시 캐시를 무효화(invalidate)하여 달력을 자동 갱신합니다.
-- **`auth.ts`**: NextAuth의 설정 파일입니다. 구글 프로바이더 등록 및 `https://www.googleapis.com/auth/calendar.events` 스코프 권한 요청 로직이 들어있습니다.
+### 🎯 기획 배경 및 핵심 가치
+1. **일정과 일일 습관의 유기적 결합**: 단순 스케줄 관리에 그치지 않고, 노션(Notion) 데이터베이스와 실시간 연동되어 오늘 실천해야 할 습관 체크리스트와 진행 현황을 달력 날짜 칸 위에서 한눈에 직관적으로 파악할 수 있습니다.
+2. **설치가 필요 없는 네이티브 앱 경험 (PWA)**: 별도의 앱스토어 다운로드 없이 브라우저의 '홈 화면에 추가'를 통해 네이티브 앱처럼 동작하며, 오프라인 환경에서도 최근 2달치 데이터의 완벽한 조회가 가능합니다.
+3. **가벼움과 제로 레이턴시(Zero-Latency)**: 불필요한 장식과 무거운 애니메이션을 배제한 플랫(Flat) 디자인을 채택하였으며, 배치 쿼리(Batch Query)와 프론트엔드 캐시 재활용 기술을 통해 로딩 지연 없는 쾌적한 사용성을 보장합니다.
+4. **반응형 멀티 디바이스 환경 지원**: 모바일 화면에서는 친숙한 '바텀 시트(Bottom Sheet)'로, 태블릿 및 데스크톱 모니터에서는 '좌우 2분할(Split-Screen)' 화면으로 자동 전환되어 최적의 공간 활용성을 제공합니다.
 
 ---
 
-## 4. 최근 업데이트 및 주요 기능 (Recent Updates)
+## 2. 주요 기능 설명 (Core Features)
 
-프로젝트 개발 과정에서 다음과 같은 UI/UX 및 기능 개선이 이루어졌습니다:
+### 📅 1) 2달 연속 무한 스크롤 캘린더 (Seamless 2-Month Grid)
+- 이번 달과 다음 달의 날짜를 단일 CSS Grid(`eachDayOfInterval`)로 끊김 없이 이어붙여, 달과 달 사이의 빈 여백 없이 연속적으로 탐색할 수 있습니다.
+- 첫 번째 달과 두 번째 달의 경계선(마지막 주차 하단 및 마지막 날짜 우측)에 동적 테두리(`border-2`)를 렌더링하여 월의 구분을 시각적으로 명확히 표시합니다.
+- 상단 연/월 헤더와 요일 행(`일 월 화 수 목 금 토`)은 화면 상단에 고정(`sticky`)되며, 날짜 그리드 영역만 부드럽게 스크롤됩니다.
 
-1. **상태 분기 처리 (조회 모드 vs 추가 모드)**:
-   - '전체 조회' 카테고리가 선택된 상태에서 날짜를 탭하면, 일정을 추가하는 폼이 아닌 해당 날짜의 **일정 목록(조회 모드)**이 먼저 바텀 시트로 나타납니다.
-   - 종일 일정은 가나다순, 일반 일정은 시간순으로 정렬되어 노출되며, 좌상단의 뒤로가기(`←`) 버튼 및 우상단의 추가(`+`) 버튼을 통해 조회/추가 모드를 자유롭게 전환할 수 있습니다.
-2. **대한민국 공휴일 연동 및 주말 강조**:
-   - `GET /api/calendar`에서 기본 캘린더 데이터뿐만 아니라 구글이 제공하는 **대한민국 휴일 캘린더(`ko.south_korea#holiday@...`)** 데이터를 병렬(`Promise.all`)로 함께 패치합니다.
-   - 달력에서 주말(토, 일)은 조금 더 굵은 글씨체(`font-bold`)로 강조되며, 일요일과 공휴일은 텍스트가 빨간색(`text-error`)으로 표시됩니다.
-   - 공휴일인 경우 날짜 숫자 바로 아래에 공휴일 이름(예: 광복절)이 표기됩니다.
-3. **UI 디테일 최적화**:
-   - 일정 마커(점심, 저녁, 휴가 등)들이 각 날짜 칸의 최하단에 밑에서부터 차곡차곡 쌓이도록 정렬(`justify-end`)을 개선했습니다.
-   - 캘린더 상단 헤더(연도/월)의 크기와 굵기를 키워 가독성을 높였으며, 요일 헤더의 '토' 글씨 색상을 평일과 동일한 진하기로 일치시켰습니다.
-   - 상단 카테고리 필터 버튼들은 부드러운 둥근 모서리(`rounded-md`)를 가지며, 선택 시 굵은 글씨(`font-bold`)로 활성화 상태를 명확히 보여줍니다.
-4. **다크 모드 지원 및 추가 UI 최적화**:
-   - `Header` 컴포넌트의 테마 토글 버튼을 통해 다크 모드를 지원하며, `localStorage`와 Tailwind의 `@custom-variant`를 활용해 상태를 유지합니다.
-   - 캘린더 상단의 헤더 정렬과 글꼴 통일성을 맞추었고, 앱 하단에 `config.ts` 기반의 버전 정보를 표기했습니다.
-   - 지난 과거의 일정은 달력 상에서 투명도(`opacity-50`)와 흑백 필터(`grayscale`)가 적용되어 지나간 일정임을 시각적으로 명확히 구분할 수 있습니다.
-5. **일정 수정/삭제 및 날짜 변경 기능**:
-   - 바텀 시트에서 특정 일정을 탭해 상세 내용을 수정(PATCH)하거나 삭제(DELETE)할 수 있으며, React Query의 낙관적 업데이트(Optimistic Update)를 통해 빠른 사용자 피드백을 제공합니다.
-   - 약속의 "날짜" 자체를 변경할 수 있는 Date Input을 추가하였으며, 종일 일정과 시간 지정 일정 간의 상호 변환 시 Google Calendar API 충돌 문제를 방지하는 로직을 적용했습니다.
-6. **다중 공유 캘린더 조회 및 방어 로직**:
-   - 상단의 '캘린더 선택' 바텀 시트(`CalendarSelectorSheet`)를 통해 사용자의 구글 계정에 연동된 여러 공유 캘린더들을 한 번에 켜고 끌 수 있습니다 (`Promise.all` 병렬 패치 활용).
-   - '읽기 전용' 권한(`reader` 등)을 가진 캘린더나 '반복 일정'의 경우, 데이터 수정을 막고 안내 배지를 띄워 에러를 방지하는 예외 처리 방어 로직이 꼼꼼하게 적용되어 있습니다.
-7. **사용자 경험(UX) 및 헤더 디자인 리팩토링**:
-   - `Header`의 로고를 텍스트 타이포그래피("Simple Schedule", 'S'자 강조)로 개편하고, 반응형(모바일 뷰)에서 텍스트 줄바꿈을 방지(`whitespace-nowrap`)하며 헤더의 양쪽 아이콘을 가장자리로 밀착시켜 공간을 확보했습니다.
-   - 상단 타이틀 옆의 불필요한 정보(`i`) 아이콘 버튼을 삭제하고, 타이틀 로고 및 앞쪽 캘린더 아이콘 자체를 클릭하면 중앙 집중형(`config.ts` 내 `HELP_MESSAGE`) 앱정보 안내 모달이 열리도록 UX를 깔끔하게 일원화했습니다. 또한 해당 안내 모달 상단의 "안내사항" 텍스트 대신 상단 헤더와 통일된 아이콘 및 타이포그래피 로고가 나타나도록 심미성을 극대화했습니다.
-   - 카테고리 필터 버튼들에 Google Material 아이콘을 매핑하여, 버튼 활성화 시에만 텍스트가 함께 표기되고 비활성화 시에는 아이콘만 남겨 공간 효율과 심미성을 높였습니다.
-   - `BottomSheet`에서 다일(기간 지정) 일정을 클릭할 경우 반복 일정과 마찬가지로 날짜/시간 수정은 막되, 제목과 메모는 수정 가능하도록 허용했습니다.
-   - Google OAuth 토큰 만료 문제 추적을 위해 NextAuth의 `debug: true` 모드를 활성화했습니다.
-8. **두 달 연속 스크롤 캘린더 (Seamless 2-Month Grid)**:
-   - 이번 달과 다음 달을 한눈에 볼 수 있도록 두 달치 날짜를 단일 CSS Grid(`eachDayOfInterval`) 구조로 이어붙여, 달과 달 사이에 빈 칸이 없이 이어지는 무한 스크롤 형태의 캘린더를 구현했습니다.
-   - 첫 번째 달과 두 번째 달의 경계선(마지막 주차 날짜 하단 및 마지막 날 우측)에 굵은 테두리(`border-2`)를 동적으로 렌더링하여 시각적으로 두 달의 경계를 명확하게 구분했습니다.
-   - 전역 CSS 레이아웃에서 화면이 비정상적으로 확장되는 문제를 해결하여(`body`의 `height: 100dvh` 고정 및 `flex-1 min-h-0` 활용), 상단의 헤더와 요일(`일 월 화...`)은 상단에 고정된 채 내부 달력 날짜 영역만 부드럽게 마우스 휠로 스크롤되도록 최적화했습니다.
-   - 달력이 화면에서 더 많은 영역을 차지할 수 있도록 상단의 필터 카테고리 및 네비게이션 버튼들의 높이와 여백을 약 10% 축소하여 공간 효율성을 극대화했습니다.
-9. **UI 디테일 최적화 및 음력 날짜 지원**:
-   - 요일 및 연월 헤더의 폰트 크기와 여백을 축소하고 캘린더 세로 가용 공간 기본값을 대폭 확대(75dvh -> 85dvh)하여 낭비되는 여백 없이 일정을 더 많이 볼 수 있게 했습니다.
-   - `lunar-javascript` 라이브러리를 도입하여 일정 상세(또는 추가) 화면에서 양력 날짜 옆에 음력 날짜(예: 음력 6.3)가 자동 병기되도록 기능을 추가했습니다.
-   - 스크롤바 발생으로 인한 요일 헤더와 날짜 그리드의 픽셀 어긋남 현상을 해결하기 위해, 요일 헤더 영역을 스크롤 컨테이너 내부의 `sticky` 구조로 편입시켜 스크롤바 유무와 상관없이 항상 우측 정렬이 완벽히 일치하도록 개선했습니다.
-10. **데스크톱 좌우 분할 반응형 레이아웃 (Split-Screen UI)**:
-   - 앱의 최대 너비(Max-width)를 768px에서 1200px로 확장하여 넓은 데스크톱 모니터 환경을 적극 활용하도록 개편했습니다.
-   - 브라우저 폭이 넓은 환경(`md` 이상)에서는 모바일용 바텀 시트 팝업이 우측 사이드 패널(Side Panel)로 자연스럽게 전환되어, 좌측 달력과 우측 일정을 동시에 보면서 관리할 수 있는 반응형 2분할 UI를 구현했습니다.
-   - 데스크톱 환경에서는 특정 날짜 클릭 시 모달이 튀어나오지 않고, 우측 사이드 패널 데이터만 즉각적으로 연동(Data Binding)되며, 날짜 미선택 시 Empty State UI가 친절히 안내를 도와줍니다.
-11. **노션(Notion) 액세스 토큰 & DB ID 관리 모달 및 Supabase DB 연동**:
-   - 구글 로그인이 완료된 상태에서만 상단 헤더의 캘린더 선택 아이콘 바로 옆에 노션 연동 아이콘이 나타나도록 구현하였습니다. 여러 개의 컨트롤 아이콘이 안정적이고 쾌적하게 배치되도록 버튼 크기(`w-9 h-9`)와 간격을 컴팩트하게 조율했습니다.
-   - 노션 아이콘을 누르면 기존 모달 스타일과 통일성 있는 `NotionTokenModal` 창이 띄워지며, 저장된 기존 토큰과 데이터베이스 ID를 자동 로딩하거나 신규 값을 바로 입력할 수 있습니다. 마스킹 없이(`type="text"`) 토큰과 ID 값을 있는 그대로 명확하게 확인할 수 있습니다.
-   - "저장" 버튼 클릭 시 NextAuth의 로그인 세션 이메일을 고유 키(`user_email`)로 사용하여 Supabase의 `user_notion_tokens` 테이블(`access_token`, `database_id`)에 안전하게 Upsert(추가/수정) 처리합니다 (이를 위해 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 환경 변수를 활용합니다).
-12. **노션(Notion) 실시간 습관 체크리스트(Habit Tracker) 연동 및 조회/편집 기능 구축**:
-   - 일정 조회 화면(`BottomSheet` / 우측 패널)의 `+` 일정 추가 버튼 바로 옆에 직관적인 체크박스(`check_box`) 모양 버튼을 신설하여 언제든 오늘의 노션 습관 체크리스트 화면으로 즉시 넘어갈 수 있는 진입점을 만들었습니다.
-   - **날짜 매칭 기본 정책**: Notion Database 속성 중 **"날짜"**라는 이름의 `date` 속성을 우선(Primary Default)으로 필터링하여 선택된 날짜와 일치하는 일일 체크리스트 페이지를 정확히 찾아오며, 없을 시 생성 유도 및 설정 미완료 안내 UI를 깔끔하게 보여줍니다.
-   - **속성별 맞춤 편집 UI**: 체크박스(`checkbox`) 속성의 원클릭 토글(취소선 및 마이크로 인터랙션), 상태/선택(`status`, `select`)의 커스텀 드롭다운 변경, 코멘트/메모(`rich_text`, `title`, `number`) 텍스트 수정 및 실시간 노션 페이지 동기화(`PATCH /api/notion/habits`)를 지원합니다.
-   - 체크리스트 조회 상태에서 언제든 이전 일정 조회 화면으로 돌아올 수 있는 백 버튼(`←`)과 노션 원문 페이지로 이동하는 외부 링크(`open_in_new`) 기능을 포함했습니다.
-13. **캘린더 내 노션 습관 체크리스트 진행 현황 실시간 표기 (Zero-Latency Background Batch Query)**:
-   - 캘린더 영역에서 표시되는 2달(현재 달 + 다음 달) 동안의 노션 습관 데이터를 `GET /api/notion/habits/summary`를 통해 **단 1번의 Batch Query**로 백그라운드 비동기(`useNotionHabitSummary`) 호출합니다. 화면 지연(Latency)나 로딩 Block이 전혀 없이 구글 일정이 먼저 렌더링된 직후 부드럽게 나타납니다.
-   - 각 날짜 칸의 번호 바로 왼쪽에 체크리스트 상태 아이콘을 직관적으로 렌더링합니다:
-     1. **진행 완료 (체크박스 100% 완료)**: 체크된 초록 아이콘 (`check_box`)
-     2. **진행 중 (체크리스트 항목이 존재하나 모두 완료되지는 않음)**: 비어있는 박스 아이콘 (`check_box_outline_blank`)
-     3. **항목 없음 (데이터베이스에 해당 날짜 레코드 또는 체크박스 속성이 없음)**: 아무것도 표시하지 않음
-   - 바텀 시트/우측 패널의 노션 체크리스트 화면에서 체크박스를 변경하고 **[저장]**을 누르는 즉시 React Query 캐시를 `invalidate` 하여 메인 달력 아이콘도 100% 실시간 동기화됩니다.
-14. **노션 습관 캐시 재활용 최적화 및 UX 개선**:
-   - `GET /api/notion/habits/summary`에서 2달간의 데이터를 불러올 때 각 페이지의 체크박스, 상태, 메모 등 전체 프로퍼티 정보까지 함께 구문 분석하여 React Query 캐시(`notion-habits-summary`)에 보관합니다.
-   - 사용자가 캘린더에서 특정 날짜의 노션 체크리스트 화면(`NotionHabitChecklist`)으로 이동할 시, 새로 API를 호츌하지 않고 **이미 조회된 캐시 결과를 0.01초 내에 즉시 활용**하며, 하단의 **새로고침 갱신 버튼** 클릭 시에만 수동으로 강제 재조회 하도록 네트워크 효율을 극대화했습니다.
-   - 노션 레코드가 없거나 연동 설정이 안 된 날짜 조회 시 표시되는 "체크리스트가 없습니다" 안내 영역의 점선 보더 및 박스 제약을 제거하고, 텍스트 줄바꿈(`break-keep`)과 전체 가로 너비를 활용한 깔끔하고 여유로운 구조로 대폭 개선하여 가독성을 높였습니다.
-   - 모바일(iOS 등)에서 체크리스트 텍스트 상자 또는 드롭다운 선택 시 화면이 자동 줌인되는 현상을 방지하기 위해, 글자 크기를 키우지 않고 기존 14pt(`text-sm`)로 유지하면서 `layout.tsx`에 뷰포트 메타 설정(`maximumScale: 1, userScalable: false`)을 도입하여 브라우저의 자동 포커스 확대를 근본적으로 차단했습니다.
-   - 체크리스트 모달 상단의 불필요한 설명 안내 문구("노션과 동기화되는 오늘의 습관 및 체크리스트입니다.") 영역을 완전히 삭제하여 상단 가용 공간을 확대했습니다.
-   - 체크리스트 모달 내 항목 간 세로 여백(`gap-2.5` → `gap-1.5`)과 텍스트 입력/드롭다운 상자의 높이를 콤팩트하게 축소하되, 터치가 잦은 체크박스 항목의 세로 높이(패딩 `py-3.5`)는 쾌적하게 조율하여 스크롤 이동을 줄이면서도 사용성을 유지했습니다.
-   - 노션 설정 모달(`NotionTokenModal`)에 **"오늘 일정 조회 시 노션 우선"** 체크박스 옵션을 추가하고 상태를 브라우저 로컬 스토리지(`localStorage`)에 보존합니다. 해당 기능 활성화 시, 카테고리가 '전체 조회'인 상태에서 캘린더의 **오늘 날짜**를 클릭하면 일반 일정 조회 대신 노션 체크리스트 화면이 기본 모드(`habit`)로 즉시 실행됩니다.
-15. **PWA 오프라인 지원 아키텍처 (Offline-First & Standalone Mode)**:
-   - 네트워크가 불안정하거나 끊긴 환경에서도 직전에 로컬(React Query 캐시 및 Service Worker)에 보관된 2달간의 캘린더 및 노션 체크리스트 데이터를 매끄럽게 조회할 수 있도록 PWA 아키텍처를 대대적으로 개편했습니다.
-   - `app/sw.ts`에서 Serwist 기본 캐시(`defaultCache`)를 제거하고, 정적 자산(CacheFirst), API 및 HTML/RSC(NetworkFirst / StaleWhileRevalidate)의 **4가지 런타임 캐시 전략**을 맞춤형으로 적용했습니다.
-   - iOS 기기 홈 화면 추가 시 네이티브 앱처럼 동작하도록 `appleWebApp` 메타데이터(`title: "Simple Reader"`, `statusBarStyle: "black-translucent"`)를 설정했습니다.
-   - **오프라인 시 100% 조회 전용(ReadOnly) 방어 로직 적용**: `useNetworkStatus` 커스텀 훅으로 실시간 연결 상태를 추적하며, 오프라인 감지 시 헤더 좌측에 텍스트 없는 빨간색 `cloud_off` 펄스 뱃지를 표시합니다. 또한 오프라인 모드에서는 다른 달(이전/다음)로의 이동이 비활성화되며, 일정 추가·수정·삭제 및 노션 체크리스트 항목 토글·실시간 갱신을 원천 차단하고 시각적 안내 문구를 제공합니다.
-   - 상단 헤더 로고를 클릭해 여는 앱 정보 모달에 **"최신 버전으로 업데이트"** 버튼을 신설하여, 필요 시 터치 한 번으로 서비스 워커 등록 해제 및 브라우저 캐시 비우기 후 새로고침을 통해 최신 릴리즈를 적용할 수 있도록 사용성을 극대화했습니다.
-16. **노션 체크리스트 UI 고도화 및 캘린더 동적 4단계 모노톤 진행률 아이콘 도입**:
-   - **체크리스트 모달 상단 레이아웃 및 여백/크기 개편**: 모달 최상단 타이틀을 "XX월 XX일 체크리스트" 포맷으로 간결화하고(체크리스트 조회 시 음력 날짜 생략), "오늘의 습관 & 체크리스트" 설명 텍스트 영역을 완전 삭제했습니다. 노션 외부 페이지 오픈 링크의 텍스트를 **"노션"**으로 간결화한 뒤 우상단 'X(닫기)' 버튼 바로 좌측 상단 헤더부로 이동시켜 상단 가용 공간 및 심미성을 높였습니다.
-   - **체크리스트 요소 크기 최적화 및 유동적 입력 상자**: 항목 간 격차 및 버튼·드롭다운 높이를 약 20% 확대(`h-[42px]`~`h-[48px]`, `p-4`)하여 일정 조회 모달과 시각적 균형을 맞췄습니다. 텍스트/메모 입력부는 `textarea`의 `scrollHeight`를 실시간 감지해 높이가 유동적으로 조절되는 `AutoResizeTextarea` 컴포넌트를 도입하여, 기본 높이 대비 최대 2배(`maxHeight: 84px`)까지 자동 확장되고 초과 시 스크롤바가 생성되도록 사용성을 개선했습니다.
-   - **캘린더 날짜 칸 동적 4단계 모노톤 SVG 체크박스 아이콘 (`HabitProgressIcon`)**: 기존의 이분법적(완료/미완료) 아이콘에서 벗어나, 체크리스트 진행률에 따라 사방 상자 내부에 그려지는 체크표시의 크기를 SVG Path로 정밀 조율했습니다:
-     1. **0% (미완료)**: 비어있는 깔끔한 모서리 둥근 네모 사각형 (`stroke="currentColor"`)
-     2. **1% ~ 49% (일부 진행)**: 상자 윤곽 정중앙에 앙증맞게 자리 잡은 아주 작은 극소형 체크표시 (`d="M 6.2 9.4 L 7.4 10.6 L 9.7 8.0"`)
-     3. **50% ~ 99% (과반 이상 진행)**: 기존의 소형 크기였던 얌전한 체크표시로 축소 조율 (`d="M 5.5 9.3 L 7.3 11.1 L 10.5 7.6"`)
-     4. **100% (진행 완료)**: 우상단 상자 윤곽선을 역동적으로 살짝 넘어서 뻗어나가는 대형 완료 체크표시
-   - **아이콘 크기 확대 및 날짜 헤더 행 세로 정렬 규격화**: 시각적 가독성과 균형을 위해 기존 13px 아이콘을 **19px(약 50% 증대)** 로 대폭 확대했습니다. 또한 "오늘 날짜"의 음영 Box 탓에 음수 마진이 적용되어 세로 수평이 어긋나던 문제를 근본적으로 해소하고자, 모든 날짜(오늘, 일반 날짜, 이전/다음 달 날짜 포함)가 **동일한 20x20px (`w-5 h-5`) 박스 래퍼 및 `h-5` 컨테이너 내에서 수평 정렬(`items-center`)** 되도록 구조를 규격화하여 전 날짜에 걸쳐 1픽셀의 내려앉음 없이 일정한 높이를 유지합니다.
-   - 캘린더 날짜 번호보다 시각적으로 튀어보이지 않도록 쨍한 색상을 배제하고 모노톤(`text-on-surface-variant` 계열)으로 자연스럽게 어우러지도록 최적화했습니다.
-17. **Vercel Next.js (App Router) PWA 서버리스 종합 보안 검증 및 하드닝(Security Hardening) 적용**:
-   - **[Phase 1] Zod 기반 엄격한 입력 스키마 검증 및 에러 위생화(Sanitize)**: `zod` 라이브러리를 도입하여 `/api/calendar`, `/api/calendars`, `/api/notion/token`, `/api/notion/habits` 등 전체 서버 엔드포인트의 쿼리 및 Body 입력 파라미터를 스키마로 엄격히 통제(Type/Value Validation)합니다. 또한 API 또는 DB 통신 실패 시 스택 트레이스나 쿼리가 노출되지 않도록, 에러 내용은 터미널 로깅(`console.error`)으로만 남기고 클라이언트 응답에는 일반화된 에러 메시지("요청을 처리할 수 없습니다.")만 반환하도록 개편했습니다.
-   - **[Phase 2] 환경 변수 접두사 린팅 및 백엔드 비밀자격 격리**: 서버단에서만 쓰이는 Supabase 접속 자격정보(`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)에서 치명적인 `NEXT_PUBLIC_` 접두사 로직을 코드 및 `.env.local`에서 원천 제거하여 클라이언트 JS 번들에 API 키가 노출되지 않도록 하드닝했습니다.
-   - **[Phase 3] 로그아웃 시 오프라인 PII 약속 캐시 즉시 청기(Purging)**: 서비스 워커(Serwist Runtime Caching)가 오프라인 조회를 위해 브라우저 `Cache Storage`에 보관한 사용자의 최근 2달치 구글 일정 및 노션 체크리스트 데이터를, 사용자가 로그아웃하거나 세션 만료 발생 시 `window.caches.delete`를 호출해 브라우저에서 강제 영구 클리어하는 방어막(`handleSignOut`)을 구축했습니다.
-   - **[Phase 4] Vercel 배포용 6대 HTTP 보안 헤더 장착**: `next.config.ts`에 강력한 HTTP 응답 보안 헤더(`headers()`)를 장착했습니다:
-     1) `Content-Security-Policy (CSP)`: PWA 서비스 워커 및 구글 OAuth/Supabase/Notion 등 정당한 통신만 허용.
-     2) `Strict-Transport-Security (HSTS)`: 1년(`63072000`초) 간 무조건 HTTPS 암호화 접속 강제 및 프리로드 적용.
-     3) `X-Frame-Options: DENY`: 타 도메인 iframes 차단을 통한 클릭재킹 완벽 불허.
-     4) `X-Content-Type-Options: nosniff`: MIME 타입 스푸핑 차단.
-     5) `Referrer-Policy: strict-origin-when-cross-origin`: 외부 이동 시 민감 경로 및 파라미터 유출 막음.
-     6) `Permissions-Policy`: `camera=(), microphone=(), geolocation=()` 설정으로 불필요한 장치 접근 차단.
-18. **PWA 이미지 캐시 전략 이원화 및 프로필 아바타 예외(Fallback UX) 방어벽 적용**:
-   - **서비스 워커 캐싱 룰 분리 (`app/sw.ts`)**: 구글 OAuth 프로필 아바타(`*.googleusercontent.com`) 등 외부(Cross-Origin) 도메인 이미지와 내부 고정 자산이 함께 1년짜리 `CacheFirst`에 묶여 깨진 캐시(Opaque 0 상태 또는 403 차단 응답)가 영구 굳어지던 문제를 수술했습니다. 외부 도메인 이미지는 상위 매처에서 **`StaleWhileRevalidate` (TTL 30일)** 및 **`CacheableResponsePlugin({ statuses: [0, 200] })`**으로 분리하여 실시간으로 쾌적하게 갱신되게 하고, Next.js 내부 정적 불변 자산(`/_next/static/*`, 로고 등)만 1년짜리 `CacheFirst`를 적용해 극강의 제로 레이턴시를 양립시켰습니다.
-   - **프로필 이미지 로딩 실패 시 자동 예외 복구 (`Header.tsx`)**: 구글 서버 통신 지연이나 일시적 차단으로 인해 `session.user.image` 로딩이 실패(`onError`)하더라도 브라우저의 기본 깨진 아이콘("?" 엑박)이 절대 나타나지 않도록 `imgError` 상태 핸들러를 도입했습니다. 오류 발생 즉시 앱 디자인을 정교하게 따르는 **기본 프로필 아이콘(`account_circle`)으로 우아하게 전환**되도록 UI 안전마진을 탑재했습니다.
-19. **매일의 명언(Quotes) 모달 및 무료 자동 번역/TTS 연동**:
-   - 앱 최초 실행 시(세션당 1회) 캘린더 화면 위에 부드럽게 나타나는 **매일의 명언(Quotes) 모달(`QuotesModal.tsx`)**을 구현했습니다.
-   - `GET /api/quotes` 백엔드 라우트에서 `zenquotes.io`의 랜덤 영어 명언을 호출한 뒤, **Gemini Flash Lite AI 번역 (Fallback: Google Translate API)**을 경유하여 명언/속담에 어울리는 문어체(해라체/한다체) 한국어 번역문을 함께 반환하도록 설계했습니다.
-   - 모달은 처음엔 원문만 표시하다가, 화면을 터치(클릭)하면 부드러운 애니메이션과 함께 한국어 뜻이 등장("Touch & Reveal")하여 감상 경험을 높입니다.
-   - 브라우저 내장 **Web Speech API (`speechSynthesis`)**를 활용한 발음 듣기(TTS) 버튼을 장착했으며, 캘린더 연/월 헤더 텍스트 우측에 전용 아이콘(`format_quote`)을 배치하여 언제든 다시 열어볼 수 있도록 캘린더 헤더 UI 밸런스를 개선(`items-center`)했습니다.
-   - React Query 기반 오프라인 대응 정책을 적용하여, 로컬 스토리지(`last_quote_data`)에 캐싱된 명언을 통해 오프라인 환경에서도 무한 로딩 없이 유려하게 마지막 명언을 보여줍니다.
-20. **명언 모달 내 '사자성어' 무작위 노출 기능 추가 (Dual Quotes Mode)**:
-   - 기존의 영문 명언 기능에 더해, `public/four_character_Chinese_idiom.csv`에서 데이터를 읽어와 무작위 사자성어와 그 뜻, 훈음을 제공하는 `/api/idioms` 라우트를 신설했습니다. (CSV 파일 내 콤마(,)가 포함된 문자열을 안전하게 처리하는 커스텀 파서 적용 완료).
-   - 모달 하단에 **[ZenQuotes]**와 **[사자성어]** 체크박스를 배치하여 사용자가 선호하는 인용구 종류를 선택할 수 있게 했습니다 (둘 다 활성화 시 모달 오픈 및 새로고침 시 50:50 확률로 무작위 노출). 두 기능이 모두 꺼지는 것을 방지하는 상호 배타적 활성화 로직을 포함했습니다.
-   - 사자성어 모드일 때는 중앙에 한자 4글자를 크게 노출하고, 발음 듣기 버튼을 우측에 일관성 있게 배치하여 레이아웃 안정감을 확보했습니다.
-21. **노션 습관 진행 현황 상태별 시각화 (테두리 점선/실선 애니메이션)**:
-   - 캘린더의 각 날짜 칸에 그려지는 `HabitProgressIcon`의 테두리 디자인이 노션의 **'상태'(Status)** 프로퍼티 값에 따라 동적으로 변화합니다.
-   - '시작 전'인 경우 사각형 전체가 점선(`stroke-dasharray`)으로 그려지며, '진행 중'일 때는 좌측과 상단 모서리만 점선이고 우측과 하단 모서리는 실선인 2-Path 조합, '완료' 시에는 전체 실선으로 렌더링되어 진행 상황을 훨씬 더 직관적으로 파악할 수 있게 고도화했습니다. (상태 프로퍼티가 없더라도 체크박스 체크 비율로 자동 폴백 적용).
-22. **바텀 시트(BottomSheet) 스크롤 및 드래그 동작 버그 수정**:
-   - 모바일 환경에서 바텀 시트를 중간 높이로 드래그했을 때 내부 일정 리스트가 끝까지 스크롤되지 않고 가려지던 버그를 고쳤습니다. Webkit의 Flex 컨테이너 패딩 버그를 우회하기 위해, 스크롤 컨테이너 최하단에 시트의 `translateY` 오프셋만큼 동적으로 높이가 변하는 `div` 스페이서를 삽입하여 어떤 높이에서도 완벽한 스크롤이 가능하도록 개선했습니다.
-   - 상단 공유 캘린더 선택 바텀 시트(`CalendarSelectorSheet`)에도 동일한 터치 드래그 및 높이 조절 로직을 적용하여 UI/UX 일관성을 확립했습니다.
-23. **Google OAuth 세션 유지 및 토큰 갱신 안정화 (Session Persistence)**:
-   - 클라이언트의 Access Token 갱신 로직(`auth.ts`)을 고도화하여, 토큰 갱신 실패를 **치명적 실패(`invalid_grant`, 권한 철회 등)**와 **일시적 실패(네트워크 오류 등)**로 구분했습니다. 치명적 실패 시에만 강제 로그아웃 처리되며, 일시적 실패는 묵인하고 다음 요청 시 재시도하도록 완화했습니다.
-   - API 통신 시 401 에러를 만났을 때 즉시 로그아웃 하던 낡은 동작을 폐기하고, **`fetchWithSessionRetry`** 공용 헬퍼를 도입했습니다. 401 응답 시 내부적으로 세션을 리프레시(`getSession()`)하여 토큰을 갱신한 뒤, 투명하게 1회 자동 재시도하여 사용자 경험이 단절되지 않도록 방어 로직을 짰습니다.
-24. **앱 정보 모달 UI 개편 및 개인정보처리방침/버전 표기**:
-   - 상단 헤더 로고 클릭 시 열리는 앱 정보 모달(`Header.tsx`) 하단의 불필요한 '확인' 버튼을 제거하여 상단 닫기(X) 및 배경 터치로 자연스럽게 닫히도록 간결화했습니다.
-   - 모달 최하단에 링크 영역을 신설하여, 좌측에는 새 창으로 열리는 **'개인정보처리방침'(`https://landing-doohee2.vercel.app/privacy`)** 링크를 배치하고, 우측에는 **`APP_VERSION`** 정보를 작게 표기하여 완성도와 신뢰도를 높였습니다.
+### 🗓️ 2) 구글 캘린더 연동 및 일정 관리 (Google Calendar Sync)
+- **일정 조회 / 추가 / 수정 / 삭제 (CRUD)**: 구글 공식 API를 프록시 라우트로 중계하여 안정적인 일정 관리를 지원합니다. React Query의 낙관적 업데이트(Optimistic Update)를 통해 네트워크 지연 없이 즉각적인 UI 반영을 제공합니다.
+- **다중 캘린더 병렬 조회**: 기본 캘린더뿐만 아니라 사용자의 구글 계정에 등록된 다양한 보조/공유 캘린더 목록을 불러와 자유롭게 켜고 끌 수 있는 `CalendarSelectorSheet`를 제공합니다.
+- **대한민국 공휴일 연동**: 구글 대한민국 공휴일 캘린더(`ko.south_korea#holiday@...`)를 병렬로 함께 가져와 일요일 및 공휴일을 빨간색(`text-error`)으로 강조하고 공휴일 명칭을 날짜 아래 표기합니다.
+- **스마트 카테고리 필터링**: '전체', '점심', '저녁', '휴가', '기타' 등 제목 및 메모 기반의 스마트 키워드 필터를 칩 버튼 형태로 제공합니다.
+- **과거 일정 시각적 구분**: 이미 지나간 날짜의 일정 블록은 투명도(`opacity-50`)와 흑백 필터(`grayscale`)를 적용해 완료된 일정임을 자연스럽게 구분합니다.
+- **음력 날짜 자동 병기**: `lunar-javascript`를 결합하여 일정 상세/추가 화면에서 양력 날짜 옆에 음력 날짜(예: 음력 6.3)를 실시간 표기합니다.
+
+### ✅ 3) 노션(Notion) 습관 트래커 연동 (Habit Tracker Integration)
+- **날짜 기반 자동 매칭**: 노션 데이터베이스의 "날짜(`date`)" 속성을 기준으로 선택한 날짜의 일일 체크리스트 페이지를 자동으로 탐색하여 가져옵니다.
+- **속성별 맞춤형 실시간 편집**:
+  - `checkbox`: 원클릭 토글 (취소선 및 완료 상태 동기화).
+  - `status` / `select`: 진행 상황(시작 전, 진행 중, 완료 등)을 변경할 수 있는 커스텀 드롭다운.
+  - `rich_text` / `title` / `number`: 내용 길이에 따라 높이가 자동 조절되는 유동형 텍스트 입력창(`AutoResizeTextarea`).
+- **캘린더 내 실시간 4단계 모노톤 진행률 아이콘 (`HabitProgressIcon`)**:
+  - 2달치 노션 데이터를 단 한 번의 비동기 배치 쿼리(`/api/notion/habits/summary`)로 백그라운드에서 불러와, 날짜 번호 옆에 19px 크기의 정교한 SVG 아이콘으로 실시간 표시합니다.
+  - 노션의 "상태(Status)" 속성 또는 체크박스 달성률(0%, 1~49%, 50~99%, 100%)에 따라 사각형 테두리의 점선/실선 패턴 및 내부 체크표시의 크기가 동적으로 변화합니다.
+  - '오늘 일정 조회 시 노션 우선' 옵션 활성화 시 오늘 날짜 클릭 시 일반 일정 대신 노션 체크리스트 화면이 기본으로 즉시 열립니다.
+
+### 💬 4) 매일의 명언 및 사자성어 듀얼 모드 (Quotes & Idioms Modal)
+- 앱 최초 진입 시(세션당 1회) 또는 헤더의 명언 아이콘(`format_quote`) 클릭 시 오픈되는 인용구 모달입니다.
+- **영문 명언 (ZenQuotes)**: 랜덤 영문 명언을 불러오며, Google Gemini AI 번역(`gemini-flash-lite-latest`)을 통해 격조 높은 문어체(해라체/한다체) 한국어로 번역합니다. (Gemini 실패 또는 키 부재 시 크롬 확장프로그램용 무료 구글 번역 엔드포인트를 폴백으로 안전하게 사용).
+- **한자 사자성어 (Idioms)**: 내부 CSV(`public/four_character_Chinese_idiom.csv`)에서 무작위로 추출하여 한자 4글자를 대형 폰트로 렌더링하고, 화면 탭 시 뜻과 훈음을 표시합니다.
+- **선택 제어 & TTS 발음 지원**: 하단 체크박스를 통해 두 인용구 소스를 자유롭게 토글할 수 있으며(동시 선택 시 50:50 무작위 노출), Web Speech API를 활용해 원문 음성을 들을 수 있습니다.
+
+### 📱 5) PWA 오프라인 지원 및 모바일/데스크톱 적응형 UI
+- **Offline-First 아키텍처**: Serwist 서비스 워커와 React Query 캐시를 결합하여 인터넷이 끊겨도 최근 2달치 캘린더 및 노션 습관 데이터를 제로 레이턴시로 열람할 수 있습니다.
+- **오프라인 읽기 전용(Read-Only) 방어 모드**: 오프라인 상태 감지 시 헤더에 `cloud_off` 빨간색 펄스 뱃지가 활성화되며, 데이터 오염 방지를 위해 월 이동, 일정 수정/삭제, 노션 체크박스 변경이 자동으로 차단됩니다.
+- **반응형 2분할(Split-Screen) 레이아웃**: 모바일 화면에서는 드래그 제스처로 높낮이 조절이 가능한 하단 바텀 시트로 작동하고, 브라우저 가로 폭이 768px(`md`) 이상인 데스크톱 환경에서는 좌측 캘린더와 우측 일정 패널이 나란히 배치되는 2분할 UI로 매끄럽게 전환됩니다.
+- **캘린더 글자 크기 조절 & 다크 모드**: 앱 정보 모달에서 글자 크기를 3단계(작게 9px / 중간 11px / 크게 12px)로 변경할 수 있으며, 시스템 테마와 연동되는 다크 모드를 완벽 지원합니다.
 
 ---
 
-## 5. 향후 유지보수 시 고려사항 (Implications)
+## 3. 사용된 기술 스택 및 프레임워크 (Tech Stack)
 
-### 1) Google OAuth Refresh Token 전략 및 동의 화면 상태 주의
-현재 구현은 세션 유지 기간 동안 Google API Access Token을 활용하며, Access Token이 만료(약 1시간)될 경우 `auth.ts` 내부의 JWT 콜백을 통해 Refresh Token으로 **새로운 Access Token을 자동 갱신(Token Rotation)** 하도록 처리되어 있습니다.
+### 3.1 기술 스택 명세
 
-**[주의]** 만약 사용자가 **7일 단위로 계속 로그아웃되는 현상**이 발생한다면, Google Cloud Console의 **'OAuth 동의 화면' 게시 상태가 "테스트(Testing)"이기 때문입니다.** 앱을 "프로덕션"으로 게시해야 Refresh Token이 영구적으로 유지됩니다. (개인/소규모 사용 시 Google 검수 없이 그대로 프로덕션 전환이 가능합니다.)
+| 구분 | 기술 / 라이브러리 | 버전 | 도입 목적 및 역할 |
+| :--- | :--- | :--- | :--- |
+| **Framework** | **Next.js (App Router)** | `v16.2.9` | 서버 컴포넌트(RSC), API Route 백엔드 프록시, 최적화 번들링 |
+| **UI Library** | **React** | `v19.2.4` | 클라이언트 UI 컴포넌트 렌더링 및 모던 훅 기반 상태 관리 |
+| **Styling** | **Tailwind CSS** | `v4.x` | 최신 `@theme` 기반 CSS 변수 시스템 제어 및 플랫 디자인 구현 |
+| **Authentication** | **NextAuth.js** | `v5 (Beta)` | Google OAuth 로그인, 180일 장기 세션 유지, 백엔드 토큰 로테이션 |
+| **State Management** | **TanStack React Query** | `v5.101.0` | 서버 상태 캐싱, 낙관적 업데이트, 백그라운드 동기화 |
+| **PWA / Service Worker** | **Serwist (`@serwist/next`)** | `v9.5.11` | 모던 Workbox 기반 오프라인 런타임 캐싱, 백그라운드 자산 사전 캐싱 |
+| **Database** | **Supabase (`@supabase/supabase-js`)** | `v2.110.8` | 구글 계정별 노션 API 토큰 및 데이터베이스 ID 안전 저장(BFF 연동) |
+| **Schema Validation** | **Zod** | `v4.4.3` | 서버 API 라우트 입력 파라미터 엄격 검증 및 에러 메시지 위생화 |
+| **Date Utility** | **date-fns** | `v4.4.0` | 캘린더 그리드 날짜 연산, 인터벌 계산 및 한국어 포맷팅 |
+| **Lunar Calendar** | **lunar-javascript** | `v1.7.7` | 양력 기준 음력 날짜(월/일) 정밀 변환 및 표기 |
+| **Generative AI** | **@google/generative-ai** | `v0.24.1` | 영어 명언의 품격 있는 문어체(해라체/한다체) 한국어 자동 번역 |
+| **Theme Management** | **next-themes** | `v0.4.6` | 라이트/다크 모드 시스템 감지 및 클래스 기반 테마 전환 유지 |
 
-### 2) Tailwind v4와 빌드 환경 (Turbopack)
-현재 프로젝트는 Tailwind CSS v4를 도입하여 css 파일 내 `@theme` 지시어로 테마를 관리하고 있습니다. Next.js 15+ 환경에서 Tailwind v4는 아직 기본 번들러인 Turbopack과 일부 호환성 이슈가 발생할 수 있어, `package.json`의 스크립트가 `next dev --webpack` 및 `next build --webpack`으로 강제되어 있습니다. 추후 호환성 이슈가 패치되면 `--webpack` 플래그를 제거하여 빌드 속도를 향상시킬 수 있습니다.
+### 3.2 필수 환경 변수 명세 (Environment Variables)
 
-### 3) 이벤트 카테고리 식별 방식의 한계
-현재 `MonthCalendar.tsx` 및 `CalendarContainer.tsx`에서의 카테고리 필터링(점심, 저녁, 휴가 등) 로직은 단순히 구글 캘린더 이벤트의 **`summary`(제목) 및 `description`(메모) 텍스트에 해당 단어가 포함되어 있는지(`includes()`)**를 검사하는 방식에 의존하고 있습니다. 
-**대응 방안:** 추후 분류가 복잡해지거나 언어가 달라질 경우를 대비하여, Google Calendar API의 `extendedProperties` 필드를 이용해 이벤트 생성(POST) 시 메타데이터로 카테고리 값을 명시적으로 저장하고, 이를 통해 필터링하도록 고도화하는 것을 권장합니다.
+`.env.local` 파일 또는 배포 플랫폼(Vercel 등)에 설정되어야 하는 환경 변수 목록입니다. 클라이언트 노출을 방지하기 위해 `NEXT_PUBLIC_` 접두사를 일절 사용하지 않습니다.
 
-### 4) 타임존(Timezone) 처리
-현재 `date-fns`를 통해 브라우저 로컬 타임존 기반으로 일정을 생성하고 있습니다. 만약 글로벌 서비스를 목표로 하거나, 사용자가 여행 중 타임존이 변경되었을 때 일정을 다르게 렌더링해야 하는 이슈가 생길 수 있습니다. 필요하다면 `date-fns-tz`를 활용하여 서버/클라이언트 간 일관된 타임존 컨벤션을 지정해야 합니다.
+| 환경 변수명 | 필수 여부 | 기본값 / 설명 |
+| :--- | :---: | :--- |
+| `AUTH_SECRET` | **필수** | NextAuth v5 JWT 암호화에 사용되는 32자 이상의 무작위 비밀키 |
+| `GOOGLE_CLIENT_ID` | **필수** | Google Cloud Console OAuth 2.0 클라이언트 ID |
+| `GOOGLE_CLIENT_SECRET` | **필수** | Google Cloud Console OAuth 2.0 클라이언트 보안 비밀번호 |
+| `SUPABASE_URL` | **필수** | Supabase 프로젝트 URL (`https://<project-ref>.supabase.co`) |
+| `SUPABASE_ANON_KEY` | **필수** | Supabase Anon 공개 API 키 (서버 라우트 내부에서만 호출됨) |
+| `SUPABASE_SERVICE_ROLE_KEY` | 선택 | Supabase Service Role 키 (설정 시 Anon Key 대신 우선 적용) |
+| `GEMINI_API_KEY` | 선택 | Google Gemini API 키 (미설정 시 무료 Google Translate로 자동 폴백) |
+| `NEXTAUTH_URL` | 선택 | 로컬 개발(`http://localhost:3000`) 또는 배포 도메인 URL |
+
+### 3.3 Supabase Database 스키마 구조
+
+사용자의 노션 자격증명은 구글 이메일을 고유 식별자로 하여 Supabase의 `user_notion_tokens` 테이블에 보관됩니다:
+
+```sql
+create table public.user_notion_tokens (
+  user_email text primary key,
+  access_token text not null,
+  database_id text not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+```
+
+---
+
+## 4. 전체적인 프로그램 구조 및 파일별 역할
+
+### 🏗️ 시스템 계층 구조 (Layered Architecture)
+
+```
+[ 브라우저 클라이언트 UI ]
+       │  ▲ (React Query / 낙관적 업데이트)
+       ▼  │
+[ Next.js API Routes (BFF 프록시 & Zod 검증) ]
+   ├── Google OAuth Token 자동 갱신 (auth.ts - 180일 세션)
+   ├── Supabase DB 조회 (사용자별 노션 자격증명 보관)
+   │
+   ├──▶ [ Google Calendar API ] (일정 CRUD, 대한민국 공휴일)
+   ├──▶ [ Notion Database API ] (습관 체크리스트, 속성 동기화)
+   ├──▶ [ Google Gemini AI API ] (영문 명언 고급 번역)
+   └──▶ [ ZenQuotes API ] (데일리 영문 명언 수급)
+```
+
+### 📂 프로젝트 파일 구조 및 세부 역할
+
+```
+simple-schedule/
+├── app/
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts  # NextAuth API 핸들러
+│   │   ├── calendar/route.ts           # 구글 캘린더 일정 조회(GET) 및 추가(POST)
+│   │   ├── calendar/[eventId]/route.ts # 특정 일정 수정(PATCH) 및 삭제(DELETE)
+│   │   ├── calendars/route.ts          # 구글 캘린더 목록 조회 (기본/공유 캘린더)
+│   │   ├── notion/token/route.ts       # Supabase 연동 노션 토큰/DB_ID 조회 및 저장
+│   │   ├── notion/habits/route.ts      # 노션 체크리스트 조회(GET) 및 실시간 수정(PATCH)
+│   │   ├── notion/habits/summary/route.ts # 2달치 습관 일괄 배치 쿼리 및 진행률 요약
+│   │   ├── quotes/route.ts             # ZenQuotes 명언 호출 백엔드 라우트
+│   │   ├── translate/route.ts          # Gemini AI 번역 및 무료 구글 번역 폴백 라우트
+│   │   └── idioms/route.ts             # CSV 기반 한자 사자성어 무작위 파싱 라우트
+│   ├── globals.css                     # Tailwind v4 @theme 전역 변수 및 플랫 디자인 정의
+│   ├── layout.tsx                      # 루트 레이아웃 (뷰포트 줌 방지, 폰트, Providers)
+│   ├── page.tsx                        # 메인 진입 페이지 (Header 및 CalendarContainer 렌더링)
+│   ├── providers.tsx                   # NextAuth, React Query, next-themes Context 주입
+│   └── sw.ts                           # Serwist 서비스 워커 런타임 캐싱 설정 (4가지 캐시 전략)
+│
+├── components/
+│   ├── Header.tsx                      # 상단 네비게이션, 앱정보 모달, 테마/노션/캘린더 트리거, 로그아웃
+│   ├── CalendarContainer.tsx           # 캘린더 전역 상태 허브 (날짜, 카테고리, 패널 높이 조절)
+│   ├── MonthCalendar.tsx               # 2달 연속 무한 스크롤 CSS 그리드 달력 및 노션 4단계 아이콘
+│   ├── FilterCategories.tsx            # 카테고리 필터 칩 버튼 (전체, 점심, 저녁, 휴가 등)
+│   ├── BottomSheet.tsx                 # 모바일 바텀시트 / 데스크톱 우측 패널 전환 반응형 인터페이스
+│   ├── CalendarSelectorSheet.tsx       # 다중 구글 캘린더 선택 및 즐겨찾기 바텀 시트
+│   ├── NotionTokenModal.tsx            # 노션 API 토큰/DB_ID 등록 모달 및 '노션 우선' 설정
+│   ├── NotionHabitChecklist.tsx         # 노션 체크리스트 실시간 편집기 (AutoResizeTextarea 포함)
+│   └── QuotesModal.tsx                 # 매일의 명언 및 사자성어 듀얼 모드 모달 (TTS 발음 포함)
+│
+├── hooks/
+│   ├── useCalendar.ts                  # 구글 캘린더 React Query 커스텀 훅 (재시도 래퍼 결합)
+│   └── useNetworkStatus.ts             # 온라인/오프라인 네트워크 연결 상태 실시간 감지 훅
+│
+├── lib/
+│   └── fetchWithSessionRetry.ts        # 401 발생 시 세션 새로고침 후 1회 자동 재시도하는 Fetch 래퍼
+│
+├── public/
+│   ├── four_character_Chinese_idiom.csv # 한자 사자성어 데이터셋 (사자성어, 한글, 뜻, 훈음)
+│   ├── manifest.json                   # PWA 매니페스트 메타데이터
+│   ├── icons/ 및 images/               # PWA 투명 모서리 아이콘 및 테마 로고 이미지
+│   └── sw.js                           # Serwist 빌드 결과 서비스 워커 파일
+│
+├── auth.ts                             # NextAuth v5 설정 (Google Provider, 180일 세션, 토큰 로테이션)
+├── config.ts                           # 전역 설정 상수 (APP_VERSION, HELP_MESSAGE)
+├── next.config.ts                      # Serwist PWA 빌드 래퍼 및 6대 HTTP 응답 보안 헤더 설정
+├── eslint.config.mjs                   # ESLint 설정 파일 (public/sw.js 자동 배제)
+└── types/                              # 외부 라이브러리 타입 선언 (lunar-javascript.d.ts 등)
+```
+
+---
+
+## 5. 핵심 구현 특징 및 기술적 상세 (Technical Highlights)
+
+### 5.1 BFF(Backend-For-Frontend) 보안 프록시 및 Zod 유효성 검증
+- **민감 자격증명 보호**: 클라이언트 브라우저에는 구글 Access Token, 노션 Secret Key, Supabase Service Role Key가 절대 노출되지 않습니다. 모든 외부 API 통신은 Next.js 서버 라우트를 통해서만 수행됩니다.
+- **엄격한 스키마 검증**: 모든 백엔드 엔드포인트는 `zod`를 도입하여 쿼리스트링 및 Request Body 파라미터를 철저하게 검증(Type/Value Validation)합니다.
+- **에러 메시지 위생화(Sanitization)**: 서버 내부 오류 발생 시 데이터베이스 쿼리나 스택 트레이스를 클라이언트로 반환하지 않고, 서버 터미널 로깅 후 범용 메시지만 응답하여 정보 유출을 차단합니다.
+
+### 5.2 180일 지속 Google OAuth 세션 및 무중단 자동 복구 (`fetchWithSessionRetry`)
+- **180일 Rolling JWT 세션**: 모바일 PWA 환경에서 사용자가 매번 재로그인하는 불편을 해소하기 위해 세션 수명을 `180일(maxAge)`로 설정하고, 24시간 주기로 세션을 자동 갱신합니다.
+- **치명적 오류와 일시적 오류의 분리**: Access Token 만료 시 Refresh Token을 이용해 백엔드에서 자동 재발급(Token Rotation)을 수행합니다. 이때 일시적인 네트워크 순단 오류는 묵인하고, 구글 서버에서 명시적으로 `invalid_grant`를 응답한 경우에만 치명적 오류로 간주하여 안전하게 로그아웃시킵니다.
+- **만료 60초 전 사전 갱신(Early Refresh)**: 토큰 만료 60초 전부터 선제적으로 갱신을 트리거하여 요청 도중 토큰이 끊기는 레이스 컨디션을 방지합니다.
+- **투명한 401 자동 재시도**: 프론트엔드 통신 중 401 응답을 수신하면 `fetchWithSessionRetry` 헬퍼가 즉시 `getSession()`을 호출해 서버의 토큰 갱신을 유도한 뒤, 실패했던 요청을 단 1회 조용히 재시도하여 사용자 작업 흐름이 끊기지 않도록 방어합니다.
+
+### 5.3 Serwist 기반 Offline-First PWA 아키텍처 및 런타임 캐시 전략
+`app/sw.ts`에 4단계 맞춤형 런타임 캐싱 규칙을 적용하여 오프라인 환경에서도 앱이 온전히 작동합니다:
+1. **정적 내부 불변 자산 (`/_next/static/*`, 로고)**: `CacheFirst` (1년 TTL) 적용으로 제로 레이턴시 로딩.
+2. **외부 프로필 이미지 (`*.googleusercontent.com`)**: `StaleWhileRevalidate` (30일 TTL) 및 `CacheableResponsePlugin({ statuses: [0, 200] })` 적용으로 캐시 깨짐 방지.
+3. **캘린더 & 노션 API 데이터 (`/api/calendar`, `/api/notion/*`)**: `NetworkFirst` (네트워크 우선 시도 후 실패 시 직전 캐시 반환).
+4. **오프라인 개인정보 즉시 청기(Purge)**: 사용자가 로그아웃하거나 세션이 만료될 경우 `handleSignOut` 루틴이 `window.caches.delete`를 일괄 실행하여 브라우저에 남은 2달치 개인 일정 및 습관 캐시를 영구 삭제합니다.
+5. **Vercel 6대 HTTP 응답 보안 헤더 장착**: CSP(Content-Security-Policy), HSTS(1년), X-Frame-Options(DENY), X-Content-Type-Options(nosniff), Referrer-Policy, Permissions-Policy를 완비했습니다.
+
+### 5.4 노션 습관 데이터의 제로 레이턴시 배치 쿼리 및 4단계 동적 SVG 아이콘
+- **단 1번의 Batch Query (`/api/notion/habits/summary`)**: 캘린더에 표시되는 2달간의 노션 습관 데이터를 백그라운드에서 한 번에 쿼리하여 캐시에 저장합니다.
+- **캐시 직접 재활용**: 사용자가 특정 날짜의 노션 체크리스트(`NotionHabitChecklist`)로 진입할 때 추가 네트워크 요청 없이 이미 로드된 배치 요약 캐시를 0.01초 내에 즉시 활용하여 렌더링 지연을 없앴습니다.
+- **4단계 동적 SVG 아이콘 (`HabitProgressIcon`)**:
+  - `0%` / `시작 전`: 비어 있는 깔끔한 점선 사각형.
+  - `1% ~ 49%` / `진행 중`: 좌측/상단 모서리 점선, 우측/하단 모서리 실선 + 극소형 중앙 체크마크.
+  - `50% ~ 99%`: 중간 크기 체크마크.
+  - `100%` / `완료`: 사각형 바깥으로 역동적으로 뻗어나가는 대형 완료 체크마크.
+  - 모든 날짜 헤더 행을 `20x20px (w-5 h-5)` 규격으로 일원화하여 오늘 날짜 박스 유무와 상관없이 1픽셀의 높낮이 오차 없이 완벽한 수평 정렬을 유지합니다.
+
+### 5.5 데스크톱 2분할(Split-Screen) 및 모바일 적응형 UI
+- 가로 폭 768px(`md`) 이상 환경에서는 팝업 형태의 모달이 사라지고 우측 사이드 패널로 자연스럽게 전환되어, 좌측의 2달 캘린더를 보면서 우측에서 선택 날짜의 일정을 실시간으로 열람/수정할 수 있습니다.
+- 모바일 환경에서는 사용자가 터치 드래그로 캘린더 영역의 높이를 자유롭게 조절할 수 있도록 리사이징 핸들러와 Webkit Flex 패딩 버그를 우회하는 동적 높이 스페이서를 내장했습니다.
+
+### 5.6 매일의 명언 및 사자성어 듀얼 인용구 시스템
+- **Gemini AI + 무료 구글 번역 Fallback 구조**: Gemini API 키가 등록되어 있으면 자연스러운 문어체(해라체/한다체) 한국어로 번역하고, 키가 없거나 할당량 초과 시 크롬 확장프로그램용 무료 구글 번역 엔드포인트(`client=dict-chrome-ex`) 및 User-Agent 헤더를 조합해 봇 차단 없이 안전하게 자동 전환되어 중단 없이 번역을 제공합니다.
+- **CSV 사자성어 파서**: `four_character_Chinese_idiom.csv`의 뜻이나 훈음에 콤마(`,`) 및 따옴표가 포함되어 있어도 데이터 유실 없이 안전하게 행을 파싱하는 전용 알고리즘을 구현했습니다.
+
+### 5.7 클라이언트 LocalStorage 상태 키 명세
+
+브라우저 로컬 저장소(`localStorage`)에 저장되어 사용자 개인화 설정을 유지하는 키 목록입니다:
+
+| 스토리지 키 | 데이터 타입 | 기본값 | 기능 및 설명 |
+| :--- | :---: | :---: | :--- |
+| `calendar_font_size` | `"sm"` \| `"md"` \| `"lg"` | `"md"` | 캘린더 날짜 및 일정 글자 크기 (9px / 11px / 12px) |
+| `notion_prefer_today` | `"true"` \| `"false"` | `"false"` | '전체 조회' 상태에서 오늘 날짜 클릭 시 노션 화면 우선 실행 |
+| `show_quotes_on_startup` | `"true"` \| `"false"` | `"true"` | 앱 접속 시 명언 모달 자동 팝업 여부 |
+| `use_zen_quotes` | `"true"` \| `"false"` | `"true"` | ZenQuotes 영문 명언 소스 사용 여부 |
+| `use_idioms` | `"true"` \| `"false"` | `"true"` | 한자 사자성어 소스 사용 여부 |
+| `last_quote_data` | JSON String | `{}` | 오프라인 환경에서 즉시 렌더링하기 위한 마지막 인용구 캐시 |
+
+---
+
+## 6. 주요 기능 및 수정 히스토리 (Changelog: Updates 1 ~ 25)
+
+1. **상태 분기 처리 (조회 모드 vs 추가 모드)**: '전체 조회' 카테고리에서 날짜 탭 시 추가 폼 대신 일정 목록(조회 모드)을 우선 표시하고 상호 전환 버튼 제공.
+2. **대한민국 공휴일 연동 및 주말 강조**: 구글 대한민국 휴일 캘린더 병렬 패치, 일요일/공휴일 빨간색 표시 및 공휴일 명칭 표기.
+3. **UI 디테일 최적화**: 일정 마커 최하단 정렬(`justify-end`), 연/월 헤더 가독성 강화, 요일 폰트 일치, 필터 버튼 스타일 정돈.
+4. **다크 모드 지원 및 지나간 일정 처리**: `next-themes` 기반 다크 모드 토글, 과거 일정 투명도(`opacity-50`) 및 그레이스케일(`grayscale`) 필터 적용.
+5. **일정 수정/삭제 및 날짜 변경 기능**: 낙관적 업데이트 기반 일정 수정/삭제, 약속 날짜 변경용 Date Input 및 종일/시간 일정 충돌 방어 로직 탑재.
+6. **다중 공유 캘린더 조회 및 방어 로직**: 구글 계정 내 공유 캘린더 다중 선택 바텀 시트(`CalendarSelectorSheet`), 읽기 전용/반복 일정 수정 제한 방어벽 구현.
+7. **UX 및 헤더 디자인 개편**: 'Simple Schedule' 타이포그래피 로고 개편, 모바일 텍스트 줄바꿈 방지, 카테고리 필터 버튼 Material 아이콘 결합.
+8. **두 달 연속 무한 스크롤 캘린더**: 이번 달과 다음 달을 단일 CSS Grid로 이어붙인 무한 스크롤 그리드 구현, 월 경계선 테두리 동적 렌더링, 상단 헤더 sticky 고정.
+9. **UI 가용 공간 확대 및 음력 날짜 지원**: 캘린더 세로 높이 확대(75dvh -> 85dvh), `lunar-javascript` 도입으로 양력 옆 음력 날짜 자동 표기, 요일 헤더 정렬 일치.
+10. **데스크톱 좌우 2분할 반응형 레이아웃**: 최대 너비 1200px 확장, 데스크톱(`md` 이상) 환경에서 우측 사이드 패널로 자동 전환되는 2분할 UI 구현.
+11. **노션 액세스 토큰 & DB ID 관리 모달 및 Supabase 연동**: 헤더 내 노션 아이콘 신설, 마스킹 없는 직관적 설정 모달(`NotionTokenModal`), 구글 이메일 기준 Supabase DB 안전 저장.
+12. **노션 실시간 습관 체크리스트 연동**: 일정 화면 내 체크박스 바로가기 버튼 추가, "날짜" 속성 기준 매칭, 체크박스/상태/텍스트 맞춤 편집 UI 및 실시간 동기화.
+13. **캘린더 내 노션 습관 진행 현황 실시간 표기**: 2달치 노션 습관 데이터를 1번의 비동기 배치 쿼리(`/api/notion/habits/summary`)로 호출하여 제로 레이턴시 렌더링 구현.
+14. **노션 습관 캐시 재활용 및 UX 개선**: 배치 요약 캐시를 체크리스트 상세 진입 시 0.01초 만에 즉시 재활용, 모바일 포커스 시 화면 자동 줌 차단 메타태그 설정, '오늘 일정 조회 시 노션 우선' 옵션 추가.
+15. **PWA 오프라인 지원 아키텍처 (Offline-First)**: Serwist 4중 런타임 캐시 전략 수립, 오프라인 시 100% 읽기 전용 방어 모드 및 `cloud_off` 빨간색 펄스 뱃지 도입, 앱 정보 모달에 '최신 버전으로 업데이트' 캐시 초기화 기능 신설.
+16. **노션 체크리스트 UI 고도화 및 4단계 동적 아이콘**: `AutoResizeTextarea` 유동형 텍스트 입력창 도입, 캘린더 날짜 칸 동적 4단계 모노톤 SVG 아이콘(`HabitProgressIcon`) 구현, 전 날짜 행 높이 규격화(`w-5 h-5`).
+17. **서버리스 종합 보안 검증 및 하드닝**: Zod 기반 전체 API 입력 검증 및 에러 메시지 위생화, 서버 환경 변수에서 `NEXT_PUBLIC_` 접두사 제거, 로그아웃 시 브라우저 오프라인 개인정보 캐시 강제 청기(`caches.delete`), Vercel 6대 HTTP 보안 헤더 장착.
+18. **PWA 이미지 캐시 전략 분리 및 프로필 Fallback**: 구글 아바타 이미지를 `StaleWhileRevalidate`로 분리하여 캐시 깨짐 방지, 구글 아바타 로딩 실패 시 기본 프로필 아이콘(`account_circle`) 자동 폴백.
+19. **매일의 명언(Quotes) 모달 및 무료 자동 번역/TTS**: 최초 진입 시 명언 모달 렌더링, Gemini Flash Lite AI 번역(Fallback: 구글 번역), Touch & Reveal 인터랙션, Web Speech API 음성 재생, 로컬 캐시 오프라인 지원.
+20. **명언 모달 내 '사자성어' 무작위 노출 (Dual Quotes Mode)**: CSV 기반 사자성어 라우트 신설(콤마 포함 문자열 안전 파싱), 하단 ZenQuotes/사자성어 토글 체크박스, 우측 TTS 발음 버튼 배치.
+21. **노션 습관 진행 현황 상태별 시각화**: 노션의 '상태(Status)' 속성값(시작 전: 전체 점선, 진행 중: 상/좌 점선, 완료: 전체 실선)에 따른 동적 SVG 테두리 렌더링.
+22. **바텀 시트(BottomSheet) 스크롤 및 드래그 버그 수정**: Webkit Flex 패딩 버그를 우회하는 동적 높이 스페이서 삽입으로 시트 높이 변경 시 내부 스크롤 가림 현상 완벽 해결.
+23. **Google OAuth 세션 유지 및 토큰 갱신 안정화 (Session Persistence)**: 치명적 오류(`invalid_grant`)와 일시적 오류 분리, 401 수신 시 세션 갱신 후 1회 조용한 자동 재시도(`fetchWithSessionRetry`) 구현, 토큰 만료 60초 전 선제 갱신, 세션 수명 180일 연장.
+24. **앱 정보 모달 UI 개편 및 개인정보처리방침/버전 표기**: 모달 하단의 불필요한 '확인' 버튼 제거, 좌측에 새 창으로 열리는 **'개인정보처리방침'(`https://landing-doohee2.vercel.app/privacy`)** 링크 및 우측에 **`APP_VERSION`** 텍스트를 배치하여 UI 완성도 향상.
+25. **구글 무료 번역 API 엔드포인트 안정화 및 ESLint 빌드 배제 최적화**: 구글 무료 번역의 기존 gtx 엔드포인트 429 차단 이슈를 해소하기 위해 `dict-chrome-ex` 엔드포인트 및 브라우저 User-Agent 헤더로 전환하고, `eslint.config.mjs`의 `globalIgnores`에 서비스 워커 번들 산출물(`public/sw.js`)을 추가하여 빌드 파이프라인 무결성을 확보.
+
+---
+
+## 7. 향후 유지보수 및 운영 가이드라인 (Maintenance Guide)
+
+### ⚠️ 1) Google Cloud Console OAuth 동의 화면 "프로덕션" 게시 필수
+- 현재 코드는 180일 장기 세션과 백그라운드 Token Rotation을 완벽히 지원하도록 작성되어 있습니다.
+- **[주의]** 만약 사용자가 **정확히 7일마다 로그인 세션이 끊기는 현상**을 겪는다면, 이는 코드가 아니라 Google Cloud Console의 **'OAuth 동의 화면' 상태가 "테스트(Testing)"로 머물러 있기 때문**입니다.
+- 테스트 상태의 OAuth 앱은 구글 보안 정책상 Refresh Token이 무조건 7일 후 강제 만료됩니다. 개인/소규모 사용 목적의 경우 복잡한 구글 심사 없이도 상태를 **"프로덕션(In Production)"**으로 즉시 전환할 수 있으므로, 반드시 프로덕션으로 게시하여 영구 토큰 유지를 활성화해야 합니다.
+
+### ⚠️ 2) Tailwind CSS v4와 빌드 환경 (Webpack 강제 이유)
+- 본 프로젝트는 최신 Tailwind CSS v4를 도입하여 `globals.css` 내 `@theme` 지시어로 테마를 제어합니다.
+- Next.js 16+ 환경에서 Tailwind v4는 아직 기본 번들러인 Turbopack과 일부 호환성 이슈가 발생할 수 있어, `package.json`의 스크립트가 `next dev --webpack` 및 `next build --webpack`으로 고정되어 있습니다. 향후 공식 호환성이 완전히 검증되기 전까지는 임의로 `--webpack` 플래그를 제거하지 않는 것을 권장합니다.
+
+### ⚠️ 3) 환경 변수 보안 및 접두사 관리
+- Supabase 연결 정보(`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`), Gemini API 키(`GEMINI_API_KEY`), 구글 클라이언트 시크릿(`GOOGLE_CLIENT_SECRET`) 등은 **절대 `NEXT_PUBLIC_` 접두사를 붙여서는 안 됩니다.**
+- 오직 서버 사이드 API Route 및 `auth.ts`에서만 `process.env`로 호출되어야 브라우저 클라이언트 JS 번들에 비밀 정보가 유출되지 않습니다.
+
+### ⚠️ 4) 이벤트 카테고리 식별 방식의 향후 고도화
+- 현재 `MonthCalendar.tsx` 및 `CalendarContainer.tsx`에서의 카테고리 분류(점심, 저녁, 휴가 등)는 구글 캘린더 일정의 `summary`(제목) 및 `description`(메모)에 특정 단어가 포함되어 있는지(`includes()`)를 검사하는 방식에 기반합니다.
+- 향후 다국어 지원이나 정밀한 카테고리 관리가 필요할 경우, Google Calendar API의 `extendedProperties` 메타데이터 속성을 활용하여 일정 생성/수정 시 카테고리 고유 식별자를 직접 저장하고 필터링하는 방식으로 확장을 고려할 수 있습니다.
+
+### ⚠️ 5) 타임존(Timezone) 컨벤션
+- 현재 모든 날짜 계산은 `date-fns`를 통해 브라우저가 위치한 현지 로컬 타임존(KST, UTC+9)을 기준으로 동작합니다.
+- 만약 글로벌 사용자를 대상으로 하거나 해외 여행 중 일정 오차를 방지해야 할 경우, `date-fns-tz`를 도입하여 사용자 설정에 기반한 고정 타임존 앵커링을 적용하는 것을 권장합니다.
