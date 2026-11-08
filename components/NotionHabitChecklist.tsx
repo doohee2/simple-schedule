@@ -39,9 +39,9 @@ function AutoResizeTextarea({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "42px";
-    const nextHeight = Math.min(el.scrollHeight, 84);
+    const nextHeight = Math.min(el.scrollHeight, 160);
     el.style.height = `${Math.max(nextHeight, 42)}px`;
-    el.style.overflowY = el.scrollHeight > 84 ? "auto" : "hidden";
+    el.style.overflowY = el.scrollHeight > 160 ? "auto" : "hidden";
   };
 
   useEffect(() => {
@@ -59,7 +59,7 @@ function AutoResizeTextarea({
         adjustHeight();
       }}
       placeholder={placeholder}
-      style={{ minHeight: "42px", maxHeight: "84px" }}
+      style={{ minHeight: "42px", maxHeight: "160px" }}
       className={`w-full py-2.5 px-3 bg-surface border border-outline-variant text-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary transition-all resize-none leading-5 ${
         disabled ? "opacity-70 cursor-not-allowed" : ""
       }`}
