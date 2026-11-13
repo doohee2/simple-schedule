@@ -2,10 +2,11 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { HELP_MESSAGE, APP_VERSION } from "@/config";
 import NotionTokenModal from "./NotionTokenModal";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { resetFatalSessionError } from "@/lib/fetchWithSessionRetry";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -13,9 +14,11 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
+  const [isSessionExpiredOpen, setIsSessionExpiredOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
   const isOnline = useNetworkStatus();
+  const isHandlingExpiryRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,10 +47,9 @@ export default function Header() {
     setImgError(false);
   }, [session?.user?.image]);
 
-  const handleSignOut = async (showAlert: boolean = false) => {
-    if (showAlert) {
-      alert("Google 로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
-    }
+  // 사용자가 헤더의 프로필 아이콘을 직접 눌러 자발적으로 로그아웃할 때만 PWA 캐시 삭제
+  const handleManualSignOut = async () => {
+    resetFatalSessionError();
     try {
       if (typeof window !== "undefined" && "caches" in window) {
         const cacheNames = await window.caches.keys();
@@ -57,16 +59,27 @@ export default function Header() {
     } catch (e) {
       console.error("[PWA Security] Error purging offline caches:", e);
     }
-    signOut();
+    signOut({ callbackUrl: "/" });
   };
 
   useEffect(() => {
+    // 💡 오프라인 상태일 때는 세션 만료 처리를 절대 진행하지 않음 (로컬 캐시 보존 및 오프라인 읽기 전용 모드 유지)
+    if (!isOnline) {
+      return;
+    }
+
     // @ts-ignore
-    if (session?.error === "RefreshAccessTokenError") {
-      handleSignOut(true);
+    if ((session as any)?.error === "RefreshAccessTokenError") {
+      // 중복 alert/모달 루프 방지: 1회만 모달 노출
+      if (!isHandlingExpiryRef.current) {
+        isHandlingExpiryRef.current = true;
+        setIsSessionExpiredOpen(true);
+      }
+    } else {
+      isHandlingExpiryRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [(session as any)?.error]);
+  }, [(session as any)?.error, isOnline]);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
@@ -131,7 +144,7 @@ export default function Header() {
               </svg>
             </button>
             <button 
-              onClick={() => handleSignOut()} 
+              onClick={() => handleManualSignOut()} 
               title="로그아웃"
               className="hover:opacity-80 transition-opacity active:scale-95 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 relative group ml-0.5"
             >
@@ -278,6 +291,45 @@ export default function Header() {
         isOpen={isNotionModalOpen} 
         onClose={() => setIsNotionModalOpen(false)} 
       />
+
+      {/* Session Expired In-App Modal */}
+      {isSessionExpiredOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-on-background/20 dark:bg-background/40 backdrop-overlay z-[80] transition-opacity duration-300" 
+            onClick={() => setIsSessionExpiredOpen(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[360px] bg-surface border border-outline-variant rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.16)] z-[90] overflow-hidden bottom-sheet-enter-active">
+            <div className="p-6">
+              <div className="flex items-center gap-2.5 mb-3 text-error">
+                <span className="material-symbols-outlined text-[28px]">sync_problem</span>
+                <h3 className="text-base font-bold text-on-surface">로그인 세션 만료</h3>
+              </div>
+              <p className="text-on-surface-variant text-xs sm:text-sm leading-relaxed mb-6 font-body-sm">
+                Google 계정 연결이 만료되었습니다. 최신 일정과 노션 습관을 안전하게 동기화하려면 다시 로그인해 주세요.
+              </p>
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => setIsSessionExpiredOpen(false)}
+                  className="flex-1 h-11 bg-surface-variant text-on-surface-variant rounded-xl font-bold text-xs hover:bg-surface-variant/80 active:scale-[0.98] transition-all"
+                >
+                  나중에 (조회 유지)
+                </button>
+                <button
+                  onClick={() => {
+                    setIsSessionExpiredOpen(false);
+                    signIn("google");
+                  }}
+                  className="flex-1 h-11 bg-primary text-on-primary rounded-xl font-bold text-xs hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[18px]">login</span>
+                  <span>다시 로그인</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </header>
   );
 }

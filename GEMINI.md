@@ -232,7 +232,7 @@ simple-schedule/
 
 ---
 
-## 6. 주요 기능 및 수정 히스토리 (Changelog: Updates 1 ~ 26)
+## 6. 주요 기능 및 수정 히스토리 (Changelog: Updates 1 ~ 27)
 
 1. **상태 분기 처리 (조회 모드 vs 추가 모드)**: '전체 조회' 카테고리에서 날짜 탭 시 추가 폼 대신 일정 목록(조회 모드)을 우선 표시하고 상호 전환 버튼 제공.
 2. **대한민국 공휴일 연동 및 주말 강조**: 구글 대한민국 휴일 캘린더 병렬 패치, 일요일/공휴일 빨간색 표시 및 공휴일 명칭 표기.
@@ -260,6 +260,7 @@ simple-schedule/
 24. **앱 정보 모달 UI 개편 및 개인정보처리방침/버전 표기**: 모달 하단의 불필요한 '확인' 버튼 제거, 좌측에 새 창으로 열리는 **'개인정보처리방침'(`https://landing-doohee2.vercel.app/privacy`)** 링크 및 우측에 **`APP_VERSION`** 텍스트를 배치하여 UI 완성도 향상.
 25. **구글 무료 번역 API 엔드포인트 안정화 및 ESLint 빌드 배제 최적화**: 구글 무료 번역의 기존 gtx 엔드포인트 429 차단 이슈를 해소하기 위해 `dict-chrome-ex` 엔드포인트 및 브라우저 User-Agent 헤더로 전환하고, `eslint.config.mjs`의 `globalIgnores`에 서비스 워커 번들 산출물(`public/sw.js`)을 추가하여 빌드 파이프라인 무결성을 확보.
 26. **노션 체크리스트 메모 입력창 최대 높이 확장**: `AutoResizeTextarea`의 동적 높이 상한선(`maxHeight`)을 기존 84px(약 2~3줄)에서 **160px(약 6~7줄)**로 확장하여 긴 메모나 코멘트를 입력할 때도 한눈에 시원하게 볼 수 있도록 개선.
+27. **로그인 세션 만료 처리 고도화 및 오프라인 캐시 보호 (Alert 무한 루프 해소)**: 브라우저 블로킹 `alert()`를 제거하고 비침해적 세션 만료 인앱 모달(`isSessionExpiredOpen`)로 개편, `isHandlingExpiryRef` 가드와 `fetchWithSessionRetry`의 `isFatalSessionError` 플래그로 연쇄적인 세션 재요청 및 메시지 중복 노출을 원천 차단. 오프라인(`!isOnline`) 감지 시에는 세션 만료 판정을 일체 유보하고 PWA 오프라인 캘린더 캐시를 100% 보존하여 조회 모드를 유지하며, 캐시 퍼지(`caches.delete`)는 사용자의 명시적 로그아웃 시에만 수행하도록 정책 분리.
 
 ---
 
